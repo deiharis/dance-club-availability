@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      Role     @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  member Member?
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model Member {
+  id             String    @id @default(cuid())
+  fullName       String
+  registerNumber String    @unique
+  email          String    @unique
+  phone          String?
+  department     String
+  academicYear   Int
+  category       Category
+  position       String
+  photoUrl       String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  timetableEntries TimetableEntry[]
+}
+
+enum Category {
+  CORE
+  MEMBER
+  FFCS
+}
+
+// One Member → Many TimetableEntries
+// Each member's timetable is fully independent
+model TimetableEntry {
+  id       String     @id @default(cuid())
+  day      Day
+  slot     String
+  status   SlotStatus @default(FREE)
+
+  memberId String
+  member   Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, day, slot])
+}
+
+enum Day {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+}
+
+enum SlotStatus {
+  FREE
+  CLASS
+}
+
+model SaturdayPlanner {
+  id         String   @id @default(cuid())
+  weekStart  DateTime @unique
+  followsDay Day
+  createdAt  DateTime @default(now())
+}

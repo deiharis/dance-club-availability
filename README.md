@@ -1,36 +1,260 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Dance Club Availability System
 
-## Getting Started
+## Project Overview
 
-First, run the development server:
+The Dance Club Availability System is a web application built to help the Dance Club management team efficiently manage member information and determine member availability based on their academic timetable.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+The primary objective of this project is to eliminate the need to manually ask members whether they are free. Instead, administrators can search the database and instantly determine which members are available during any academic time slot.
+
+This application is intended for internal use by the Dance Club.
+
+---
+
+# Main Objectives
+
+The application should allow administrators to:
+
+* Manage all club members.
+* Store each member's academic timetable.
+* Search for members who are available during a specific day and time.
+* View overall club statistics.
+* Maintain member information in one centralized system.
+
+Regular members should only be able to view their own profile and timetable.
+
+---
+
+# Technology Stack
+
+## Frontend
+
+* Next.js (App Router)
+* React
+* TypeScript
+* Tailwind CSS
+
+## Backend
+
+* Next.js API Routes
+
+## Database
+
+* PostgreSQL (Supabase)
+
+## ORM
+
+* Prisma
+
+## Authentication
+
+* NextAuth
+
+## Deployment
+
+* Vercel
+
+---
+
+# User Roles
+
+There are only two user roles.
+
+## Administrator
+
+Administrators represent the Core Team.
+
+Administrators have permission to:
+
+* Login
+* View Dashboard
+* Add Members
+* Edit Members
+* Delete Members
+* Manage Timetables
+* Search Members
+* View Analytics
+
+Administrators have full access to the system.
+
+---
+
+## Member
+
+Regular members can only:
+
+* Login
+* View their own profile
+* View their own timetable
+
+Members cannot edit information or access administrator pages.
+
+---
+
+# Member Categories
+
+There are exactly three categories.
+
+* Core Members
+* Normal Members
+* FFCS
+
+These categories are fixed throughout the application.
+
+Internally they are stored as:
+
+```text
+CORE
+MEMBER
+FFCS
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+No additional categories should exist.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Positions
 
-## Learn More
+Positions are **not predefined**.
 
-To learn more about Next.js, take a look at the following resources:
+The Position field is a simple text value entered manually when creating or editing a member.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Examples include:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* President
+* Vice President
+* Secretary
+* Joint Secretary
+* Dance Captain
+* Volunteer
+* Member
 
-## Deploy on Vercel
+There is **no Position table** in the database.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+There is **no Position dropdown**.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+# Timetable System
+
+Each member has an academic timetable consisting of:
+
+* Monday
+* Tuesday
+* Wednesday
+* Thursday
+* Friday
+
+Saturday and Sunday are intentionally excluded.
+
+Each timetable slot can contain only one of the following values:
+
+* Free
+* Theory Class
+* Lab Class
+
+No other statuses should exist.
+
+---
+
+# Search System
+
+One of the primary features of this application is the availability search.
+
+Administrators should be able to search members using filters such as:
+
+* Name
+* Register Number
+* Department
+* Academic Year
+* Category
+* Position
+* Day
+* Time Slot
+* Availability Status
+
+Example:
+
+Find all Core Members who are Free on Wednesday during the 2:00 PM slot.
+
+---
+
+# Analytics
+
+The Analytics page should provide a simple overview of the club.
+
+Statistics include:
+
+* Total Members
+* Core Members
+* Normal Members
+* FFCS Members
+
+No unnecessary analytics are required.
+
+---
+
+# Design Guidelines
+
+The application should maintain a clean and professional appearance.
+
+Requirements:
+
+* Dark theme
+* Minimalistic design
+* Rounded components
+* Professional spacing
+* Modern typography
+* Responsive layout
+
+Do **not** use emojis anywhere in the interface.
+
+Use **Lucide React** icons only.
+
+The design should resemble modern applications such as:
+
+* Vercel Dashboard
+* GitHub
+* Linear
+* Notion
+
+---
+
+# Project Structure Philosophy
+
+The project should remain modular and maintainable.
+
+Business logic, database logic, UI components, and API routes should remain separated whenever possible.
+
+Avoid placing database queries directly inside UI components when a reusable service layer is more appropriate.
+
+---
+
+# Development Principles
+
+Whenever modifying this project:
+
+1. Analyze the existing implementation before making changes.
+2. Keep the database schema and application code synchronized.
+3. Update every affected file when changing a model or API.
+4. Maintain consistency across the entire project.
+5. Avoid duplicate code.
+6. Prefer reusable components.
+7. Keep the project production-ready rather than tutorial-style.
+
+---
+
+# Important Rules
+
+* Do not recreate features that already exist.
+* Do not introduce unnecessary complexity.
+* Do not add features unless explicitly requested.
+* Preserve the existing project architecture.
+* Follow the current coding style.
+* Ensure all generated code is TypeScript compatible.
+* Ensure Prisma schema, API routes, frontend pages, and database queries always remain consistent.
+
+---
+
+# Current Goal
+
+The objective is to build a stable, scalable, and maintainable Dance Club Availability Management System that can be deployed to Vercel and used by the Dance Club for day-to-day operations.
