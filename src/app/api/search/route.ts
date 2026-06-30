@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -10,10 +12,15 @@ export async function GET(req: Request) {
     const department = searchParams.get("department") || "";
     const academicYear = searchParams.get("academicYear") || "";
     const day = searchParams.get("day") || "";
-    const slot = searchParams.get("slot") || "";
 
-    // Build the base filter
-    const where: any = {};
+    // Multiple slots come as a comma separated list, e.g. "T1,T3,T8"
+    const slotsParam = searchParams.get("slots") || "";
+    const slots = slotsParam
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const where: Record<string, unknown> = {};
 
     if (query) {
       where.OR = [
@@ -35,14 +42,14 @@ export async function GET(req: Request) {
       where.academicYear = parseInt(academicYear);
     }
 
-    // If filtering by availability, only include members who are FREE
-    // at that day+slot (or have no entry at all, meaning default FREE)
-    if (day && slot) {
+    // Member must be FREE during EVERY selected slot on the selected day.
+    // We exclude anyone who has a CLASS entry on ANY of the selected slots.
+    if (day && slots.length > 0) {
       where.NOT = {
         timetableEntries: {
           some: {
             day,
-            slot,
+            slot: { in: slots },
             status: "CLASS",
           },
         },

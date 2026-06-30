@@ -16,6 +16,8 @@ interface Member {
   position: string;
 }
 
+const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
+
 function getCategoryLabel(category: string) {
   if (category === "CORE") return "Core Members";
   if (category === "FFCS") return "FFCS";
@@ -34,7 +36,7 @@ export default function SearchPage() {
   const [department, setDepartment] = useState("");
   const [academicYear, setAcademicYear] = useState("");
   const [day, setDay] = useState("");
-  const [slot, setSlot] = useState("");
+  const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
 
   const [results, setResults] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,16 +52,17 @@ export default function SearchPage() {
     if (department) params.set("department", department);
     if (academicYear) params.set("academicYear", academicYear);
     if (day) params.set("day", day);
-    if (slot) params.set("slot", slot);
+    if (selectedSlots.length > 0) params.set("slots", selectedSlots.join(","));
 
-    const res = await fetch(`/api/search?${params.toString()}`);
+    const res = await fetch(`/api/search?${params.toString()}`, {
+      cache: "no-store",
+    });
     const data = await res.json();
 
     setResults(data);
     setLoading(false);
-  }, [query, category, department, academicYear, day, slot]);
+  }, [query, category, department, academicYear, day, selectedSlots]);
 
-  // Auto search whenever filters change (debounced)
   useEffect(() => {
     const timeout = setTimeout(() => {
       runSearch();
@@ -67,17 +70,23 @@ export default function SearchPage() {
     return () => clearTimeout(timeout);
   }, [runSearch]);
 
+  function toggleSlot(slot: string) {
+    setSelectedSlots((prev) =>
+      prev.includes(slot) ? prev.filter((s) => s !== slot) : [...prev, slot]
+    );
+  }
+
   function clearFilters() {
     setQuery("");
     setCategory("");
     setDepartment("");
     setAcademicYear("");
     setDay("");
-    setSlot("");
+    setSelectedSlots([]);
   }
 
   const hasActiveFilters =
-    query || category || department || academicYear || day || slot;
+    query || category || department || academicYear || day || selectedSlots.length > 0;
 
   return (
     <div>
@@ -109,7 +118,7 @@ export default function SearchPage() {
           </div>
 
           {/* Filter row */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
 
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-1.5 block">
@@ -174,24 +183,38 @@ export default function SearchPage() {
               </select>
             </div>
 
-            <div>
-              <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-1.5 block">
-                Time Slot
-              </label>
-              <select
-                value={slot}
-                onChange={(e) => setSlot(e.target.value)}
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
-              >
-                <option value="">Any slot</option>
-                {SLOTS.filter((s) => s.slot !== "Lunch").map((s) => (
-                  <option key={s.slot} value={s.slot}>
-                    {s.slot} ({s.time})
-                  </option>
-                ))}
-              </select>
-            </div>
+          </div>
 
+          {/* Multi-select time slots */}
+          <div>
+            <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+              Time Slots {selectedSlots.length > 0 && `(${selectedSlots.length} selected)`}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {ACTIVE_SLOTS.map((s) => {
+                const active = selectedSlots.includes(s.slot);
+                return (
+                  <button
+                    key={s.slot}
+                    type="button"
+                    onClick={() => toggleSlot(s.slot)}
+                    title={s.time}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
+                      active
+                        ? "bg-purple-600 border-purple-500 text-white"
+                        : "bg-[#0f1117] border-gray-700 text-gray-400 hover:border-gray-600"
+                    }`}
+                  >
+                    {s.slot}
+                  </button>
+                );
+              })}
+            </div>
+            {selectedSlots.length > 0 && !day && (
+              <p className="text-orange-400 text-xs mt-2">
+                Select a day above to apply this slot filter
+              </p>
+            )}
           </div>
 
           {hasActiveFilters && (
@@ -214,9 +237,9 @@ export default function SearchPage() {
               {loading
                 ? "Searching..."
                 : `${results.length} member${results.length !== 1 ? "s" : ""} found`}
-              {day && slot && !loading && (
+              {day && selectedSlots.length > 0 && !loading && (
                 <span className="text-green-400">
-                  {" "}— available on {DAY_LABELS[day]} during {slot}
+                  {" "}— available on {DAY_LABELS[day]} during {selectedSlots.join(", ")}
                 </span>
               )}
             </p>

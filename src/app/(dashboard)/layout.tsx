@@ -24,7 +24,7 @@ export default async function DashboardLayout({
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
       />
-      <main className="flex-1 ml-60">
+      <main className="flex-1 ml-60 min-w-0">
         {children}
       </main>
     </div>

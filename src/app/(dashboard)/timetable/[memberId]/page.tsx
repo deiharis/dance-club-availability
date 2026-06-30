@@ -44,7 +44,7 @@ export default async function MemberTimetablePage({
       </div>
 
       {/* Timetable */}
-      <div className="p-8">
+      <div className="p-8 min-w-0">
         <div className="bg-[#1a1d27] border border-gray-800 rounded-xl px-6 py-6">
           <TimetableGrid
             memberId={member.id}

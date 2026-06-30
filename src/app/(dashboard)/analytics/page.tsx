@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import Heatmap from "@/components/timetable/Heatmap";
 import { SLOTS, DAYS, DAY_LABELS } from "@/lib/timetable";
-import { TrendingUp, TrendingDown, Clock, Users } from "lucide-react";
+import { TrendingUp, TrendingDown, Clock, Users, RefreshCw } from "lucide-react";
 
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
 
@@ -36,13 +36,25 @@ export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/analytics")
+  function loadAnalytics() {
+    setLoading(true);
+    fetch("/api/analytics", { cache: "no-store" })
       .then((res) => res.json())
       .then((d) => {
         setData(d);
         setLoading(false);
       });
+  }
+
+  useEffect(() => {
+    loadAnalytics();
+
+    // Refresh automatically whenever the user comes back to this tab/page
+    function handleFocus() {
+      loadAnalytics();
+    }
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, []);
 
   if (loading || !data) {
@@ -61,11 +73,20 @@ export default function AnalyticsPage() {
   return (
     <div>
 
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-8 py-4">
-        <h1 className="text-lg font-semibold text-white">Analytics</h1>
-        <p className="text-gray-500 text-xs mt-0.5">
-          Availability insights across all members
-        </p>
+      <div className="border-b border-gray-800 bg-[#1a1d27] px-8 py-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-white">Analytics</h1>
+          <p className="text-gray-500 text-xs mt-0.5">
+            Availability insights across all members
+          </p>
+        </div>
+        <button
+          onClick={loadAnalytics}
+          className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+        >
+          <RefreshCw size={14} />
+          Refresh
+        </button>
       </div>
 
       <div className="p-8 space-y-6">

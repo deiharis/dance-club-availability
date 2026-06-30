@@ -18,7 +18,7 @@ export default async function TimetablePage() {
         </p>
       </div>
 
-      <div className="p-8">
+      <div className="p-8 min-w-0">
         {members.length === 0 ? (
           <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
             <p className="text-gray-500 text-sm mb-4">

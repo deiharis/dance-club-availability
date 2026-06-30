@@ -2,6 +2,9 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { SLOTS, DAYS } from "@/lib/timetable";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
 
 export async function GET() {

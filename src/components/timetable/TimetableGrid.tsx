@@ -98,10 +98,10 @@ export default function TimetableGrid({
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full min-w-0">
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4 mb-3">
         <div className="flex items-center gap-2">
           <div className="w-3 h-3 rounded-sm bg-green-500/10 border border-green-500/30" />
           <span className="text-gray-400 text-xs">Free</span>
@@ -117,85 +117,88 @@ export default function TimetableGrid({
         )}
       </div>
 
-      {/* Grid */}
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      {/* Grid — scroll only happens INSIDE this container */}
+      <div className="w-full min-w-0 overflow-x-auto rounded-lg border border-gray-800/50">
+        <table className="border-collapse w-full">
           <thead>
             <tr>
-              <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-3 py-2 w-28">
-                Slot
+              <th className="text-left text-gray-400 text-[10px] font-medium uppercase tracking-wide px-2 py-1.5 w-16 sticky left-0 bg-[#1a1d27] z-10">
+                Day
               </th>
-              {DAYS.map((day) => (
-                <th
-                  key={day}
-                  className="text-center text-gray-400 text-xs font-medium uppercase tracking-wide px-3 py-2"
-                >
-                  {DAY_LABELS[day]}
-                </th>
-              ))}
+              {SLOTS.map((slotInfo) => {
+                const isLunch = slotInfo.slot === "Lunch";
+                return (
+                  <th
+                    key={slotInfo.slot}
+                    className="text-center px-1 py-1.5 min-w-[58px]"
+                  >
+                    <span className={`text-[11px] font-medium block ${
+                      isLunch ? "text-gray-500" : "text-gray-300"
+                    }`}>
+                      {slotInfo.slot}
+                    </span>
+                    <span className="text-gray-600 text-[9px] block leading-tight whitespace-nowrap">
+                      {slotInfo.time}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>
-            {SLOTS.map((slotInfo) => {
-              const isLunch = slotInfo.slot === "Lunch";
+            {DAYS.map((day) => (
+              <tr key={day} className="border-t border-gray-800/50">
+                {/* Day label */}
+                <td className="px-2 py-1 sticky left-0 bg-[#1a1d27] z-10">
+                  <span className="text-gray-200 text-xs font-medium">
+                    {DAY_LABELS[day].slice(0, 3)}
+                  </span>
+                </td>
 
-              return (
-                <tr key={slotInfo.slot}>
-                  {/* Slot label */}
-                  <td className="px-3 py-1.5">
-                    <div>
-                      <span className={`text-xs font-medium ${
-                        isLunch ? "text-gray-500" : "text-gray-300"
-                      }`}>
-                        {slotInfo.slot}
-                      </span>
-                      <p className="text-gray-600 text-xs">{slotInfo.time}</p>
-                    </div>
-                  </td>
+                {/* Slot cells */}
+                {SLOTS.map((slotInfo) => {
+                  const isLunch = slotInfo.slot === "Lunch";
 
-                  {/* Day cells */}
-                  {DAYS.map((day) => {
-                    if (isLunch) {
-                      return (
-                        <td key={day} className="px-1.5 py-1">
-                          <div className="h-8 rounded border border-gray-800/50 bg-gray-800/30 flex items-center justify-center">
-                            <span className="text-gray-500 text-xs">
-                              Lunch Break
-                            </span>
-                          </div>
-                        </td>
-                      );
-                    }
-
-                    const status = getStatus(day, slotInfo.slot);
-                    const key = `${day}_${slotInfo.slot}`;
-                    const isSaving = saving === key;
-
+                  if (isLunch) {
                     return (
-                      <td key={day} className="px-1.5 py-1">
-                        <button
-                          onClick={() => handleCellClick(day, slotInfo.slot)}
-                          onMouseEnter={(e) =>
-                            handleMouseEnter(e, day, slotInfo)
-                          }
-                          onMouseLeave={handleMouseLeave}
-                          disabled={readonly || isSaving}
-                          className={`w-full h-8 rounded border transition-all text-xs font-medium ${
-                            getStatusStyle(status)
-                          } ${
-                            readonly
-                              ? "cursor-default"
-                              : "cursor-pointer hover:opacity-80 active:scale-95"
-                          } ${isSaving ? "opacity-50" : ""}`}
-                        >
-                          {status === "CLASS" ? "Class" : ""}
-                        </button>
+                      <td key={slotInfo.slot} className="px-0.5 py-0.5">
+                        <div className="h-7 rounded border border-gray-800/50 bg-gray-800/30 flex items-center justify-center">
+                          <span className="text-gray-500 text-[9px]">
+                            Lunch
+                          </span>
+                        </div>
                       </td>
                     );
-                  })}
-                </tr>
-              );
-            })}
+                  }
+
+                  const status = getStatus(day, slotInfo.slot);
+                  const key = `${day}_${slotInfo.slot}`;
+                  const isSaving = saving === key;
+
+                  return (
+                    <td key={slotInfo.slot} className="px-0.5 py-0.5">
+                      <button
+                        onClick={() => handleCellClick(day, slotInfo.slot)}
+                        onMouseEnter={(e) =>
+                          handleMouseEnter(e, day, slotInfo)
+                        }
+                        onMouseLeave={handleMouseLeave}
+                        disabled={readonly || isSaving}
+                        className={`w-full h-7 rounded border transition-all text-[10px] font-medium ${
+                          getStatusStyle(status)
+                        } ${
+                          readonly
+                            ? "cursor-default"
+                            : "cursor-pointer hover:opacity-80 active:scale-95"
+                        } ${isSaving ? "opacity-50" : ""}`}
+                      >
+                        {status === "CLASS" ? "Class" : ""}
+                      </button>
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
