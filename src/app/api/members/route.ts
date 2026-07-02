@@ -2,6 +2,8 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const members = await db.member.findMany({
     orderBy: { createdAt: "desc" },
@@ -21,29 +23,19 @@ export async function POST(req: Request) {
       department,
       academicYear,
       category,
+      isFFCS,
       position,
       password,
     } = body;
 
-    if (
-      !fullName ||
-      !registerNumber ||
-      !email ||
-      !department ||
-      !position ||
-      !password ||
-      !category
-    ) {
+    if (!fullName || !registerNumber || !email || !department || !position || !password || !category) {
       return NextResponse.json(
         { error: "All required fields must be filled" },
         { status: 400 }
       );
     }
 
-    const existingUser = await db.user.findUnique({
-      where: { email },
-    });
-
+    const existingUser = await db.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json(
         { error: "A member with this email already exists" },
@@ -51,10 +43,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const existingMember = await db.member.findUnique({
-      where: { registerNumber },
-    });
-
+    const existingMember = await db.member.findUnique({ where: { registerNumber } });
     if (existingMember) {
       return NextResponse.json(
         { error: "A member with this register number already exists" },
@@ -64,11 +53,18 @@ export async function POST(req: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
+    // FFCS_ONLY is always isFFCS = true
+    const finalIsFFCS = category === "FFCS_ONLY" ? true : Boolean(isFFCS);
+
+    // Role logic
+    let role: "ADMIN" | "MEMBER" = "MEMBER";
+    if (category === "CORE") role = "ADMIN";
+
     const user = await db.user.create({
       data: {
         email,
         password: hashedPassword,
-        role: category === "CORE" ? "ADMIN" : "MEMBER",
+        role,
         member: {
           create: {
             fullName,
@@ -78,6 +74,7 @@ export async function POST(req: Request) {
             department,
             academicYear: parseInt(academicYear),
             category,
+            isFFCS: finalIsFFCS,
             position,
           },
         },

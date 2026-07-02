@@ -1,0 +1,64 @@
+import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+
+    const member = await db.member.findUnique({ where: { userId } });
+    if (!member) {
+      return NextResponse.json([], { status: 200 });
+    }
+
+    const notifications = await db.notification.findMany({
+      where: { memberId: member.id },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return NextResponse.json(notifications);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+    const member = await db.member.findUnique({ where: { userId } });
+    if (!member) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Mark all notifications as read
+    await db.notification.updateMany({
+      where: { memberId: member.id, read: false },
+      data: { read: true },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
+}

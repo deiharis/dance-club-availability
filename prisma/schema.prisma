@@ -8,6 +8,14 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// ─── ROLES ──────────────────────────────────────────────
+enum Role {
+  SUPERADMIN
+  ADMIN
+  MEMBER
+}
+
+// ─── USER ───────────────────────────────────────────────
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
@@ -16,12 +24,25 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  member Member?
+  member   Member?
+  gradesby FFCSGrade[]
 }
 
-enum Role {
-  ADMIN
+// ─── MEMBER ─────────────────────────────────────────────
+enum Category {
+  CORE
   MEMBER
+  DANCER
+  FFCS_ONLY
+}
+
+enum FFCSGrade_Enum {
+  S
+  A
+  B
+  C
+  D
+  E
 }
 
 model Member {
@@ -33,37 +54,23 @@ model Member {
   department     String
   academicYear   Int
   category       Category
+  isFFCS         Boolean   @default(false)
   position       String
   photoUrl       String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
-  userId         String    @unique
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   timetableEntries TimetableEntry[]
+  ffcsGrades       FFCSGrade[]
+  reports          Report[]       @relation("SubmittedReports")
+  reviewedReports  Report[]       @relation("ReviewedReports")
+  notifications    Notification[]
 }
 
-enum Category {
-  CORE
-  MEMBER
-  FFCS
-}
-
-// One Member → Many TimetableEntries
-// Each member's timetable is fully independent
-model TimetableEntry {
-  id       String     @id @default(cuid())
-  day      Day
-  slot     String
-  status   SlotStatus @default(FREE)
-
-  memberId String
-  member   Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  @@unique([memberId, day, slot])
-}
-
+// ─── TIMETABLE ──────────────────────────────────────────
 enum Day {
   MONDAY
   TUESDAY
@@ -77,9 +84,85 @@ enum SlotStatus {
   CLASS
 }
 
+model TimetableEntry {
+  id       String     @id @default(cuid())
+  day      Day
+  slot     String
+  status   SlotStatus @default(FREE)
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, day, slot])
+}
+
+// ─── SATURDAY PLANNER ───────────────────────────────────
 model SaturdayPlanner {
   id         String   @id @default(cuid())
   weekStart  DateTime @unique
   followsDay Day
   createdAt  DateTime @default(now())
+}
+
+// ─── FFCS GRADES ────────────────────────────────────────
+model FFCSGrade {
+  id        String         @id @default(cuid())
+  subject   String
+  grade     FFCSGrade_Enum
+  remarks   String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  memberId   String
+  member     Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  gradedById String
+  gradedBy   User   @relation(fields: [gradedById], references: [id])
+}
+
+// ─── REPORTS ────────────────────────────────────────────
+enum ReportStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  description String
+  workDate    DateTime
+  imageUrl    String
+  imagePath   String
+  status      ReportStatus @default(PENDING)
+  reviewNotes String?
+  submittedAt DateTime     @default(now())
+  reviewedAt  DateTime?
+
+  memberId String
+  member   Member @relation("SubmittedReports", fields: [memberId], references: [id], onDelete: Cascade)
+
+  reviewedById String?
+  reviewedBy   Member? @relation("ReviewedReports", fields: [reviewedById], references: [id])
+
+  notification Notification?
+}
+
+// ─── NOTIFICATIONS ──────────────────────────────────────
+enum NotificationType {
+  REPORT_APPROVED
+  REPORT_REJECTED
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  reportId String? @unique
+  report   Report? @relation(fields: [reportId], references: [id], onDelete: SetNull)
 }

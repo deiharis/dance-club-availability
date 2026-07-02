@@ -73,9 +73,9 @@ export default function AnalyticsPage() {
   return (
     <div>
 
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-8 py-4 flex items-center justify-between">
+      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-white">Analytics</h1>
+          <h1 className="text-base sm:text-lg font-semibold text-white">Analytics</h1>
           <p className="text-gray-500 text-xs mt-0.5">
             Availability insights across all members
           </p>
@@ -89,10 +89,10 @@ export default function AnalyticsPage() {
         </button>
       </div>
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-4 sm:space-y-6">
 
         {/* Top Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
           <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-2">

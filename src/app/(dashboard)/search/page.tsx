@@ -118,7 +118,7 @@ export default function SearchPage() {
           </div>
 
           {/* Filter row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
 
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-1.5 block">
@@ -252,63 +252,159 @@ export default function SearchPage() {
               </p>
             </div>
           ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Name</th>
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Reg Number</th>
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Category</th>
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Position</th>
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Department</th>
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Year</th>
-                  <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Timetable</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800">
-                {results.map((member) => (
-                  <tr key={member.id} className="hover:bg-white/5 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                          <span className="text-purple-400 text-xs font-semibold">
-                            {member.fullName.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-white text-sm font-medium">{member.fullName}</p>
-                          <p className="text-gray-500 text-xs">{member.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-300 text-sm font-mono">{member.registerNumber}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-md ${getCategoryStyle(member.category)}`}>
-                        {getCategoryLabel(member.category)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-300 text-sm">{member.position}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-300 text-sm">{member.department}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className="text-gray-300 text-sm">Year {member.academicYear}</span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/timetable/${member.id}`}
-                        className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-                      >
-                        View
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <>
+  {/* Desktop table */}
+  <table className="hidden md:table w-full">
+    <thead>
+      <tr className="border-b border-gray-800">
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Name
+        </th>
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Reg No.
+        </th>
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Category
+        </th>
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Position
+        </th>
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Dept
+        </th>
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Year
+        </th>
+        <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">
+          Timetable
+        </th>
+      </tr>
+    </thead>
+
+    <tbody className="divide-y divide-gray-800">
+      {results.map((member) => (
+        <tr
+          key={member.id}
+          className="hover:bg-white/5 transition-colors"
+        >
+          <td className="px-6 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-purple-400 text-xs font-semibold">
+                  {member.fullName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+
+              <div>
+                <p className="text-white text-sm font-medium">
+                  {member.fullName}
+                </p>
+                <p className="text-gray-500 text-xs">
+                  {member.email}
+                </p>
+              </div>
+            </div>
+          </td>
+
+          <td className="px-6 py-4">
+            <span className="text-gray-300 text-sm font-mono">
+              {member.registerNumber}
+            </span>
+          </td>
+
+          <td className="px-6 py-4">
+            <span
+              className={`text-xs font-medium px-2 py-1 rounded-md ${getCategoryStyle(
+                member.category
+              )}`}
+            >
+              {getCategoryLabel(member.category)}
+            </span>
+          </td>
+
+          <td className="px-6 py-4">
+            <span className="text-gray-300 text-sm">
+              {member.position}
+            </span>
+          </td>
+
+          <td className="px-6 py-4">
+            <span className="text-gray-300 text-sm">
+              {member.department}
+            </span>
+          </td>
+
+          <td className="px-6 py-4">
+            <span className="text-gray-300 text-sm">
+              Year {member.academicYear}
+            </span>
+          </td>
+
+          <td className="px-6 py-4">
+            <Link
+              href={`/timetable/${member.id}`}
+              className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              View
+            </Link>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  {/* Mobile cards */}
+  <div className="md:hidden divide-y divide-gray-800">
+    {results.map((member) => (
+      <div key={member.id} className="px-4 py-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+              <span className="text-purple-400 text-xs font-semibold">
+                {member.fullName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-white text-sm font-medium truncate">
+                {member.fullName}
+              </p>
+
+              <p className="text-gray-500 text-xs truncate">
+                {member.registerNumber} • {member.department}
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href={`/timetable/${member.id}`}
+            className="text-xs text-purple-400 hover:text-purple-300 transition-colors flex-shrink-0"
+          >
+            View
+          </Link>
+        </div>
+
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <span
+            className={`text-xs font-medium px-2 py-1 rounded-md ${getCategoryStyle(
+              member.category
+            )}`}
+          >
+            {getCategoryLabel(member.category)}
+          </span>
+
+          <span className="text-gray-500 text-xs">
+            {member.position}
+          </span>
+
+          <span className="text-gray-500 text-xs">
+            Year {member.academicYear}
+          </span>
+        </div>
+      </div>
+    ))}
+  </div>
+</>
           )}
 
         </div>
