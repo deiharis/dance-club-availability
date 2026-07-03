@@ -9,11 +9,10 @@ export async function GET(req: Request) {
 
     const query = searchParams.get("query") || "";
     const category = searchParams.get("category") || "";
+    const isFFCS = searchParams.get("isFFCS") || "";
     const department = searchParams.get("department") || "";
     const academicYear = searchParams.get("academicYear") || "";
     const day = searchParams.get("day") || "";
-
-    // Multiple slots come as a comma separated list, e.g. "T1,T3,T8"
     const slotsParam = searchParams.get("slots") || "";
     const slots = slotsParam
       .split(",")
@@ -31,7 +30,14 @@ export async function GET(req: Request) {
     }
 
     if (category) {
-      where.category = category;
+      const validCategories = ["CORE", "MEMBER", "DANCER", "FFCS_ONLY"];
+      if (validCategories.includes(category)) {
+        where.category = category;
+      }
+    }
+
+    if (isFFCS === "true") {
+      where.isFFCS = true;
     }
 
     if (department) {
@@ -42,8 +48,6 @@ export async function GET(req: Request) {
       where.academicYear = parseInt(academicYear);
     }
 
-    // Member must be FREE during EVERY selected slot on the selected day.
-    // We exclude anyone who has a CLASS entry on ANY of the selected slots.
     if (day && slots.length > 0) {
       where.NOT = {
         timetableEntries: {

@@ -13,6 +13,10 @@ export async function GET() {
     const allEntries = await db.timetableEntry.findMany();
 
     const totalMembers = members.length;
+    const totalCore = members.filter((m) => m.category === "CORE").length;
+    const totalDancer = members.filter((m) => m.category === "DANCER").length;
+    const totalFFCSOnly = members.filter((m) => m.category === "FFCS_ONLY").length;
+    const totalFFCSEnrolled = members.filter((m) => m.isFFCS).length;
 
     // ── Heatmap data: for every day+slot, how many members are FREE ──
     const heatmap: { day: string; slot: string; freeCount: number; percentage: number }[] = [];
@@ -85,6 +89,10 @@ export async function GET() {
 
     return NextResponse.json({
       totalMembers,
+      totalCore,
+      totalDancer,
+      totalFFCSOnly,
+      totalFFCSEnrolled,
       heatmap,
       bestSlot,
       mostAvailableDay,

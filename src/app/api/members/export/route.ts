@@ -4,7 +4,8 @@ import * as XLSX from "xlsx";
 
 function getCategoryLabel(category: string) {
   if (category === "CORE") return "Core Members";
-  if (category === "FFCS") return "FFCS";
+  if (category === "DANCER") return "Dancers";
+  if (category === "FFCS_ONLY") return "FFCS Only";
   return "Normal Members";
 }
 
@@ -22,6 +23,7 @@ export async function GET() {
       "Department": m.department,
       "Academic Year": m.academicYear,
       "Category": getCategoryLabel(m.category),
+      "FFCS Enrolled": m.isFFCS ? "Yes" : "No",
       "Position": m.position,
     }));
 
@@ -29,16 +31,16 @@ export async function GET() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
 
-    // Auto-width columns
     worksheet["!cols"] = [
-      { wch: 22 }, // Full Name
-      { wch: 18 }, // Register Number
-      { wch: 28 }, // Email
-      { wch: 14 }, // Phone
-      { wch: 14 }, // Department
-      { wch: 14 }, // Academic Year
-      { wch: 16 }, // Category
-      { wch: 20 }, // Position
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 28 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 14 },
+      { wch: 16 },
+      { wch: 14 },
+      { wch: 20 },
     ];
 
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
@@ -46,18 +48,12 @@ export async function GET() {
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type":
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="members-${new Date()
-          .toISOString()
-          .slice(0, 10)}.xlsx"`,
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="members-${new Date().toISOString().slice(0, 10)}.xlsx"`,
       },
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
 }

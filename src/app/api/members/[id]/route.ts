@@ -1,6 +1,8 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
@@ -18,7 +20,7 @@ export async function GET(
     }
 
     return NextResponse.json(member);
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
@@ -41,10 +43,44 @@ export async function PATCH(
       department,
       academicYear,
       category,
+      isFFCS,
       position,
     } = body;
 
-    const member = await db.member.update({
+    // Validate category
+    const validCategories = ["CORE", "MEMBER", "DANCER", "FFCS_ONLY"];
+    if (category && !validCategories.includes(category)) {
+      return NextResponse.json(
+        { error: "Invalid category" },
+        { status: 400 }
+      );
+    }
+
+    // FFCS_ONLY always has isFFCS = true
+    const finalIsFFCS = category === "FFCS_ONLY" ? true : Boolean(isFFCS);
+
+    // Update role on user record if category changed
+    const newRole = category === "CORE" ? "ADMIN" : "MEMBER";
+
+    const member = await db.member.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!member) {
+      return NextResponse.json(
+        { error: "Member not found" },
+        { status: 404 }
+      );
+    }
+
+    // Update user role
+    await db.user.update({
+      where: { id: member.userId },
+      data: { role: newRole },
+    });
+
+    // Update member
+    const updated = await db.member.update({
       where: { id: params.id },
       data: {
         fullName,
@@ -54,12 +90,13 @@ export async function PATCH(
         department,
         academicYear: parseInt(academicYear),
         category,
+        isFFCS: finalIsFFCS,
         position,
       },
     });
 
-    return NextResponse.json(member);
-  } catch (error) {
+    return NextResponse.json(updated);
+  } catch {
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }
@@ -88,7 +125,7 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

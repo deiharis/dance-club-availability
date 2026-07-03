@@ -21,6 +21,7 @@ export default function EditMemberPage() {
     department: "",
     academicYear: "1",
     category: "MEMBER",
+    isFFCS: false,
     position: "",
   });
 
@@ -36,6 +37,7 @@ export default function EditMemberPage() {
           department: data.department ?? "",
           academicYear: String(data.academicYear ?? "1"),
           category: data.category ?? "MEMBER",
+          isFFCS: data.isFFCS ?? false,
           position: data.position ?? "",
         });
         setFetching(false);
@@ -49,7 +51,12 @@ export default function EditMemberPage() {
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const target = e.target;
+    if (target instanceof HTMLInputElement && target.type === "checkbox") {
+      setForm({ ...form, [target.name]: target.checked });
+    } else {
+      setForm({ ...form, [target.name]: target.value });
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -57,10 +64,13 @@ export default function EditMemberPage() {
     setLoading(true);
     setError("");
 
+    const finalIsFFCS =
+      form.category === "FFCS_ONLY" ? true : form.isFFCS;
+
     const res = await fetch(`/api/members/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
+      body: JSON.stringify({ ...form, isFFCS: finalIsFFCS }),
     });
 
     const data = await res.json();
@@ -82,11 +92,14 @@ export default function EditMemberPage() {
     );
   }
 
+  const isFFCSOnly = form.category === "FFCS_ONLY";
+
   return (
     <div>
-
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-8 py-4 flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-white">Edit Member</h1>
+      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4 flex items-center justify-between">
+        <h1 className="text-base sm:text-lg font-semibold text-white">
+          Edit Member
+        </h1>
         <Link
           href="/members"
           className="text-sm text-gray-400 hover:text-white transition-colors"
@@ -95,8 +108,8 @@ export default function EditMemberPage() {
         </Link>
       </div>
 
-      <div className="p-8 max-w-2xl">
-        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-8">
+      <div className="p-4 sm:p-8 max-w-2xl">
+        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
 
             <div>
@@ -121,7 +134,7 @@ export default function EditMemberPage() {
                 value={form.registerNumber}
                 onChange={handleChange}
                 required
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm font-mono"
+                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white font-mono focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -135,7 +148,7 @@ export default function EditMemberPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -150,7 +163,7 @@ export default function EditMemberPage() {
                 name="phone"
                 value={form.phone}
                 onChange={handleChange}
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -163,7 +176,7 @@ export default function EditMemberPage() {
                 value={form.department}
                 onChange={handleChange}
                 required
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -192,14 +205,43 @@ export default function EditMemberPage() {
                 <select
                   name="category"
                   value={form.category}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setForm((prev) => ({
+                      ...prev,
+                      category: val,
+                      isFFCS: val === "FFCS_ONLY" ? true : prev.isFFCS,
+                    }));
+                  }}
                   className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
-                  <option value="MEMBER">Normal Members</option>
-                  <option value="CORE">Core Members</option>
-                  <option value="FFCS">FFCS</option>
+                  <option value="MEMBER">Normal Member</option>
+                  <option value="CORE">Core Member</option>
+                  <option value="DANCER">Dancer</option>
+                  <option value="FFCS_ONLY">FFCS Only</option>
                 </select>
               </div>
+            </div>
+
+            {/* FFCS Checkbox */}
+            <div className="flex items-center gap-3 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
+              <input
+                type="checkbox"
+                name="isFFCS"
+                id="isFFCS"
+                checked={isFFCSOnly ? true : form.isFFCS}
+                disabled={isFFCSOnly}
+                onChange={handleChange}
+                className="w-4 h-4 accent-purple-500"
+              />
+              <label htmlFor="isFFCS" className="text-sm text-gray-300">
+                Enrolled in FFCS programme
+              </label>
+              {isFFCSOnly && (
+                <span className="text-xs text-purple-400 ml-auto">
+                  Auto-set for FFCS Only
+                </span>
+              )}
             </div>
 
             <div>
@@ -241,7 +283,6 @@ export default function EditMemberPage() {
           </form>
         </div>
       </div>
-
     </div>
   );
 }

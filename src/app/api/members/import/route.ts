@@ -7,7 +7,7 @@ function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" 
   const v = value.trim().toLowerCase();
   if (v.includes("core")) return "CORE";
   if (v.includes("dancer")) return "DANCER";
-  if (v.includes("ffcs only") || v === "ffcs_only") return "FFCS_ONLY";
+  if (v === "ffcs only" || v === "ffcs_only") return "FFCS_ONLY";
   if (v.includes("ffcs")) return "FFCS_ONLY";
   return "MEMBER";
 }
@@ -18,10 +18,7 @@ export async function POST(req: Request) {
     const file = formData.get("file") as File | null;
 
     if (!file) {
-      return NextResponse.json(
-        { error: "No file uploaded" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
     const arrayBuffer = await file.arrayBuffer();
@@ -30,7 +27,7 @@ export async function POST(req: Request) {
     const workbook = XLSX.read(buffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
-    const rows: any[] = XLSX.utils.sheet_to_json(sheet);
+    const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet);
 
     let created = 0;
     let skipped = 0;
@@ -44,6 +41,9 @@ export async function POST(req: Request) {
       const department = row["Department"]?.toString().trim();
       const academicYear = parseInt(row["Academic Year"]) || 1;
       const category = mapCategory(row["Category"]?.toString() || "Normal Members");
+      const isFFCS =
+        category === "FFCS_ONLY" ||
+        row["FFCS Enrolled"]?.toString().trim().toLowerCase() === "yes";
       const position = row["Position"]?.toString().trim() || "Member";
 
       if (!fullName || !registerNumber || !email || !department) {
@@ -53,9 +53,7 @@ export async function POST(req: Request) {
       }
 
       const existingUser = await db.user.findUnique({ where: { email } });
-      const existingMember = await db.member.findUnique({
-        where: { registerNumber },
-      });
+      const existingMember = await db.member.findUnique({ where: { registerNumber } });
 
       if (existingUser || existingMember) {
         skipped++;
@@ -63,14 +61,14 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // Default password = register number (member should change it later)
       const hashedPassword = await bcrypt.hash(registerNumber, 12);
+      const role = category === "CORE" ? "ADMIN" : "MEMBER";
 
       await db.user.create({
         data: {
           email,
           password: hashedPassword,
-          role: category === "CORE" ? "ADMIN" : "MEMBER",
+          role,
           member: {
             create: {
               fullName,
@@ -80,6 +78,7 @@ export async function POST(req: Request) {
               department,
               academicYear,
               category,
+              isFFCS,
               position,
             },
           },
@@ -93,7 +92,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error(error);
     return NextResponse.json(
-      { error: "Failed to process file. Make sure it's a valid Excel file." },
+      { error: "Failed to process file. Make sure it is a valid Excel file." },
       { status: 500 }
     );
   }

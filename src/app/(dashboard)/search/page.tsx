@@ -19,14 +19,16 @@ interface Member {
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
 
 function getCategoryLabel(category: string) {
-  if (category === "CORE") return "Core Members";
-  if (category === "FFCS") return "FFCS";
-  return "Normal Members";
+  if (category === "CORE") return "Core";
+  if (category === "DANCER") return "Dancer";
+  if (category === "FFCS_ONLY") return "FFCS Only";
+  return "Member";
 }
 
 function getCategoryStyle(category: string) {
   if (category === "CORE") return "bg-purple-500/20 text-purple-400";
-  if (category === "FFCS") return "bg-blue-500/20 text-blue-400";
+  if (category === "DANCER") return "bg-pink-500/20 text-pink-400";
+  if (category === "FFCS_ONLY") return "bg-blue-500/20 text-blue-400";
   return "bg-gray-500/20 text-gray-400";
 }
 
@@ -37,6 +39,7 @@ export default function SearchPage() {
   const [academicYear, setAcademicYear] = useState("");
   const [day, setDay] = useState("");
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+  const [isFFCS, setIsFFCS] = useState("");
 
   const [results, setResults] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,6 +56,7 @@ export default function SearchPage() {
     if (academicYear) params.set("academicYear", academicYear);
     if (day) params.set("day", day);
     if (selectedSlots.length > 0) params.set("slots", selectedSlots.join(","));
+    if (isFFCS) params.set("isFFCS", isFFCS);
 
     const res = await fetch(`/api/search?${params.toString()}`, {
       cache: "no-store",
@@ -79,14 +83,14 @@ export default function SearchPage() {
   function clearFilters() {
     setQuery("");
     setCategory("");
+    setIsFFCS("");
     setDepartment("");
     setAcademicYear("");
     setDay("");
     setSelectedSlots([]);
   }
-
   const hasActiveFilters =
-    query || category || department || academicYear || day || selectedSlots.length > 0;
+    query || category || isFFCS || department || academicYear || day || selectedSlots.length > 0;
 
   return (
     <div>
@@ -118,7 +122,7 @@ export default function SearchPage() {
           </div>
 
           {/* Filter row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
 
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-1.5 block">
@@ -130,9 +134,10 @@ export default function SearchPage() {
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
                 <option value="">All</option>
-                <option value="CORE">Core Members</option>
-                <option value="MEMBER">Normal Members</option>
-                <option value="FFCS">FFCS</option>
+              <option value="CORE">Core Members</option>
+              <option value="MEMBER">Normal Members</option>
+              <option value="DANCER">Dancers</option>
+              <option value="FFCS_ONLY">FFCS Only</option>
               </select>
             </div>
 
@@ -164,7 +169,19 @@ export default function SearchPage() {
                 <option value="4">Year 4</option>
               </select>
             </div>
-
+            <div>
+              <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-1.5 block">
+                FFCS
+              </label>
+              <select
+                value={isFFCS}
+                onChange={(e) => setIsFFCS(e.target.value)}
+                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+              >
+                <option value="">All</option>
+                <option value="true">FFCS Enrolled</option>
+              </select>
+            </div>
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-1.5 block">
                 Day
