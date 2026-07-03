@@ -91,7 +91,7 @@ export default async function ProfilePage() {
 
         <div className="flex items-center gap-3">
           <Link
-            href="/reports"
+            href="/reports/submit"
             className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
           >
             <FileText size={16} />

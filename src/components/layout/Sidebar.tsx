@@ -58,6 +58,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
     { href: "/search", label: "Search", icon: Search, show: isAdminOrAbove },
     { href: "/analytics", label: "Analytics", icon: BarChart2, show: isAdminOrAbove },
     { href: "/reports/review", label: "Reports", icon: FileText, show: isAdminOrAbove },
+    { href: "/reports/submit", label: "My Reports", icon: FileText, show: true },
     { href: "/grades", label: "FFCS Grades", icon: GraduationCap, show: isSuperAdmin },
   ];
 

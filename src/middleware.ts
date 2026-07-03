@@ -37,8 +37,8 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // All logged-in users
-  if (pathname.startsWith("/profile") || pathname.startsWith("/reports")) {
+  // All logged-in users — reports submission is for everyone
+  if (pathname.startsWith("/profile") || pathname.startsWith("/reports/submit")) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
   }
 
