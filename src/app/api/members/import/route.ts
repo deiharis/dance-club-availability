@@ -3,10 +3,12 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import bcrypt from "bcryptjs";
 
-function mapCategory(value: string): "CORE" | "MEMBER" | "FFCS" {
+function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" {
   const v = value.trim().toLowerCase();
   if (v.includes("core")) return "CORE";
-  if (v.includes("ffcs")) return "FFCS";
+  if (v.includes("dancer")) return "DANCER";
+  if (v.includes("ffcs only") || v === "ffcs_only") return "FFCS_ONLY";
+  if (v.includes("ffcs")) return "FFCS_ONLY";
   return "MEMBER";
 }
 
