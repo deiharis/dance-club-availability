@@ -45,6 +45,7 @@ export async function PATCH(
       category,
       isFFCS,
       position,
+      danceTeam,
     } = body;
 
     // Validate category
@@ -52,6 +53,13 @@ export async function PATCH(
     if (category && !validCategories.includes(category)) {
       return NextResponse.json(
         { error: "Invalid category" },
+        { status: 400 }
+      );
+    }
+
+    if (category === "DANCER" && !danceTeam) {
+      return NextResponse.json(
+        { error: "Please select a dance team for Dancer members" },
         { status: 400 }
       );
     }
@@ -92,6 +100,7 @@ export async function PATCH(
         category,
         isFFCS: finalIsFFCS,
         position,
+        danceTeam: category === "DANCER" ? danceTeam : null,
       },
     });
 

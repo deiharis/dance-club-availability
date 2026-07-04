@@ -19,6 +19,7 @@ export default function AddMemberPage() {
     category: "MEMBER",
     isFFCS: false,
     position: "",
+    danceTeam: "",
     password: "",
   });
 
@@ -172,6 +173,7 @@ export default function AddMemberPage() {
                       ...prev,
                       category: val,
                       isFFCS: val === "FFCS_ONLY" ? true : prev.isFFCS,
+                      danceTeam: val !== "DANCER" ? "" : prev.danceTeam,
                     }));
                   }}
                   className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
@@ -183,7 +185,47 @@ export default function AddMemberPage() {
                 </select>
               </div>
             </div>
-
+            {/* Dance Team — only shown for Dancer category */}
+            {form.category === "DANCER" && (
+              <div>
+                <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+                  Dance Team <span className="text-red-400 normal-case font-normal">(required)</span>
+                </label>
+                <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-2">
+                  {[
+                    "Laasya",
+                    "Xemius",
+                    "Powerhouse",
+                    "Majestic Swaggers",
+                    "Contemporary",
+                    "Taal",
+                    "Z Crew",
+                  ].map((team) => (
+                    <label
+                      key={team}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                        form.danceTeam === team
+                          ? "bg-purple-600/20 border border-purple-500/30"
+                          : "hover:bg-white/5 border border-transparent"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="danceTeam"
+                        value={team}
+                        checked={form.danceTeam === team}
+                        onChange={(e) =>
+                          setForm({ ...form, danceTeam: e.target.value })
+                        }
+                        className="w-4 h-4 accent-purple-500 flex-shrink-0"
+                        required
+                      />
+                      <span className="text-white text-sm">{team}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* FFCS Checkbox — auto checked and disabled for FFCS_ONLY */}
             <div className="flex items-center gap-3 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
               <input

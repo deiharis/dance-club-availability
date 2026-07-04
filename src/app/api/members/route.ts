@@ -25,12 +25,20 @@ export async function POST(req: Request) {
       category,
       isFFCS,
       position,
+      danceTeam,
       password,
     } = body;
 
     if (!fullName || !registerNumber || !email || !department || !position || !password || !category) {
       return NextResponse.json(
         { error: "All required fields must be filled" },
+        { status: 400 }
+      );
+    }
+
+    if (category === "DANCER" && !danceTeam) {
+      return NextResponse.json(
+        { error: "Please select a dance team for Dancer members" },
         { status: 400 }
       );
     }
@@ -76,6 +84,7 @@ export async function POST(req: Request) {
             category,
             isFFCS: finalIsFFCS,
             position,
+            danceTeam: category === "DANCER" ? danceTeam : null,
           },
         },
       },

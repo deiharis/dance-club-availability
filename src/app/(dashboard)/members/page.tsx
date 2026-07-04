@@ -14,7 +14,8 @@ interface Member {
   category: string;
   isFFCS: boolean;
   position: string;
-}
+  danceTeam: string | null;
+} 
 
 function getCategoryLabel(category: string) {
   if (category === "CORE") return "Core";
@@ -165,7 +166,14 @@ export default function MembersPage() {
                           )}
                         </div>
                       </td>
-                      <td className="px-6 py-4"><span className="text-gray-300 text-sm">{member.position}</span></td>
+                      <td className="px-6 py-4">
+                      <div>
+                        <span className="text-gray-300 text-sm">{member.position}</span>
+                        {member.category === "DANCER" && member.danceTeam && (
+                          <p className="text-pink-400 text-xs mt-0.5">{member.danceTeam}</p>
+                        )}
+                      </div>
+                    </td>
                       <td className="px-6 py-4"><span className="text-gray-300 text-sm">{member.department}</span></td>
                       <td className="px-6 py-4"><span className="text-gray-300 text-sm">Y{member.academicYear}</span></td>
                       <td className="px-6 py-4">
@@ -215,6 +223,9 @@ export default function MembersPage() {
                     <div>
                       <span className="text-gray-500">Position: </span>
                       <span className="text-gray-300">{member.position}</span>
+                      {member.category === "DANCER" && member.danceTeam && (
+                        <span className="text-pink-400 text-xs ml-1">· {member.danceTeam}</span>
+                      )}
                     </div>
                   </div>
                   <div className="mt-3 flex items-center gap-2 flex-wrap">
