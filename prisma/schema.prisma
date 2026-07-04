@@ -179,6 +179,7 @@ model ODRequest {
   id           String    @id @default(cuid())
   reason       String
   activityDate DateTime
+  slots        String[]  @default([])
   status       ODStatus  @default(PENDING)
   approvedAt   DateTime?
   createdAt    DateTime  @default(now())

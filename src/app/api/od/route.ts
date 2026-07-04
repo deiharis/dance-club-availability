@@ -15,7 +15,6 @@ export async function GET() {
     const role = (session.user as any).role;
     const userId = (session.user as any).id;
 
-    // SuperAdmin sees all OD requests
     if (role === "SUPERADMIN") {
       const requests = await db.oDRequest.findMany({
         orderBy: { createdAt: "desc" },
@@ -40,7 +39,6 @@ export async function GET() {
       return NextResponse.json(requests);
     }
 
-    // Members see only their own OD requests
     const member = await db.member.findUnique({ where: { userId } });
     if (!member) {
       return NextResponse.json([], { status: 200 });
@@ -86,7 +84,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Only CORE and MEMBER categories can request OD
     if (member.category !== "CORE" && member.category !== "MEMBER") {
       return NextResponse.json(
         { error: "Only Core Members and Normal Members can request OD" },
@@ -94,7 +91,9 @@ export async function POST(req: Request) {
       );
     }
 
-    const { reportId, reason } = await req.json();
+    // Read the body exactly once
+    const body = await req.json();
+    const { reportId, reason, slots } = body;
 
     if (!reportId || !reason?.trim()) {
       return NextResponse.json(
@@ -103,7 +102,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Verify the report exists, belongs to this member, and is APPROVED
     const report = await db.report.findUnique({
       where: { id: reportId },
     });
@@ -129,7 +127,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check if OD already requested for this report
     const existing = await db.oDRequest.findUnique({
       where: { reportId },
     });
@@ -147,6 +144,7 @@ export async function POST(req: Request) {
         reportId,
         reason: reason.trim(),
         activityDate: report.workDate,
+        slots: Array.isArray(slots) ? slots : [],
       },
     });
 

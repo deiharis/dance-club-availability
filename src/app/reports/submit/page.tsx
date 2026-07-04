@@ -33,6 +33,7 @@ interface ODRequest {
   id: string;
   reason: string;
   activityDate: string;
+  slots: string[];
   status: string;
   approvedAt: string | null;
   report: {
@@ -40,7 +41,6 @@ interface ODRequest {
     workDate: string;
   };
 }
-
 function StatusBadge({ status }: { status: string }) {
   if (status === "APPROVED") {
     return (
@@ -101,6 +101,7 @@ export default function SubmitReportPage() {
   const [odForm, setODForm] = useState({
     reportId: "",
     reason: "",
+    slots: [] as string[],
   });
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -223,7 +224,7 @@ export default function SubmitReportPage() {
     setODSuccess(
       "OD request submitted. The Super Admin will mark it as approved once the college grants the OD."
     );
-    setODForm({ reportId: "", reason: "" });
+    setODForm({ reportId: "", reason: "", slots: [] });
     loadAll();
   }
 
@@ -501,7 +502,65 @@ export default function SubmitReportPage() {
                       ))}
                     </select>
                   </div>
-
+                  <div>
+                    <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+                      Time Slots Needed{" "}
+                      {odForm.slots.length > 0 && (
+                        <span className="text-purple-400 normal-case font-normal">
+                          ({odForm.slots.length} selected)
+                        </span>
+                      )}
+                    </label>
+                    <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-2 max-h-52 overflow-y-auto">
+                      {[
+                        { label: "T1", time: "08:00 AM to 08:50 AM" },
+                        { label: "T2", time: "08:55 AM to 09:45 AM" },
+                        { label: "T3", time: "09:50 AM to 10:40 AM" },
+                        { label: "T4", time: "10:45 AM to 11:35 AM" },
+                        { label: "T5", time: "11:40 AM to 12:30 PM" },
+                        { label: "T6", time: "12:35 PM to 01:25 PM" },
+                        { label: "Lunch", time: "01:25 PM to 02:00 PM" },
+                        { label: "T7", time: "02:00 PM to 02:50 PM" },
+                        { label: "T8", time: "02:55 PM to 03:45 PM" },
+                        { label: "T9", time: "03:50 PM to 04:40 PM" },
+                        { label: "T10", time: "04:45 PM to 05:35 PM" },
+                        { label: "T11", time: "05:40 PM to 06:30 PM" },
+                        { label: "T12", time: "06:35 PM to 07:25 PM" },
+                      ].map((slot) => {
+                        const value = `${slot.time}`;
+                        const checked = odForm.slots.includes(value);
+                        return (
+                          <label
+                            key={slot.label}
+                            className={`flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-colors ${
+                              checked
+                                ? "bg-purple-600/20 border border-purple-500/30"
+                                : "hover:bg-white/5 border border-transparent"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => {
+                                setODForm((prev) => ({
+                                  ...prev,
+                                  slots: checked
+                                    ? prev.slots.filter((s) => s !== value)
+                                    : [...prev.slots, value],
+                                }));
+                              }}
+                              className="w-4 h-4 accent-purple-500 flex-shrink-0"
+                            />
+                            <div>
+                              <span className="text-white text-xs font-medium">
+                                {slot.time}
+                              </span>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
                   <div>
                     <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                       OD Reason
@@ -592,6 +651,18 @@ export default function SubmitReportPage() {
                             Report: {od.report.description.slice(0, 60)}
                             {od.report.description.length > 60 ? "..." : ""}
                           </p>
+                          {od.slots && od.slots.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-1.5">
+                              {od.slots.map((slot) => (
+                                <span
+                                  key={slot}
+                                  className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-300"
+                                >
+                                  {slot}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                           {od.status === "APPROVED" && od.approvedAt && (
                             <p className="text-green-400 text-xs mt-1">
                               OD approved on{" "}

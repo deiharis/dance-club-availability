@@ -7,6 +7,7 @@ interface ODRequest {
   id: string;
   reason: string;
   activityDate: string;
+  slots: string[];
   status: string;
   approvedAt: string | null;
   createdAt: string;
@@ -194,6 +195,24 @@ export default function ODManagementPage() {
                     </p>
                     <p className="text-white text-sm">{req.reason}</p>
                   </div>
+
+                  {req.slots && req.slots.length > 0 && (
+                    <div>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-1.5">
+                        Requested Time Slots
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {req.slots.map((slot) => (
+                          <span
+                            key={slot}
+                            className="text-xs font-medium px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30"
+                          >
+                            {slot}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   <div className="pt-2 border-t border-gray-800">
                     <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
                       Linked Report
