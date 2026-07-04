@@ -14,8 +14,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
 
-  // SUPERADMIN only routes
-  if (pathname.startsWith("/grades")) {
+ // SUPERADMIN only routes
+  if (pathname.startsWith("/grades") || pathname.startsWith("/od")) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
     if (token.role !== "SUPERADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -54,6 +54,7 @@ export const config = {
     "/search/:path*",
     "/analytics/:path*",
     "/grades/:path*",
+    "/od/:path*",
     "/reports/:path*",
     "/profile/:path*",
   ],

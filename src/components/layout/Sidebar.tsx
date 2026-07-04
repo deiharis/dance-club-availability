@@ -14,6 +14,7 @@ import {
   GraduationCap,
   Menu,
   X,
+  FileBadge,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -60,6 +61,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
     { href: "/reports/review", label: "Reports", icon: FileText, show: isAdminOrAbove },
     { href: "/reports/submit", label: "My Reports", icon: FileText, show: true },
     { href: "/grades", label: "FFCS Grades", icon: GraduationCap, show: isSuperAdmin },
+    { href: "/od", label: "OD Requests", icon: FileBadge, show: isSuperAdmin },
   ];
 
   const SidebarContent = () => (

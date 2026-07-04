@@ -1,0 +1,161 @@
+import { db } from "@/lib/db";
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const role = (session.user as any).role;
+    const userId = (session.user as any).id;
+
+    // SuperAdmin sees all OD requests
+    if (role === "SUPERADMIN") {
+      const requests = await db.oDRequest.findMany({
+        orderBy: { createdAt: "desc" },
+        include: {
+          member: {
+            select: {
+              fullName: true,
+              registerNumber: true,
+              department: true,
+              category: true,
+              position: true,
+            },
+          },
+          report: {
+            select: {
+              description: true,
+              workDate: true,
+            },
+          },
+        },
+      });
+      return NextResponse.json(requests);
+    }
+
+    // Members see only their own OD requests
+    const member = await db.member.findUnique({ where: { userId } });
+    if (!member) {
+      return NextResponse.json([], { status: 200 });
+    }
+
+    const requests = await db.oDRequest.findMany({
+      where: { memberId: member.id },
+      orderBy: { createdAt: "desc" },
+      include: {
+        report: {
+          select: {
+            description: true,
+            workDate: true,
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(requests);
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const userId = (session.user as any).id;
+
+    const member = await db.member.findUnique({ where: { userId } });
+    if (!member) {
+      return NextResponse.json(
+        { error: "Member profile not found" },
+        { status: 404 }
+      );
+    }
+
+    // Only CORE and MEMBER categories can request OD
+    if (member.category !== "CORE" && member.category !== "MEMBER") {
+      return NextResponse.json(
+        { error: "Only Core Members and Normal Members can request OD" },
+        { status: 403 }
+      );
+    }
+
+    const { reportId, reason } = await req.json();
+
+    if (!reportId || !reason?.trim()) {
+      return NextResponse.json(
+        { error: "Report and reason are required" },
+        { status: 400 }
+      );
+    }
+
+    // Verify the report exists, belongs to this member, and is APPROVED
+    const report = await db.report.findUnique({
+      where: { id: reportId },
+    });
+
+    if (!report) {
+      return NextResponse.json(
+        { error: "Report not found" },
+        { status: 404 }
+      );
+    }
+
+    if (report.memberId !== member.id) {
+      return NextResponse.json(
+        { error: "You can only request OD for your own reports" },
+        { status: 403 }
+      );
+    }
+
+    if (report.status !== "APPROVED") {
+      return NextResponse.json(
+        { error: "OD can only be requested for approved reports" },
+        { status: 400 }
+      );
+    }
+
+    // Check if OD already requested for this report
+    const existing = await db.oDRequest.findUnique({
+      where: { reportId },
+    });
+
+    if (existing) {
+      return NextResponse.json(
+        { error: "An OD request already exists for this report" },
+        { status: 400 }
+      );
+    }
+
+    const odRequest = await db.oDRequest.create({
+      data: {
+        memberId: member.id,
+        reportId,
+        reason: reason.trim(),
+        activityDate: report.workDate,
+      },
+    });
+
+    return NextResponse.json(odRequest, { status: 201 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
+  }
+}

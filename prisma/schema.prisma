@@ -65,9 +65,10 @@ model Member {
 
   timetableEntries TimetableEntry[]
   ffcsGrades       FFCSGrade[]
-  reports          Report[]       @relation("SubmittedReports")
-  reviewedReports  Report[]       @relation("ReviewedReports")
+  reports          Report[]         @relation("SubmittedReports")
+  reviewedReports  Report[]         @relation("ReviewedReports")
   notifications    Notification[]
+  odRequests       ODRequest[]
 }
 
 // ─── TIMETABLE ──────────────────────────────────────────
@@ -145,6 +146,7 @@ model Report {
   reviewedBy   Member? @relation("ReviewedReports", fields: [reviewedById], references: [id])
 
   notification Notification?
+  odRequest    ODRequest?
 }
 
 // ─── NOTIFICATIONS ──────────────────────────────────────
@@ -165,4 +167,25 @@ model Notification {
 
   reportId String? @unique
   report   Report? @relation(fields: [reportId], references: [id], onDelete: SetNull)
+}
+
+// ─── OD REQUESTS ────────────────────────────────────────
+enum ODStatus {
+  PENDING
+  APPROVED
+}
+
+model ODRequest {
+  id           String    @id @default(cuid())
+  reason       String
+  activityDate DateTime
+  status       ODStatus  @default(PENDING)
+  approvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  reportId String  @unique
+  report   Report  @relation(fields: [reportId], references: [id], onDelete: Cascade)
 }
