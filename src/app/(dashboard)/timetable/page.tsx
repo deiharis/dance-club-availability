@@ -48,13 +48,13 @@ async function MemberTimetable({
   member,
 }: {
   member: {
-    id: string;
-    fullName: string;
-    registerNumber: string;
-    department: string;
-    position: string;
-    category: string;
-  };
+  id: string;
+  fullName: string;
+  registerNumber: string;
+  department: string;
+  position: string | null;
+  category: string;
+};
 }) {
   const entries = await db.timetableEntry.findMany({
     where: { memberId: member.id },
@@ -77,9 +77,9 @@ async function MemberTimetable({
             </p>
 
             <p className="text-gray-500 text-xs">
-              {member.registerNumber} · {member.department} ·{" "}
-              {member.position}
-            </p>
+  {member.registerNumber} · {member.department}
+  {member.position && ` · ${member.position}`}
+</p>
           </div>
         </div>
 
