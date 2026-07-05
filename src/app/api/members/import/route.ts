@@ -2,6 +2,12 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import bcrypt from "bcryptjs";
+import {
+  CORE_TEAMS,
+  MEMBER_TEAMS,
+  DANCER_TEAMS,
+  DANCER_ROLES,
+} from "@/lib/teams";
 
 function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" {
   const v = value.trim().toLowerCase();
@@ -10,6 +16,18 @@ function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" 
   if (v === "ffcs only" || v === "ffcs_only") return "FFCS_ONLY";
   if (v.includes("ffcs")) return "FFCS_ONLY";
   return "MEMBER";
+}
+
+function validatePosition(category: string, position: string): boolean {
+  if (category === "CORE") return CORE_TEAMS.includes(position);
+  if (category === "MEMBER") return MEMBER_TEAMS.includes(position);
+  if (category === "DANCER") return DANCER_ROLES.includes(position);
+  return true; // FFCS_ONLY has no position requirement
+}
+
+function validateTeam(category: string, team: string): boolean {
+  if (category === "DANCER") return DANCER_TEAMS.includes(team);
+  return true;
 }
 
 export async function POST(req: Request) {
@@ -44,12 +62,23 @@ export async function POST(req: Request) {
       const isFFCS =
         category === "FFCS_ONLY" ||
         row["FFCS Enrolled"]?.toString().trim().toLowerCase() === "yes";
-      const position = row["Position"]?.toString().trim() || "Member";
+      const position = row["Position"]?.toString().trim() || null;
+      const team = row["Team"]?.toString().trim() || null;
 
       if (!fullName || !registerNumber || !email || !department) {
         skipped++;
         errors.push(`Skipped row — missing required fields (${fullName || "unnamed"})`);
         continue;
+      }
+
+      // Validate position for non-FFCS_ONLY members
+      if (category !== "FFCS_ONLY" && position && !validatePosition(category, position)) {
+        errors.push(`Warning: "${position}" is not a valid position for ${category} — imported anyway`);
+      }
+
+      // Validate team for dancers
+      if (category === "DANCER" && team && !validateTeam(category, team)) {
+        errors.push(`Warning: "${team}" is not a valid dance team — imported anyway`);
       }
 
       const existingUser = await db.user.findUnique({ where: { email } });
@@ -62,7 +91,11 @@ export async function POST(req: Request) {
       }
 
       const hashedPassword = await bcrypt.hash(registerNumber, 12);
-      const role = category === "CORE" ? "ADMIN" : "MEMBER";
+
+      // Role logic
+      let role: "ADMIN" | "MEMBER" = "MEMBER";
+      if (category === "CORE") role = "ADMIN";
+      if (category === "DANCER" && position === "Team Leader") role = "ADMIN";
 
       await db.user.create({
         data: {
@@ -79,7 +112,8 @@ export async function POST(req: Request) {
               academicYear,
               category,
               isFFCS,
-              position,
+              position: category !== "FFCS_ONLY" ? position : null,
+              team: category === "DANCER" ? team : null,
             },
           },
         },

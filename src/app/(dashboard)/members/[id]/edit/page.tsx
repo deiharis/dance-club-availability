@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
+import TeamSelector from "@/components/ui/TeamSelector";
+import { getTeamsForCategory, DANCER_ROLES } from "@/lib/teams";
 
 export default function EditMemberPage() {
   const router = useRouter();
@@ -23,7 +25,7 @@ export default function EditMemberPage() {
     category: "MEMBER",
     isFFCS: false,
     position: "",
-    danceTeam: "",
+    team: "",
   });
 
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function EditMemberPage() {
           category: data.category ?? "MEMBER",
           isFFCS: data.isFFCS ?? false,
           position: data.position ?? "",
-          danceTeam: data.danceTeam ?? "",
+          team: data.team ?? "",
         });
         setFetching(false);
       })
@@ -49,17 +51,6 @@ export default function EditMemberPage() {
         setFetching(false);
       });
   }, [id]);
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) {
-    const target = e.target;
-    if (target instanceof HTMLInputElement && target.type === "checkbox") {
-      setForm({ ...form, [target.name]: target.checked });
-    } else {
-      setForm({ ...form, [target.name]: target.value });
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -95,6 +86,10 @@ export default function EditMemberPage() {
   }
 
   const isFFCSOnly = form.category === "FFCS_ONLY";
+  const isDancer = form.category === "DANCER";
+  const isCoreOrMember =
+    form.category === "CORE" || form.category === "MEMBER";
+  const positionOptions = getTeamsForCategory(form.category);
 
   return (
     <div>
@@ -121,9 +116,11 @@ export default function EditMemberPage() {
               <input
                 name="fullName"
                 value={form.fullName}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, fullName: e.target.value })
+                }
                 required
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -134,7 +131,9 @@ export default function EditMemberPage() {
               <input
                 name="registerNumber"
                 value={form.registerNumber}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, registerNumber: e.target.value })
+                }
                 required
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white font-mono focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
@@ -148,7 +147,9 @@ export default function EditMemberPage() {
                 name="email"
                 type="email"
                 value={form.email}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, email: e.target.value })
+                }
                 required
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
@@ -164,7 +165,9 @@ export default function EditMemberPage() {
               <input
                 name="phone"
                 value={form.phone}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, phone: e.target.value })
+                }
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
@@ -176,7 +179,9 @@ export default function EditMemberPage() {
               <input
                 name="department"
                 value={form.department}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, department: e.target.value })
+                }
                 required
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
@@ -188,9 +193,10 @@ export default function EditMemberPage() {
                   Academic Year
                 </label>
                 <select
-                  name="academicYear"
                   value={form.academicYear}
-                  onChange={handleChange}
+                  onChange={(e) =>
+                    setForm({ ...form, academicYear: e.target.value })
+                  }
                   className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="1">Year 1</option>
@@ -205,15 +211,15 @@ export default function EditMemberPage() {
                   Category
                 </label>
                 <select
-                  name="category"
                   value={form.category}
                   onChange={(e) => {
-                    const val = e.target.value;
                     setForm((prev) => ({
                       ...prev,
-                      category: val,
-                      isFFCS: val === "FFCS_ONLY" ? true : prev.isFFCS,
-                      danceTeam: val !== "DANCER" ? "" : prev.danceTeam,
+                      category: e.target.value,
+                      isFFCS:
+                        e.target.value === "FFCS_ONLY" ? true : prev.isFFCS,
+                      position: "",
+                      team: "",
                     }));
                   }}
                   className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
@@ -225,47 +231,85 @@ export default function EditMemberPage() {
                 </select>
               </div>
             </div>
-            {/* Dance Team — only shown for Dancer category */}
-            {form.category === "DANCER" && (
+
+            {/* CORE / MEMBER: position from their team list */}
+            {isCoreOrMember && (
               <div>
                 <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
-                  Dance Team <span className="text-red-400 normal-case font-normal">(required)</span>
+                  Position{" "}
+                  <span className="text-red-400 normal-case font-normal">
+                    (required)
+                  </span>
                 </label>
-                <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-2">
-                  {[
-                    "Laasya",
-                    "Xemius",
-                    "Powerhouse",
-                    "Majestic Swaggers",
-                    "Contemporary",
-                    "Taal",
-                    "Z Crew",
-                  ].map((team) => (
-                    <label
-                      key={team}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                        form.danceTeam === team
-                          ? "bg-purple-600/20 border border-purple-500/30"
-                          : "hover:bg-white/5 border border-transparent"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="danceTeam"
-                        value={team}
-                        checked={form.danceTeam === team}
-                        onChange={(e) =>
-                          setForm({ ...form, danceTeam: e.target.value })
-                        }
-                        className="w-4 h-4 accent-purple-500 flex-shrink-0"
-                        required
-                      />
-                      <span className="text-white text-sm">{team}</span>
-                    </label>
+                <select
+                  value={form.position}
+                  onChange={(e) =>
+                    setForm({ ...form, position: e.target.value })
+                  }
+                  required
+                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                >
+                  <option value="">Select a position...</option>
+                  {positionOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
             )}
+
+            {/* DANCER: dance team + role */}
+            {isDancer && (
+              <>
+                <TeamSelector
+                  category="DANCER"
+                  value={form.team}
+                  onChange={(team) => setForm({ ...form, team })}
+                />
+                <div>
+                  <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+                    Dancer Role{" "}
+                    <span className="text-red-400 normal-case font-normal">
+                      (required)
+                    </span>
+                  </label>
+                  <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-1.5">
+                    {DANCER_ROLES.map((role) => (
+                      <label
+                        key={role}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                          form.position === role
+                            ? "bg-purple-600/20 border border-purple-500/30"
+                            : "hover:bg-white/5 border border-transparent"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="position"
+                          value={role}
+                          checked={form.position === role}
+                          onChange={(e) =>
+                            setForm({ ...form, position: e.target.value })
+                          }
+                          className="w-4 h-4 accent-purple-500 flex-shrink-0"
+                          required
+                        />
+                        <div>
+                          <span className="text-white text-sm">{role}</span>
+                          {role === "Team Leader" && (
+                            <span className="ml-2 text-xs text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
+                              Admin access
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
             {/* FFCS Checkbox */}
             <div className="flex items-center gap-3 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
               <input
@@ -274,7 +318,9 @@ export default function EditMemberPage() {
                 id="isFFCS"
                 checked={isFFCSOnly ? true : form.isFFCS}
                 disabled={isFFCSOnly}
-                onChange={handleChange}
+                onChange={(e) =>
+                  setForm({ ...form, isFFCS: e.target.checked })
+                }
                 className="w-4 h-4 accent-purple-500"
               />
               <label htmlFor="isFFCS" className="text-sm text-gray-300">
@@ -285,20 +331,6 @@ export default function EditMemberPage() {
                   Auto-set for FFCS Only
                 </span>
               )}
-            </div>
-
-            <div>
-              <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
-                Position
-              </label>
-              <input
-                name="position"
-                value={form.position}
-                onChange={handleChange}
-                required
-                placeholder="e.g. President, Dance Captain"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
-              />
             </div>
 
             {error && (

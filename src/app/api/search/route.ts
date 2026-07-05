@@ -12,12 +12,11 @@ export async function GET(req: Request) {
     const isFFCS = searchParams.get("isFFCS") || "";
     const department = searchParams.get("department") || "";
     const academicYear = searchParams.get("academicYear") || "";
+    const position = searchParams.get("position") || "";
+    const team = searchParams.get("team") || "";
     const day = searchParams.get("day") || "";
     const slotsParam = searchParams.get("slots") || "";
-    const slots = slotsParam
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const slots = slotsParam.split(",").map((s) => s.trim()).filter(Boolean);
 
     const where: Record<string, unknown> = {};
 
@@ -46,6 +45,16 @@ export async function GET(req: Request) {
 
     if (academicYear) {
       where.academicYear = parseInt(academicYear);
+    }
+
+    // Position filter — applies to CORE and MEMBER categories
+    if (position) {
+      where.position = position;
+    }
+
+    // Team filter — applies to DANCER category
+    if (team) {
+      where.team = team;
     }
 
     if (day && slots.length > 0) {

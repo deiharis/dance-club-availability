@@ -4,6 +4,12 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Search as SearchIcon, X, SlidersHorizontal } from "lucide-react";
 import { SLOTS, DAYS, DAY_LABELS } from "@/lib/timetable";
+import {
+  CORE_TEAMS,
+  MEMBER_TEAMS,
+  DANCER_TEAMS,
+  DANCER_ROLES,
+} from "@/lib/teams";
 
 interface Member {
   id: string;
@@ -14,7 +20,8 @@ interface Member {
   academicYear: number;
   category: string;
   isFFCS: boolean;
-  position: string;
+  position: string | null;
+  team: string | null;
 }
 
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
@@ -39,17 +46,15 @@ const EMPTY_FILTERS = {
   isFFCS: "",
   department: "",
   academicYear: "",
+  position: "",
+  team: "",
   day: "",
   selectedSlots: [] as string[],
 };
 
 export default function SearchPage() {
-  // Draft filters — what the user is currently selecting
   const [draft, setDraft] = useState({ ...EMPTY_FILTERS });
-
-  // Applied filters — what was last searched
   const [applied, setApplied] = useState<typeof EMPTY_FILTERS | null>(null);
-
   const [results, setResults] = useState<Member[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
@@ -74,6 +79,8 @@ export default function SearchPage() {
     if (draft.isFFCS) params.set("isFFCS", draft.isFFCS);
     if (draft.department) params.set("department", draft.department);
     if (draft.academicYear) params.set("academicYear", draft.academicYear);
+    if (draft.position) params.set("position", draft.position);
+    if (draft.team) params.set("team", draft.team);
     if (draft.day) params.set("day", draft.day);
     if (draft.selectedSlots.length > 0)
       params.set("slots", draft.selectedSlots.join(","));
@@ -93,12 +100,24 @@ export default function SearchPage() {
     setSearched(false);
   }
 
+  // When category changes, reset position and team
+  function handleCategoryChange(val: string) {
+    setDraft((prev) => ({
+      ...prev,
+      category: val,
+      position: "",
+      team: "",
+    }));
+  }
+
   const hasActiveDraft =
     draft.query ||
     draft.category ||
     draft.isFFCS ||
     draft.department ||
     draft.academicYear ||
+    draft.position ||
+    draft.team ||
     draft.day ||
     draft.selectedSlots.length > 0;
 
@@ -108,8 +127,14 @@ export default function SearchPage() {
     draft.isFFCS,
     draft.department,
     draft.academicYear,
+    draft.position,
+    draft.team,
     draft.day,
   ].filter(Boolean).length + draft.selectedSlots.length;
+
+  const showPositionFilter =
+    draft.category === "CORE" || draft.category === "MEMBER";
+  const showDancerFilters = draft.category === "DANCER";
 
   return (
     <div>
@@ -138,13 +163,13 @@ export default function SearchPage() {
                 setDraft((prev) => ({ ...prev, query: e.target.value }))
               }
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              placeholder="Search by name, register number, or position..."
+              placeholder="Search by name, register number..."
               className="w-full bg-[#0f1117] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
             />
           </div>
 
-          {/* Filter grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-4">
+          {/* Row 1: Main filters */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-3">
 
             <div>
               <label className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1.5 block">
@@ -152,9 +177,7 @@ export default function SearchPage() {
               </label>
               <select
                 value={draft.category}
-                onChange={(e) =>
-                  setDraft((prev) => ({ ...prev, category: e.target.value }))
-                }
+                onChange={(e) => handleCategoryChange(e.target.value)}
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
                 <option value="">All</option>
@@ -203,10 +226,7 @@ export default function SearchPage() {
               <select
                 value={draft.academicYear}
                 onChange={(e) =>
-                  setDraft((prev) => ({
-                    ...prev,
-                    academicYear: e.target.value,
-                  }))
+                  setDraft((prev) => ({ ...prev, academicYear: e.target.value }))
                 }
                 className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
@@ -239,6 +259,87 @@ export default function SearchPage() {
             </div>
 
           </div>
+
+          {/* Row 2: Position filter — CORE or MEMBER only */}
+          {showPositionFilter && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1.5 block">
+                  Position{" "}
+                  <span className="text-gray-600 normal-case font-normal">
+                    (optional)
+                  </span>
+                </label>
+                <select
+                  value={draft.position}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, position: e.target.value }))
+                  }
+                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                >
+                  <option value="">All positions</option>
+                  {(draft.category === "CORE" ? CORE_TEAMS : MEMBER_TEAMS).map(
+                    (pos) => (
+                      <option key={pos} value={pos}>
+                        {pos}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* Row 2: Dance Team + Role — DANCER only */}
+          {showDancerFilters && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              <div>
+                <label className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1.5 block">
+                  Dance Team{" "}
+                  <span className="text-gray-600 normal-case font-normal">
+                    (optional)
+                  </span>
+                </label>
+                <select
+                  value={draft.team}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, team: e.target.value }))
+                  }
+                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                >
+                  <option value="">All teams</option>
+                  {DANCER_TEAMS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1.5 block">
+                  Dancer Role{" "}
+                  <span className="text-gray-600 normal-case font-normal">
+                    (optional)
+                  </span>
+                </label>
+                <select
+                  value={draft.position}
+                  onChange={(e) =>
+                    setDraft((prev) => ({ ...prev, position: e.target.value }))
+                  }
+                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                >
+                  <option value="">All roles</option>
+                  {DANCER_ROLES.map((r) => (
+                    <option key={r} value={r}>
+                      {r}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* Time slot multi-select */}
           <div className="mb-5">
@@ -336,6 +437,16 @@ export default function SearchPage() {
                 Year {applied.academicYear}
               </span>
             )}
+            {applied.position && (
+              <span className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-md">
+                {applied.position}
+              </span>
+            )}
+            {applied.team && (
+              <span className="text-xs bg-pink-500/20 text-pink-400 px-2 py-1 rounded-md">
+                {applied.team}
+              </span>
+            )}
             {applied.day && (
               <span className="text-xs bg-gray-800 text-gray-300 px-2 py-1 rounded-md">
                 {DAY_LABELS[applied.day]}
@@ -388,7 +499,7 @@ export default function SearchPage() {
                       <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Name</th>
                       <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Reg No.</th>
                       <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Category</th>
-                      <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Position</th>
+                      <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Position / Team</th>
                       <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Dept</th>
                       <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Year</th>
                       <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-6 py-3">Timetable</th>
@@ -396,10 +507,7 @@ export default function SearchPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-800">
                     {results.map((member) => (
-                      <tr
-                        key={member.id}
-                        className="hover:bg-white/5 transition-colors"
-                      >
+                      <tr key={member.id} className="hover:bg-white/5 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
@@ -435,9 +543,22 @@ export default function SearchPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <span className="text-gray-300 text-sm">
-                            {member.position}
-                          </span>
+                          <div>
+                            {member.position ? (
+                              <p className="text-gray-300 text-sm">
+                                {member.position}
+                              </p>
+                            ) : (
+                              <p className="text-gray-600 text-xs italic">
+                                Not set
+                              </p>
+                            )}
+                            {member.team && (
+                              <p className="text-purple-400 text-xs mt-0.5">
+                                {member.team}
+                              </p>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <span className="text-gray-300 text-sm">
@@ -498,9 +619,16 @@ export default function SearchPage() {
                             FFCS
                           </span>
                         )}
-                        <span className="text-gray-500 text-xs">
-                          {member.position}
-                        </span>
+                        {member.position && (
+                          <span className="text-gray-400 text-xs">
+                            {member.position}
+                          </span>
+                        )}
+                        {member.team && (
+                          <span className="text-purple-400 text-xs">
+                            {member.team}
+                          </span>
+                        )}
                         <span className="text-gray-500 text-xs">
                           Y{member.academicYear}
                         </span>

@@ -3,6 +3,11 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import TeamSelector from "@/components/ui/TeamSelector";
+import {
+  getTeamsForCategory,
+  DANCER_ROLES,
+} from "@/lib/teams";
 
 export default function AddMemberPage() {
   const router = useRouter();
@@ -19,7 +24,7 @@ export default function AddMemberPage() {
     category: "MEMBER",
     isFFCS: false,
     position: "",
-    danceTeam: "",
+    team: "",
     password: "",
   });
 
@@ -57,18 +62,24 @@ export default function AddMemberPage() {
   }
 
   const isFFCSOnly = form.category === "FFCS_ONLY";
+  const isDancer = form.category === "DANCER";
+  const isCoreOrMember =
+    form.category === "CORE" || form.category === "MEMBER";
+  const positionOptions = getTeamsForCategory(form.category);
 
   return (
     <div>
-
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-8 py-4">
-        <h1 className="text-lg font-semibold text-white">Add New Member</h1>
+      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4">
+        <h1 className="text-base sm:text-lg font-semibold text-white">
+          Add New Member
+        </h1>
       </div>
 
       <div className="p-4 sm:p-8 max-w-2xl">
-        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-6 sm:p-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
 
+            {/* Full Name */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                 Full Name
@@ -83,6 +94,7 @@ export default function AddMemberPage() {
               />
             </div>
 
+            {/* Register Number */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                 Register Number
@@ -97,6 +109,7 @@ export default function AddMemberPage() {
               />
             </div>
 
+            {/* Email */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                 Email Address
@@ -112,6 +125,7 @@ export default function AddMemberPage() {
               />
             </div>
 
+            {/* Phone */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                 Phone Number{" "}
@@ -128,6 +142,7 @@ export default function AddMemberPage() {
               />
             </div>
 
+            {/* Department */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                 Department
@@ -142,6 +157,7 @@ export default function AddMemberPage() {
               />
             </div>
 
+            {/* Academic Year + Category */}
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
@@ -168,12 +184,13 @@ export default function AddMemberPage() {
                   name="category"
                   value={form.category}
                   onChange={(e) => {
-                    const val = e.target.value;
                     setForm((prev) => ({
                       ...prev,
-                      category: val,
-                      isFFCS: val === "FFCS_ONLY" ? true : prev.isFFCS,
-                      danceTeam: val !== "DANCER" ? "" : prev.danceTeam,
+                      category: e.target.value,
+                      isFFCS:
+                        e.target.value === "FFCS_ONLY" ? true : prev.isFFCS,
+                      position: "",
+                      team: "",
                     }));
                   }}
                   className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
@@ -185,48 +202,86 @@ export default function AddMemberPage() {
                 </select>
               </div>
             </div>
-            {/* Dance Team — only shown for Dancer category */}
-            {form.category === "DANCER" && (
+
+            {/* CORE / MEMBER: position from their team list */}
+            {isCoreOrMember && (
               <div>
                 <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
-                  Dance Team <span className="text-red-400 normal-case font-normal">(required)</span>
+                  Position{" "}
+                  <span className="text-red-400 normal-case font-normal">
+                    (required)
+                  </span>
                 </label>
-                <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-2">
-                  {[
-                    "Laasya",
-                    "Xemius",
-                    "Powerhouse",
-                    "Majestic Swaggers",
-                    "Contemporary",
-                    "Taal",
-                    "Z Crew",
-                  ].map((team) => (
-                    <label
-                      key={team}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
-                        form.danceTeam === team
-                          ? "bg-purple-600/20 border border-purple-500/30"
-                          : "hover:bg-white/5 border border-transparent"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="danceTeam"
-                        value={team}
-                        checked={form.danceTeam === team}
-                        onChange={(e) =>
-                          setForm({ ...form, danceTeam: e.target.value })
-                        }
-                        className="w-4 h-4 accent-purple-500 flex-shrink-0"
-                        required
-                      />
-                      <span className="text-white text-sm">{team}</span>
-                    </label>
+                <select
+                  value={form.position}
+                  onChange={(e) =>
+                    setForm({ ...form, position: e.target.value })
+                  }
+                  required
+                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                >
+                  <option value="">Select a position...</option>
+                  {positionOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
-                </div>
+                </select>
               </div>
             )}
-            {/* FFCS Checkbox — auto checked and disabled for FFCS_ONLY */}
+
+            {/* DANCER: dance team + role */}
+            {isDancer && (
+              <>
+                <TeamSelector
+                  category="DANCER"
+                  value={form.team}
+                  onChange={(team) => setForm({ ...form, team })}
+                />
+                <div>
+                  <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+                    Dancer Role{" "}
+                    <span className="text-red-400 normal-case font-normal">
+                      (required)
+                    </span>
+                  </label>
+                  <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-1.5">
+                    {DANCER_ROLES.map((role) => (
+                      <label
+                        key={role}
+                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-colors ${
+                          form.position === role
+                            ? "bg-purple-600/20 border border-purple-500/30"
+                            : "hover:bg-white/5 border border-transparent"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="position"
+                          value={role}
+                          checked={form.position === role}
+                          onChange={(e) =>
+                            setForm({ ...form, position: e.target.value })
+                          }
+                          className="w-4 h-4 accent-purple-500 flex-shrink-0"
+                          required
+                        />
+                        <div>
+                          <span className="text-white text-sm">{role}</span>
+                          {role === "Team Leader" && (
+                            <span className="ml-2 text-xs text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
+                              Admin access
+                            </span>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* FFCS Checkbox */}
             <div className="flex items-center gap-3 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
               <input
                 type="checkbox"
@@ -247,20 +302,7 @@ export default function AddMemberPage() {
               )}
             </div>
 
-            <div>
-              <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
-                Position
-              </label>
-              <input
-                name="position"
-                value={form.position}
-                onChange={handleChange}
-                required
-                placeholder="e.g. President, Dance Captain, Choreographer"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
-              />
-            </div>
-
+            {/* Password */}
             <div>
               <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                 Password
@@ -301,7 +343,6 @@ export default function AddMemberPage() {
           </form>
         </div>
       </div>
-
     </div>
   );
 }

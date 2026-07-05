@@ -5,10 +5,18 @@ import bcrypt from "bcryptjs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const members = await db.member.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json(members);
+  try {
+    const members = await db.member.findMany({
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json(members);
+  } catch (error) {
+    console.error("GET /api/members error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch members" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: Request) {
@@ -25,22 +33,39 @@ export async function POST(req: Request) {
       category,
       isFFCS,
       position,
-      danceTeam,
+      team,
       password,
     } = body;
 
-    if (!fullName || !registerNumber || !email || !department || !position || !password || !category) {
+    if (!fullName || !registerNumber || !email || !department || !password || !category) {
       return NextResponse.json(
         { error: "All required fields must be filled" },
         { status: 400 }
       );
     }
 
-    if (category === "DANCER" && !danceTeam) {
+    // CORE and MEMBER require a position (from their team list)
+    if ((category === "CORE" || category === "MEMBER") && !position) {
       return NextResponse.json(
-        { error: "Please select a dance team for Dancer members" },
+        { error: "Please select a position" },
         { status: 400 }
       );
+    }
+
+    // DANCER requires both a team and a role
+    if (category === "DANCER") {
+      if (!team) {
+        return NextResponse.json(
+          { error: "Please select a dance team" },
+          { status: 400 }
+        );
+      }
+      if (!position) {
+        return NextResponse.json(
+          { error: "Please select a dancer role (Team Leader or Normal Dancer)" },
+          { status: 400 }
+        );
+      }
     }
 
     const existingUser = await db.user.findUnique({ where: { email } });
@@ -60,13 +85,15 @@ export async function POST(req: Request) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
-
-    // FFCS_ONLY is always isFFCS = true
     const finalIsFFCS = category === "FFCS_ONLY" ? true : Boolean(isFFCS);
 
-    // Role logic
+    // Role logic:
+    // CORE → ADMIN
+    // DANCER + Team Leader → ADMIN
+    // Everything else → MEMBER
     let role: "ADMIN" | "MEMBER" = "MEMBER";
     if (category === "CORE") role = "ADMIN";
+    if (category === "DANCER" && position === "Team Leader") role = "ADMIN";
 
     const user = await db.user.create({
       data: {
@@ -83,8 +110,8 @@ export async function POST(req: Request) {
             academicYear: parseInt(academicYear),
             category,
             isFFCS: finalIsFFCS,
-            position,
-            danceTeam: category === "DANCER" ? danceTeam : null,
+            position: position || null,
+            team: category === "DANCER" ? team : null,
           },
         },
       },

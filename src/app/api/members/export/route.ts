@@ -24,7 +24,8 @@ export async function GET() {
       "Academic Year": m.academicYear,
       "Category": getCategoryLabel(m.category),
       "FFCS Enrolled": m.isFFCS ? "Yes" : "No",
-      "Position": m.position,
+      "Position": m.position ?? "",
+      "Team": m.team ?? "",
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(rows);
@@ -32,15 +33,16 @@ export async function GET() {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Members");
 
     worksheet["!cols"] = [
-      { wch: 22 },
-      { wch: 18 },
-      { wch: 28 },
+      { wch: 24 },
+      { wch: 20 },
+      { wch: 30 },
       { wch: 14 },
       { wch: 14 },
       { wch: 14 },
       { wch: 16 },
       { wch: 14 },
-      { wch: 20 },
+      { wch: 36 },
+      { wch: 28 },
     ];
 
     const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
@@ -48,12 +50,18 @@ export async function GET() {
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": `attachment; filename="members-${new Date().toISOString().slice(0, 10)}.xlsx"`,
+        "Content-Type":
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": `attachment; filename="members-${new Date()
+          .toISOString()
+          .slice(0, 10)}.xlsx"`,
       },
     });
   } catch (error) {
     console.error(error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
 }
