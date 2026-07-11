@@ -232,15 +232,14 @@ export default async function ProfilePage() {
         {/* Timetable */}
         <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-white font-semibold text-sm">
-              My Timetable
-            </h2>
-
-            <p className="text-gray-500 text-xs">
-              Contact your Core Team to make changes
-            </p>
+            <h2 className="text-white font-semibold text-sm">My Timetable</h2>
+            <Link
+              href="/timetable"
+              className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
+            >
+              Edit Timetable
+            </Link>
           </div>
-
           <TimetableGrid
             memberId={member.id}
             initialEntries={entries.map((e) => ({

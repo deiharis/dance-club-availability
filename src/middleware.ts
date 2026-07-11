@@ -26,7 +26,6 @@ export async function middleware(req: NextRequest) {
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/members") ||
-    pathname.startsWith("/timetable") ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/analytics") ||
     pathname.startsWith("/reports/review")
@@ -35,6 +34,13 @@ export async function middleware(req: NextRequest) {
     if (token.role === "MEMBER") {
       return NextResponse.redirect(new URL("/profile", req.url));
     }
+  }
+
+  // Timetable — admins go to /timetable (admin view)
+  // Members go to /timetable (their own edit view)
+  if (pathname.startsWith("/timetable")) {
+    if (!token) return NextResponse.redirect(new URL("/login", req.url));
+    // Members are allowed — the page handles the redirect to member view
   }
 
   // All logged-in users — reports submission is for everyone

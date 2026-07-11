@@ -13,15 +13,18 @@ interface Report {
   submittedAt: string;
   reviewedAt: string | null;
   member: {
-  fullName: string;
-  registerNumber: string;
-  category: string;
-  position: string;
-  isFFCS: boolean;
-};
-  reviewedBy: { fullName: string } | null;
+    fullName: string;
+    registerNumber: string;
+    category: string;
+    position: string | null;
+    isFFCS: boolean;
+  };
+  reviewedBy: {
+    fullName: string;
+    position: string | null;
+    category: string;
+  } | null;
 }
-
 function StatusBadge({ status }: { status: string }) {
   if (status === "APPROVED") {
     return (
@@ -237,12 +240,38 @@ export default function ReviewReportsPage() {
                 )}
 
                 {report.reviewedBy && (
-                  <p className="text-gray-600 text-xs mb-4">
-                    Reviewed by {report.reviewedBy.fullName} on{" "}
-                    {report.reviewedAt
-                      ? new Date(report.reviewedAt).toLocaleDateString("en-IN")
-                      : "—"}
-                  </p>
+                  <div className="flex items-center gap-2 mb-4 flex-wrap">
+                    <div className="w-6 h-6 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-purple-400 text-xs font-semibold">
+                        {report.reviewedBy.fullName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-xs">
+                        <span className="text-white font-medium">
+                          {report.reviewedBy.fullName}
+                        </span>
+                        {report.reviewedBy.position && (
+                          <span className="text-gray-500">
+                            {" "}· {report.reviewedBy.position}
+                          </span>
+                        )}
+                        <span className="text-gray-600">
+                          {" "}· Verified on{" "}
+                          {report.reviewedAt
+                            ? new Date(report.reviewedAt).toLocaleDateString(
+                                "en-IN",
+                                {
+                                  day: "numeric",
+                                  month: "short",
+                                  year: "numeric",
+                                }
+                              )
+                            : "—"}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
                 )}
 
                 {/* Review Actions — only for PENDING */}

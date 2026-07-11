@@ -12,7 +12,7 @@ async function getSignedUrl(imagePath: string): Promise<string> {
 
   const { data, error } = await supabaseAdmin.storage
     .from("report-images")
-    .createSignedUrl(imagePath, 60 * 30); // valid for 30 minutes
+    .createSignedUrl(imagePath, 60 * 30);
 
   if (error || !data?.signedUrl) {
     console.error("Signed URL error:", error);
@@ -42,15 +42,19 @@ export async function GET() {
               registerNumber: true,
               category: true,
               position: true,
+              isFFCS: true,
             },
           },
           reviewedBy: {
-            select: { fullName: true },
+            select: {
+              fullName: true,
+              position: true,
+              category: true,
+            },
           },
         },
       });
 
-      // Generate signed URLs for all pending reports that have images
       const reportsWithSignedUrls = await Promise.all(
         reports.map(async (report) => {
           if (report.status === "PENDING" && report.imagePath) {
@@ -119,13 +123,10 @@ export async function POST(req: Request) {
       );
     }
 
-    // Upload image to Supabase Storage
     const fileExt = image.name.split(".").pop();
     const fileName = `${member.id}-${Date.now()}.${fileExt}`;
     const arrayBuffer = await image.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-
-    console.log("Uploading:", fileName, "size:", buffer.length);
 
     const { data: uploadData, error: uploadError } = await supabaseAdmin.storage
       .from("report-images")
@@ -144,13 +145,12 @@ export async function POST(req: Request) {
 
     console.log("Upload success:", uploadData.path);
 
-    // Save the file PATH (not the public URL) so we can generate signed URLs later
     const report = await db.report.create({
       data: {
         description,
         workDate: new Date(workDate),
-        imageUrl: "",        // not storing public URL — we use signed URLs on retrieval
-        imagePath: fileName, // this is what matters
+        imageUrl: "",
+        imagePath: fileName,
         memberId: member.id,
       },
     });
