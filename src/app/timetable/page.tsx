@@ -6,15 +6,15 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
+import Sidebar from "@/components/layout/Sidebar";
 
-// ── Member view (editable own timetable) ──────────────────
+// ── Member's own editable timetable ──────────────────────
 async function MemberTimetableView() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
   const userId = (session.user as any).id;
   const member = await db.member.findUnique({ where: { userId } });
-
   if (!member) redirect("/profile");
 
   const entries = await db.timetableEntry.findMany({
@@ -65,7 +65,7 @@ async function MemberTimetableView() {
   );
 }
 
-// ── Admin member timetable card ───────────────────────────
+// ── Admin timetable card per member ──────────────────────
 async function MemberTimetableCard({
   member,
 }: {
@@ -119,14 +119,14 @@ async function MemberTimetableCard({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────
+// ── Main page — roles split here ─────────────────────────
 export default async function TimetablePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
   const role = (session.user as any).role;
 
-  // Normal members get their own editable timetable view
+  // Normal members see their own editable timetable
   if (role === "MEMBER") {
     return <MemberTimetableView />;
   }
@@ -137,37 +137,43 @@ export default async function TimetablePage() {
   });
 
   return (
-    <div>
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4">
-        <h1 className="text-base sm:text-lg font-semibold text-white">
-          Timetable
-        </h1>
-        <p className="text-gray-500 text-xs mt-0.5">
-          Click any cell to cycle: Free → Class → Free
-        </p>
-      </div>
-
-      <div className="p-4 sm:p-8">
-        {members.length === 0 ? (
-          <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
-            <p className="text-gray-500 text-sm mb-4">
-              No members yet. Add members first.
-            </p>
-            <Link
-              href="/members/add"
-              className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-            >
-              Add Member
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {members.map((member) => (
-              <MemberTimetableCard key={member.id} member={member} />
-            ))}
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-[#0f1117] text-white flex">
+      <Sidebar
+        userName={session.user.name ?? "Admin"}
+        userEmail={session.user.email ?? ""}
+        role={role}
+      />
+      <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
+        <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4">
+          <h1 className="text-base sm:text-lg font-semibold text-white">
+            Timetable
+          </h1>
+          <p className="text-gray-500 text-xs mt-0.5">
+            Click any cell to toggle between Free and Class
+          </p>
+        </div>
+        <div className="p-4 sm:p-8">
+          {members.length === 0 ? (
+            <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
+              <p className="text-gray-500 text-sm mb-4">
+                No members yet. Add members first.
+              </p>
+              <Link
+                href="/members/add"
+                className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Add Member
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {members.map((member) => (
+                <MemberTimetableCard key={member.id} member={member} />
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }

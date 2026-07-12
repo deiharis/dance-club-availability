@@ -14,15 +14,19 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
 
- // SUPERADMIN only routes
-  if (pathname.startsWith("/grades") || pathname.startsWith("/od")) {
+  // SUPERADMIN only routes
+  if (
+    pathname.startsWith("/grades") ||
+    pathname.startsWith("/od") ||
+    pathname.startsWith("/events")
+  ) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
     if (token.role !== "SUPERADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
   }
 
-  // Admin + Superadmin routes
+  // Admin + SuperAdmin only routes
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/members") ||
@@ -36,15 +40,18 @@ export async function middleware(req: NextRequest) {
     }
   }
 
-  // Timetable — admins go to /timetable (admin view)
-  // Members go to /timetable (their own edit view)
+  // Timetable — all authenticated users allowed
+  // The page itself handles what each role sees
   if (pathname.startsWith("/timetable")) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
-    // Members are allowed — the page handles the redirect to member view
   }
 
-  // All logged-in users — reports submission is for everyone
-  if (pathname.startsWith("/profile") || pathname.startsWith("/reports/submit")) {
+  // All logged-in users
+  if (
+    pathname.startsWith("/profile") ||
+    pathname.startsWith("/reports/submit") ||
+    pathname.startsWith("/reports/mine")
+  ) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
   }
 
@@ -61,6 +68,7 @@ export const config = {
     "/analytics/:path*",
     "/grades/:path*",
     "/od/:path*",
+    "/events/:path*",
     "/reports/:path*",
     "/profile/:path*",
   ],

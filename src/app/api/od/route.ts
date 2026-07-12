@@ -34,6 +34,13 @@ export async function GET() {
               workDate: true,
             },
           },
+          event: {
+            select: {
+              id: true,
+              name: true,
+              eventDate: true,
+            },
+          },
         },
       });
       return NextResponse.json(requests);
@@ -52,6 +59,13 @@ export async function GET() {
           select: {
             description: true,
             workDate: true,
+          },
+        },
+        event: {
+          select: {
+            id: true,
+            name: true,
+            eventDate: true,
           },
         },
       },
@@ -91,9 +105,8 @@ export async function POST(req: Request) {
       );
     }
 
-    // Read the body exactly once
     const body = await req.json();
-    const { reportId, reason, slots } = body;
+    const { reportId, reason, slots, eventId } = body;
 
     if (!reportId || !reason?.trim()) {
       return NextResponse.json(
@@ -102,9 +115,14 @@ export async function POST(req: Request) {
       );
     }
 
-    const report = await db.report.findUnique({
-      where: { id: reportId },
-    });
+    if (!eventId) {
+      return NextResponse.json(
+        { error: "Please select an event for this OD request" },
+        { status: 400 }
+      );
+    }
+
+    const report = await db.report.findUnique({ where: { id: reportId } });
 
     if (!report) {
       return NextResponse.json(
@@ -127,14 +145,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const existing = await db.oDRequest.findUnique({
-      where: { reportId },
-    });
-
+    const existing = await db.oDRequest.findUnique({ where: { reportId } });
     if (existing) {
       return NextResponse.json(
         { error: "An OD request already exists for this report" },
         { status: 400 }
+      );
+    }
+
+    // Verify event exists
+    const event = await db.event.findUnique({ where: { id: eventId } });
+    if (!event) {
+      return NextResponse.json(
+        { error: "Selected event not found" },
+        { status: 404 }
       );
     }
 
@@ -145,6 +169,7 @@ export async function POST(req: Request) {
         reason: reason.trim(),
         activityDate: report.workDate,
         slots: Array.isArray(slots) ? slots : [],
+        eventId,
       },
     });
 

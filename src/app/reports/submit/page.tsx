@@ -40,6 +40,17 @@ interface ODRequest {
     description: string;
     workDate: string;
   };
+  event: {
+    id: string;
+    name: string;
+    eventDate: string;
+  } | null;
+}
+
+interface Event {
+  id: string;
+  name: string;
+  eventDate: string;
 }
 function StatusBadge({ status }: { status: string }) {
   if (status === "APPROVED") {
@@ -96,12 +107,14 @@ export default function SubmitReportPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>("");
   const [canRequestOD, setCanRequestOD] = useState(false);
+  const [events, setEvents] = useState<Event[]>([]);
 
   // OD form
   const [odForm, setODForm] = useState({
     reportId: "",
     reason: "",
     slots: [] as string[],
+    eventId: "",
   });
 
   const fileRef = useRef<HTMLInputElement>(null);
@@ -132,17 +145,18 @@ export default function SubmitReportPage() {
       fetch("/api/reports/mine", { cache: "no-store" }).then((r) => r.json()),
       fetch("/api/reports/approved", { cache: "no-store" }).then((r) => r.json()),
       fetch("/api/od", { cache: "no-store" }).then((r) => r.json()),
-    ]).then(([myReports, approved, myODs]) => {
+      fetch("/api/events", { cache: "no-store" }).then((r) => r.json()),
+    ]).then(([myReports, approved, myODs, eventList]) => {
       setReports(Array.isArray(myReports) ? myReports : []);
 
       const approvedList = Array.isArray(approved) ? approved : [];
       setApprovedReports(approvedList);
 
-      // Can request OD if there are approved reports without an OD request
       const hasEligible = approvedList.some((r: ApprovedReport) => !r.odRequest);
       setCanRequestOD(hasEligible);
 
       setODRequests(Array.isArray(myODs) ? myODs : []);
+      setEvents(Array.isArray(eventList) ? eventList : []);
       setLoading(false);
     });
   }
@@ -205,6 +219,11 @@ export default function SubmitReportPage() {
       return;
     }
 
+    if (!odForm.eventId) {
+      setODError("Please select an event for this OD request.");
+      return;
+    }
+
     setODSubmitting(true);
 
     const res = await fetch("/api/od", {
@@ -224,7 +243,7 @@ export default function SubmitReportPage() {
     setODSuccess(
       "OD request submitted. The Super Admin will mark it as approved once the college grants the OD."
     );
-    setODForm({ reportId: "", reason: "", slots: [] });
+    setODForm({ reportId: "", reason: "", slots: [], eventId: "" });
     loadAll();
   }
 
@@ -502,12 +521,59 @@ export default function SubmitReportPage() {
                       ))}
                     </select>
                   </div>
+<div>
+                    <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+                      Select Event{" "}
+                      <span className="text-red-400 normal-case font-normal">
+                        (required)
+                      </span>
+                    </label>
+                    {events.length === 0 ? (
+                      <div className="bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
+                        <p className="text-gray-500 text-sm">
+                          No events available. Contact the Super Admin to add events.
+                        </p>
+                      </div>
+                    ) : (
+                      <select
+                        value={odForm.eventId}
+                        onChange={(e) =>
+                          setODForm({ ...odForm, eventId: e.target.value })
+                        }
+                        required
+                        className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                      >
+                        <option value="">Select an event...</option>
+                        {events.map((ev) => (
+                          <option key={ev.id} value={ev.id}>
+                            {ev.name} —{" "}
+                            {new Date(ev.eventDate).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
                   <div>
                     <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
                       Time Slots Needed{" "}
                       {odForm.slots.length > 0 && (
-                        <span className="text-purple-400 normal-case font-normal">
-                          ({odForm.slots.length} selected)
+                        <span className={`normal-case font-normal ${
+                          odForm.slots.length >= 2 && odForm.slots.length % 2 === 0
+                            ? "text-green-400"
+                            : "text-orange-400"
+                        }`}>
+                          ({odForm.slots.length} selected
+                          {odForm.slots.length < 2
+                            ? " — minimum 2 required"
+                            : odForm.slots.length % 2 !== 0
+                            ? " — must be an even number"
+                            : " ✓"}
+                          )
                         </span>
                       )}
                     </label>
@@ -527,7 +593,7 @@ export default function SubmitReportPage() {
                         { label: "T11", time: "05:40 PM to 06:30 PM" },
                         { label: "T12", time: "06:35 PM to 07:25 PM" },
                       ].map((slot) => {
-                        const value = `${slot.time}`;
+                        const value = slot.time;
                         const checked = odForm.slots.includes(value);
                         return (
                           <label
@@ -551,15 +617,16 @@ export default function SubmitReportPage() {
                               }}
                               className="w-4 h-4 accent-purple-500 flex-shrink-0"
                             />
-                            <div>
-                              <span className="text-white text-xs font-medium">
-                                {slot.time}
-                              </span>
-                            </div>
+                            <span className="text-white text-xs font-medium">
+                              {slot.time}
+                            </span>
                           </label>
                         );
                       })}
                     </div>
+                    <p className="text-gray-600 text-xs mt-1.5">
+                      Select an even number of slots (2, 4, 6...)
+                    </p>
                   </div>
                   <div>
                     <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
@@ -647,10 +714,17 @@ export default function SubmitReportPage() {
                               }
                             )}
                           </p>
+
                           <p className="text-gray-600 text-xs mt-0.5">
                             Report: {od.report.description.slice(0, 60)}
                             {od.report.description.length > 60 ? "..." : ""}
                           </p>
+                          {od.event && (
+                            <p className="text-purple-400 text-xs mt-0.5">
+                              Event: {od.event.name}
+                            </p>
+                          )}
+
                           {od.slots && od.slots.length > 0 && (
                             <div className="flex flex-wrap gap-1.5 mt-1.5">
                               {od.slots.map((slot) => (

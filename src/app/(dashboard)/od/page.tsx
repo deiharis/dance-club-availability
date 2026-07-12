@@ -16,12 +16,17 @@ interface ODRequest {
     registerNumber: string;
     department: string;
     category: string;
-    position: string;
+    position: string | null;
   };
   report: {
     description: string;
     workDate: string;
   };
+  event: {
+    id: string;
+    name: string;
+    eventDate: string;
+  } | null;
 }
 
 function StatusBadge({ status }: { status: string }) {
@@ -195,6 +200,30 @@ export default function ODManagementPage() {
                     </p>
                     <p className="text-white text-sm">{req.reason}</p>
                   </div>
+                  
+                  {req.event && (
+                    <div>
+                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
+                        Event
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-white text-sm font-medium">
+                          {req.event.name}
+                        </p>
+                        <span className="text-gray-500 text-xs">
+                          ·{" "}
+                          {new Date(req.event.eventDate).toLocaleDateString(
+                            "en-IN",
+                            {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            }
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {req.slots && req.slots.length > 0 && (
                     <div>

@@ -15,6 +15,7 @@ import {
   Menu,
   X,
   FileBadge,
+  CalendarDays,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -56,6 +57,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
     { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: isAdminOrAbove },
     { href: "/members", label: "Members", icon: Users, show: isAdminOrAbove },
     { href: "/timetable", label: "Timetable", icon: Calendar, show: isAdminOrAbove },
+    { href: "/events", label: "Events", icon: CalendarDays, show: isSuperAdmin },
     { href: "/search", label: "Search", icon: Search, show: isAdminOrAbove },
     { href: "/analytics", label: "Analytics", icon: BarChart2, show: isAdminOrAbove },
     { href: "/reports/review", label: "Reports", icon: FileText, show: isAdminOrAbove },
