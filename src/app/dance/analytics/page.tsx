@@ -13,7 +13,7 @@ export default async function DanceAnalyticsPage({
 }) {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
-  if (!dance.isLead && !dance.isCommittee) redirect("/dance");
+  if (!dance.isLead && !dance.isSuper) redirect("/dance");
 
   // Committee: the chosen tab, else their own team if they dance. Others: their own team.
   const team = pageTeam(dance, searchParams.team);
@@ -35,7 +35,7 @@ export default async function DanceAnalyticsPage({
         subtitle="How your team is showing up, and when everyone can rehearse."
       />
 
-      {dance.isCommittee && (
+      {dance.isSuper && (
         <div className="-mt-3 mb-6 flex flex-wrap gap-2">
           {DANCER_TEAMS.map((t) => (
             <Link

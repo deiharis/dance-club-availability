@@ -25,8 +25,7 @@ export async function POST(req: Request) {
     if (!DANCER_TEAMS.includes(team)) {
       return NextResponse.json({ error: "Invalid team" }, { status: 400 });
     }
-    if (!caller.isLead && !caller.isCommittee) return forbidden();
-    if (!caller.canManage(team)) return forbidden();
+    if (!caller.canManage(team)) return forbidden(); // SuperAdmin, or this team's Lead
 
     if (!TIME.test(startTime) || !TIME.test(endTime) || endTime <= startTime) {
       return NextResponse.json(

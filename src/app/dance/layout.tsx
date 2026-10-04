@@ -22,17 +22,14 @@ export default async function DanceLayout({
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
 
-  // Dance Floor is for anyone in a dance team, plus the committee (who manage every team).
-  // Checked against the database, so a member added to a team gets in without re-logging.
-  if (!dance.isCommittee && !dance.member.team) redirect("/profile");
+  // Dance Floor is for anyone in a dance team, plus the SuperAdmin (who manages every team).
+  // Core members without a team have no team to see. Checked against the database, so a
+  // member added to a team gets in without re-logging.
+  if (!dance.isSuper && !dance.member.team) {
+    redirect(dance.isCommittee ? "/dashboard" : "/profile");
+  }
 
-  const label = dance.isSuper
-    ? "Super Admin"
-    : dance.isLead
-    ? "Dance Lead"
-    : dance.isCommittee
-    ? "Committee"
-    : "Dancer";
+  const label = dance.isSuper ? "Super Admin" : dance.isLead ? "Dance Lead" : "Dancer";
 
   // Sidebar badges: unread notifications, and (for Leads) reports waiting on them.
   const [unread, pending] = await Promise.all([
@@ -63,7 +60,7 @@ export default async function DanceLayout({
         userName={session.user.name ?? "Dancer"}
         userEmail={session.user.email ?? ""}
         label={label}
-        canManage={dance.isLead || dance.isCommittee}
+        canManage={dance.isLead || dance.isSuper}
         isCommittee={dance.isCommittee}
         badges={{ "/dance/notifications": unread, "/dance/reports": pending }}
       />

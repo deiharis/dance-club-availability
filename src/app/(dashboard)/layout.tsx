@@ -3,6 +3,7 @@ import { consoleFont } from "@/lib/fonts";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
+import { db } from "@/lib/db";
 
 export default async function DashboardLayout({
   children,
@@ -15,12 +16,15 @@ export default async function DashboardLayout({
   const role = session.user.role;
   if (role === "MEMBER") redirect("/profile");
 
+  const me = await db.member.findUnique({ where: { userId: session.user.id }, select: { team: true } });
+
   return (
     <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
+        showDanceFloor={role === "SUPERADMIN" || !!me?.team}
       />
       {/* pt-14 on mobile accounts for the fixed top bar */}
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">

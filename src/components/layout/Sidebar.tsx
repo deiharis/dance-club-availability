@@ -27,9 +27,10 @@ interface SidebarProps {
   userName: string;
   userEmail: string;
   role: string;
+  showDanceFloor: boolean; // SuperAdmin, or a member who is in a dance team
 }
 
-export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
+export default function Sidebar({ userName, userEmail, role, showDanceFloor }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -165,8 +166,8 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
         })}
       </nav>
 
-      {/* Switch to the dancer section */}
-      {isAdminOrAbove && (
+      {/* Switch to the dancer section (own team only, unless SuperAdmin) */}
+      {showDanceFloor && (
         <Link
           href="/dance"
           className="mx-3 mb-3 flex items-center justify-between rounded border border-zinc-800 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"

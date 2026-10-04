@@ -61,10 +61,11 @@ export default function AnalyticsPage() {
             value={tab}
             onChange={setTab}
             options={[
-              { key: "availability", label: "Availability" },
-              { key: "membership", label: "Membership" },
-              { key: "dance", label: "Dance Floor" },
-              { key: "activity", label: "Activity" },
+              { key: "availability" as Tab, label: "Availability" },
+              { key: "membership" as Tab, label: "Membership" },
+              // Only the SuperAdmin gets every team's dance data
+              ...(data && !data.dance ? [] : [{ key: "dance" as Tab, label: "Dance Floor" }]),
+              { key: "activity" as Tab, label: "Activity" },
             ]}
           />
         </div>
@@ -82,7 +83,7 @@ export default function AnalyticsPage() {
           <div key={`${tab}-${data.generatedAt}`}>
             {tab === "availability" && <AvailabilityTab d={data.availability} />}
             {tab === "membership" && <MembershipTab d={data.membership} />}
-            {tab === "dance" && <DanceTab d={data.dance} />}
+            {tab === "dance" && data.dance && <DanceTab d={data.dance} />}
             {tab === "activity" && <ActivityTab d={data.activity} />}
           </div>
         )}

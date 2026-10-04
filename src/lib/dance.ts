@@ -33,9 +33,10 @@ export async function getCaller() {
     isLead,
     isCommittee,
     inTeam: !!member?.team,
-    // SuperAdmin and committee manage every team; a Lead only their own.
+    // Dance teams: ONLY the SuperAdmin manages every team; a Lead only their own. Core/committee
+    // rights do NOT extend to dance teams (a Core member in a team is just a Normal Dancer there).
     canManage: (team: string | null) =>
-      isCommittee || (isLead && !!team && member?.team === team),
+      isSuper || (isLead && !!team && member?.team === team),
   };
 }
 
@@ -57,13 +58,13 @@ export async function getDanceUser() {
 // `{ category: "DANCER", team }` so committee members in a team are never left out.
 export const inDanceTeam = (team: string): Prisma.MemberWhereInput => ({ team });
 
-// Which team a Dance Floor page shows. Committee: the ?team= tab, else their own team if
-// they dance, else the first team. Everyone else: their own team (null if none).
+// Which team a Dance Floor page shows. SuperAdmin: the ?team= tab, else their own team if
+// they dance, else the first team. Everyone else (Core included): their own team, never ?team=.
 export function pageTeam(
-  dance: { isCommittee: boolean; member: { team: string | null } },
+  dance: { isSuper: boolean; member: { team: string | null } },
   requested?: string
 ): string | null {
-  if (!dance.isCommittee) return dance.member.team;
+  if (!dance.isSuper) return dance.member.team;
   if (requested && DANCER_TEAMS.includes(requested)) return requested;
   return dance.member.team ?? DANCER_TEAMS[0];
 }

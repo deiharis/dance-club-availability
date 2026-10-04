@@ -83,7 +83,7 @@ export default async function AttendancePage({
         subtitle="Percentage is present out of present plus absent; excused is not counted."
       />
 
-      {dance.isCommittee && (
+      {dance.isSuper && (
         <div className="mt-4 flex flex-wrap gap-2">
           {DANCER_TEAMS.map((t) => (
             <Link

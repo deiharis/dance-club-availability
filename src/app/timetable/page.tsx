@@ -124,6 +124,7 @@ export default async function TimetablePage() {
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
+        showDanceFloor={role === "SUPERADMIN" || !!members.find((m) => m.userId === session.user.id)?.team}
       />
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
         <div data-section="People" className="c-page-header">

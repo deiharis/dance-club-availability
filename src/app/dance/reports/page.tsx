@@ -6,7 +6,7 @@ import ReviewReports from "@/components/reports/ReviewReports";
 export default async function DanceReportsPage() {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
-  if (!dance.isLead && !dance.isCommittee) redirect("/dance");
+  if (!dance.isLead && !dance.isSuper) redirect("/dance");
 
   // The API already limits a Lead to their own team's dancers' reports.
   return (

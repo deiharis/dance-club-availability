@@ -26,6 +26,7 @@ export default async function SubmitReportPage() {
           userName={name}
           userEmail={session.user.email ?? ""}
           role={session.user.role}
+          showDanceFloor={caller.isSuper || caller.inTeam}
         />
         <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
           <div data-section="Work" className="c-page-header">

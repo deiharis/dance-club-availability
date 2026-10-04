@@ -93,6 +93,6 @@ export interface AnalyticsData {
   generatedAt: string;
   availability: AvailabilityData;
   membership: MembershipData;
-  dance: DanceData;
+  dance: DanceData | null; // null unless SuperAdmin (other dance teams' data)
   activity: ActivityData;
 }

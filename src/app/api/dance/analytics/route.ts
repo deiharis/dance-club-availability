@@ -11,13 +11,13 @@ const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
 const SLOT_NAMES = new Set(ACTIVE_SLOTS.map((s) => s.slot));
 const pct = (part: number, whole: number) => (whole === 0 ? 0 : Math.round((part / whole) * 100));
 
-// Analytics for ONE dance team. A Lead gets their own team; the committee can pass ?team=.
+// Analytics for ONE dance team. A Lead gets their own team; only the SuperAdmin can pass ?team=.
 export async function GET(req: Request) {
   const caller = await getCaller();
   if (!caller) return unauthorized();
 
   const asked = new URL(req.url).searchParams.get("team");
-  const team = caller.isCommittee ? asked ?? DANCER_TEAMS[0] : caller.member?.team ?? "";
+  const team = caller.isSuper ? asked ?? DANCER_TEAMS[0] : caller.member?.team ?? "";
   if (!DANCER_TEAMS.includes(team)) {
     return NextResponse.json({ error: "Unknown team" }, { status: 400 });
   }
