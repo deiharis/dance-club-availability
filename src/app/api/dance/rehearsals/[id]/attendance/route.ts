@@ -30,7 +30,7 @@ export async function PUT(
     }
 
     const dancers = await db.member.findMany({
-      where: { category: "DANCER", team: rehearsal.team },
+      where: { team: rehearsal.team },
       select: { id: true },
     });
     const ids = new Set(dancers.map((d) => d.id));

@@ -22,8 +22,13 @@ const DANCE_TYPES: NotificationType[] = [
   "ATTENDANCE_MARKED",
 ];
 
+// Also: the decision on a dance-topic report, even for a Core member who dances.
 const danceWhere: Prisma.NotificationWhereInput = {
-  OR: [{ type: { in: DANCE_TYPES } }, { member: { category: "DANCER" } }],
+  OR: [
+    { type: { in: DANCE_TYPES } },
+    { member: { category: "DANCER" } },
+    { report: { area: "DANCE" } },
+  ],
 };
 
 export const sectionWhere = (
@@ -75,7 +80,7 @@ export async function notifyTeam(opts: {
   try {
     const [dancers, superAdmins] = await Promise.all([
       db.member.findMany({
-        where: { category: "DANCER", team: opts.team },
+        where: { team: opts.team },
         select: { id: true },
       }),
       superAdminMembers(),

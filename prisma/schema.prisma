@@ -198,8 +198,17 @@ enum ReportStatus {
   REJECTED
 }
 
+// What a report is about. DANCE reports are reviewed by the member's Team Leader;
+// COMMITTEE reports by the committee. null = older reports (DANCE if the submitter is a
+// pure dancer, otherwise COMMITTEE). See isLeadReviewed in lib/dance.ts.
+enum ReportArea {
+  COMMITTEE
+  DANCE
+}
+
 model Report {
   id          String       @id @default(cuid())
+  area        ReportArea?
   description String
   workDate    DateTime
   imageUrl    String

@@ -205,7 +205,8 @@ export async function GET() {
     };
 
     // ── Dance Floor ──────────────────────────────────────────────────────────
-    const dancers = members.filter((m) => m.category === "DANCER");
+    // Everyone in a dance team, including Core / Normal members who also dance.
+    const dancers = members.filter((m) => !!m.team);
     const rehearsalById = new Map(rehearsals.map((r) => [r.id, r]));
     const memberById = new Map(members.map((m) => [m.id, m]));
 

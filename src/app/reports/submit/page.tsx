@@ -33,7 +33,7 @@ export default async function SubmitReportPage() {
             <p className="text-zinc-500 mt-0.5">Submit work reports and request OD</p>
           </div>
           <div className="p-4 sm:p-8 max-w-3xl">
-            <MyReports variant="member" showOd />
+            <MyReports variant="member" showOd area={caller.inTeam ? "ask" : "COMMITTEE"} />
           </div>
         </main>
       </div>
@@ -44,14 +44,14 @@ export default async function SubmitReportPage() {
   // (same rule as api/od), so FFCS-only members get reports without the OD tab.
   const canOd = caller?.member?.category === "CORE" || caller?.member?.category === "MEMBER";
   return (
-    <MemberShell name={name}>
+    <MemberShell name={name} inTeam={!!caller?.member?.team}>
       <MemberHeading
         label="Work"
         title="My reports"
         subtitle={canOd ? "Submit work reports and request OD for approved ones." : "Submit work reports for review."}
       />
       <div className="max-w-3xl">
-        <MyReports variant="member" showOd={canOd} />
+        <MyReports variant="member" showOd={canOd} area={caller?.inTeam ? "ask" : "COMMITTEE"} />
       </div>
     </MemberShell>
   );

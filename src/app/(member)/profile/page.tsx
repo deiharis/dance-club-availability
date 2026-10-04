@@ -68,7 +68,7 @@ export default async function ProfilePage() {
   ];
 
   return (
-    <MemberShell name={member.fullName}>
+    <MemberShell name={member.fullName} inTeam={!!member.team}>
       <MemberHeading label="Member portal" title={`Welcome, ${firstName}`} subtitle="Your details, updates and weekly timetable." />
 
       <div className="space-y-6">

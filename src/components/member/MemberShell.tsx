@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Calendar, FileText, KeyRound, LogOut } from "lucide-react";
+import { User, Calendar, FileText, KeyRound, LogOut, Music } from "lucide-react";
 import { LogoMark, LogoLockup } from "@/components/brand/Logo";
 import { consoleFont, brandFont } from "@/lib/fonts";
 
@@ -18,12 +18,15 @@ const LINKS = [
 
 export default function MemberShell({
   name,
+  inTeam = false,
   children,
 }: {
   name: string;
+  inTeam?: boolean; // member also dances in a team -> show a Dance Floor link
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const links = inTeam ? [...LINKS, { href: "/dance", label: "Dance Floor", icon: Music }] : LINKS;
   const initials = name
     .split(" ")
     .map((w) => w[0])
@@ -45,7 +48,7 @@ export default function MemberShell({
           </Link>
 
           <nav className="ml-auto flex items-center gap-1 overflow-x-auto">
-            {LINKS.map((l) => {
+            {links.map((l) => {
               const Icon = l.icon;
               const active = pathname.startsWith(l.href);
               return (

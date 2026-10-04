@@ -2,7 +2,7 @@ import { Sora } from "next/font/google";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { getDanceUser } from "@/lib/dance";
+import { getDanceUser, leadReviewedWhere } from "@/lib/dance";
 import { db } from "@/lib/db";
 import { sectionWhere } from "@/lib/notify";
 import DanceSidebar from "@/components/dance/DanceSidebar";
@@ -22,13 +22,17 @@ export default async function DanceLayout({
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
 
+  // Dance Floor is for anyone in a dance team, plus the committee (who manage every team).
+  // Checked against the database, so a member added to a team gets in without re-logging.
+  if (!dance.isCommittee && !dance.member.team) redirect("/profile");
+
   const label = dance.isSuper
     ? "Super Admin"
     : dance.isLead
     ? "Dance Lead"
-    : dance.member.category === "DANCER"
-    ? "Dancer"
-    : "Committee";
+    : dance.isCommittee
+    ? "Committee"
+    : "Dancer";
 
   // Sidebar badges: unread notifications, and (for Leads) reports waiting on them.
   const [unread, pending] = await Promise.all([
@@ -40,11 +44,8 @@ export default async function DanceLayout({
       ? db.report.count({
           where: {
             status: "PENDING",
-            member: {
-              category: "DANCER",
-              team: dance.member.team,
-              id: { not: dance.member.id },
-            },
+            ...leadReviewedWhere,
+            member: { team: dance.member.team, id: { not: dance.member.id } },
           },
         })
       : Promise.resolve(0),

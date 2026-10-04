@@ -4,9 +4,10 @@ import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 
-// Allowed: your own timetable, anyone's if you are committee/SuperAdmin,
-// or a dancer in your team if you are that team's Dance Lead.
-async function authorize(memberId: string) {
+// Allowed: your own timetable, anyone's if you are committee/SuperAdmin, or, for a team's
+// Dance Lead, any teammate's. A Lead may READ every teammate's timetable (including Core members
+// who also dance) but may only EDIT pure dancers'; committee members manage their own.
+async function authorize(memberId: string, write: boolean) {
   const caller = await getCaller();
   if (!caller) return { res: unauthorized() };
 
@@ -14,7 +15,7 @@ async function authorize(memberId: string) {
 
   if (caller.isLead) {
     const target = await db.member.findUnique({ where: { id: memberId } });
-    if (target?.category === "DANCER" && caller.canManage(target.team)) {
+    if (target?.team && caller.canManage(target.team) && (!write || target.category === "DANCER")) {
       return { caller };
     }
   }
@@ -26,7 +27,7 @@ export async function GET(
   { params }: { params: { memberId: string } }
 ) {
   try {
-    const auth = await authorize(params.memberId);
+    const auth = await authorize(params.memberId, false);
     if ("res" in auth) return auth.res;
 
     const entries = await db.timetableEntry.findMany({
@@ -46,7 +47,7 @@ export async function POST(
   { params }: { params: { memberId: string } }
 ) {
   try {
-    const auth = await authorize(params.memberId);
+    const auth = await authorize(params.memberId, true);
     if ("res" in auth) return auth.res;
 
     const { day, slot, status } = await req.json();

@@ -6,6 +6,7 @@ import { StatusChip } from "@/components/console/ui";
 
 interface Report {
   id: string;
+  area?: "COMMITTEE" | "DANCE" | null;
   description: string;
   workDate: string;
   imageUrl: string;
@@ -232,6 +233,12 @@ export default function ReviewReports({
                         {viewOnly && report.member.team && (
                           <span className="rounded bg-pink-500/15 px-1.5 py-0.5 text-[10px] font-medium text-pink-300">
                             {report.member.team}
+                          </span>
+                        )}
+                        {/* A committee member who also dances: say what this report is about */}
+                        {report.member.category !== "DANCER" && report.area === "DANCE" && (
+                          <span className="rounded bg-orange-500/15 px-1.5 py-0.5 text-[10px] font-medium text-orange-300">
+                            Dance team
                           </span>
                         )}
                         {report.member.isFFCS && (

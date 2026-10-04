@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { normalizeDepartment } from "@/lib/departments";
 import { normalizePhone } from "@/lib/phone";
+import { danceTeamFor } from "@/lib/teams";
 
 // Shared by the committee import (api/members/import) and the Dance Floor roster import
 // (api/dance/roster/import), so both read sheets, clean data and create accounts the same way.
@@ -51,6 +52,19 @@ export function readDancer(row: Row) {
   };
 }
 
+// The member who already has this email or register number (case-insensitive), if any.
+export async function findExistingMember(email: string, registerNumber: string) {
+  return db.member.findFirst({
+    where: {
+      OR: [
+        { email: { equals: email, mode: "insensitive" } },
+        { registerNumber: { equals: registerNumber, mode: "insensitive" } },
+      ],
+    },
+    select: { id: true, fullName: true, team: true, category: true },
+  });
+}
+
 // Case-insensitive on both, so "24bce1234" and "24BCE1234" count as the same person.
 export async function alreadyExists(email: string, registerNumber: string) {
   const [user, member] = await Promise.all([
@@ -96,7 +110,7 @@ export async function createMemberAccount(m: {
           category: m.category,
           isFFCS: m.category === "FFCS_ONLY" ? true : m.isFFCS,
           position: m.category !== "FFCS_ONLY" ? m.position : null,
-          team: m.category === "DANCER" ? m.team : null,
+          team: danceTeamFor(m.category, m.team),
           skillLevel: m.skillLevel ?? "AMATEUR",
         },
       },

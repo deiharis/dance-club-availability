@@ -22,17 +22,17 @@ const COLUMNS = [
 
 // GET /api/dance/roster/export?team=Laasya            -> the team's dancers with attendance
 // GET /api/dance/roster/export?team=Laasya&template=1 -> empty template with one example row
-// A Lead always gets their own team; the committee picks with ?team=.
+// SuperAdmin only, one team at a time (the team picked on the Roster page).
 export async function GET(req: Request) {
   const caller = await getCaller();
   if (!caller) return unauthorized();
+  if (!caller.isSuper) return forbidden();
 
   const params = new URL(req.url).searchParams;
-  const team = caller.isCommittee ? params.get("team") ?? "" : caller.member?.team ?? "";
+  const team = params.get("team") ?? "";
   if (!DANCER_TEAMS.includes(team)) {
     return NextResponse.json({ error: "Unknown team" }, { status: 400 });
   }
-  if (!caller.canManage(team)) return forbidden();
 
   try {
     if (params.get("template") === "1") {
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
     }
 
     const dancers = await db.member.findMany({
-      where: { category: "DANCER", team },
+      where: { team },
       orderBy: { fullName: "asc" },
       include: { attendance: { select: { status: true, rehearsal: { select: { team: true } } } } },
     });
@@ -78,7 +78,9 @@ export async function GET(req: Request) {
         Department: d.department,
         "Academic Year": d.academicYear,
         "Dance Team": d.team ?? "",
-        "Dancer Role": d.position ?? "Normal Dancer",
+        // Members who also dance are always Normal Dancers; their position is a committee role.
+        "Dancer Role": d.category === "DANCER" ? d.position ?? "Normal Dancer" : "Normal Dancer",
+        "Club Role": d.category === "DANCER" ? "Dancer" : `${d.category === "CORE" ? "Core" : d.category === "FFCS_ONLY" ? "FFCS only" : "Normal member"}${d.position ? ` (${d.position})` : ""}`,
         "Skill Level": d.skillLevel === "PROFESSIONAL" ? "Professional" : "Amateur",
         "Attendance %": present + absent === 0 ? "" : Math.round((present / (present + absent)) * 100),
         Present: present,
@@ -88,9 +90,9 @@ export async function GET(req: Request) {
     });
 
     const sheet = XLSX.utils.json_to_sheet(rows, {
-      header: [...COLUMNS, "Attendance %", "Present", "Absent", "Excused"],
+      header: [...COLUMNS, "Club Role", "Attendance %", "Present", "Absent", "Excused"],
     });
-    sheet["!cols"] = [24, 18, 30, 14, 28, 13, 18, 16, 14, 13, 9, 9, 9].map((wch) => ({ wch }));
+    sheet["!cols"] = [24, 18, 30, 14, 28, 13, 18, 16, 14, 30, 13, 9, 9, 9].map((wch) => ({ wch }));
     const book = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(book, sheet, team.slice(0, 31));
 

@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { SLOTS, DAYS } from "@/lib/timetable";
 import { DANCER_TEAMS } from "@/lib/teams";
-import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { getCaller, unauthorized, forbidden, leadReviewedWhere } from "@/lib/dance";
 import type { TeamAnalytics, HeatCell } from "@/lib/analytics-types";
 
 export const dynamic = "force-dynamic";
@@ -27,7 +27,7 @@ export async function GET(req: Request) {
     const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
 
     const dancers = await db.member.findMany({
-      where: { category: "DANCER", team },
+      where: { team },
       select: { id: true, fullName: true, skillLevel: true, position: true },
       orderBy: { fullName: "asc" },
     });
@@ -41,7 +41,8 @@ export async function GET(req: Request) {
       db.report.count({
         where: {
           status: "PENDING",
-          member: { category: "DANCER", team, id: { not: caller.member?.id } },
+          ...leadReviewedWhere,
+          member: { team, id: { not: caller.member?.id } },
         },
       }),
     ]);

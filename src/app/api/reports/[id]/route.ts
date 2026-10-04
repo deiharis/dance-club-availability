@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getCaller } from "@/lib/dance";
+import { getCaller, isLeadReviewed } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 
@@ -44,14 +44,12 @@ export async function PATCH(
       );
     }
 
-    // Normal dancers' reports: only their own team's Dance Lead reviews them.
-    // The committee reviews Dance Leads' reports (a Lead can't review their own).
-    const isNormalDancer =
-      report.member.category === "DANCER" &&
-      report.member.position !== "Team Leader";
+    // Dance-topic reports (from anyone in a team, except a Lead's own) are decided ONLY by
+    // that team's Lead; every other report by the committee. Same split as the GET queues.
+    const leadReviewed = isLeadReviewed(report, report.member);
     const allowed = caller.isCommittee
-      ? !isNormalDancer
-      : report.member.category === "DANCER" && caller.canManage(report.member.team);
+      ? !leadReviewed
+      : leadReviewed && caller.canManage(report.member.team);
     if (!allowed) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

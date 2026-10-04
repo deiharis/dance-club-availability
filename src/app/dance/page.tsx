@@ -21,23 +21,24 @@ export default async function DanceDashboardPage() {
   if (!dance) redirect("/login");
   const { member, isSuper, isLead } = dance;
 
-  const isDancer = member.category === "DANCER";
-  const team = isDancer ? member.team : null;
+  // Anyone in a dance team (pure dancers and members who also dance) gets their personal cards.
+  const isDancer = !!member.team;
+  const team = member.team;
   const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
 
   // Dancers/Leads: their own team. SuperAdmin and Core: every team.
   const teamCounts =
-    isDancer && !isSuper
+    !dance.isCommittee
       ? []
       : await db.member.groupBy({
           by: ["team"],
-          where: { category: "DANCER" },
+          where: { team: { not: null } },
           _count: true,
         });
 
   const [teamSize, nextRehearsal, nextPerformance, marks] = team
     ? await Promise.all([
-        db.member.count({ where: { category: "DANCER", team } }),
+        db.member.count({ where: { team } }),
         db.rehearsal.findFirst({
           where: { team, date: { gte: today } },
           orderBy: [{ date: "asc" }, { startTime: "asc" }],

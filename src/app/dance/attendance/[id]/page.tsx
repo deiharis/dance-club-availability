@@ -22,7 +22,7 @@ export default async function MarkAttendancePage({
   if (!dance.canManage(rehearsal.team)) redirect("/dance/attendance");
 
   const dancers = await db.member.findMany({
-    where: { category: "DANCER", team: rehearsal.team },
+    where: { team: rehearsal.team },
     orderBy: { fullName: "asc" },
     select: { id: true, fullName: true },
   });

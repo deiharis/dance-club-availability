@@ -26,7 +26,6 @@ export default async function DanceTimetablePage() {
     (isLead || isSuper) && member.team
       ? await db.member.findMany({
           where: {
-            category: "DANCER",
             team: member.team,
             id: { not: member.id },
           },

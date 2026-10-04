@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { getDanceUser } from "@/lib/dance";
+import { getDanceUser, pageTeam } from "@/lib/dance";
 import { DANCER_TEAMS } from "@/lib/teams";
 import StageHeader from "@/components/dance/StageHeader";
 import TeamAnalyticsView from "@/components/dance/TeamAnalyticsView";
@@ -15,11 +15,8 @@ export default async function DanceAnalyticsPage({
   if (!dance) redirect("/login");
   if (!dance.isLead && !dance.isCommittee) redirect("/dance");
 
-  const team = dance.isCommittee
-    ? DANCER_TEAMS.includes(searchParams.team ?? "")
-      ? (searchParams.team as string)
-      : DANCER_TEAMS[0]
-    : dance.member.team;
+  // Committee: the chosen tab, else their own team if they dance. Others: their own team.
+  const team = pageTeam(dance, searchParams.team);
 
   if (!team) {
     return (

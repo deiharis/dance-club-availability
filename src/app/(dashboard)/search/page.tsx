@@ -125,7 +125,7 @@ export default function SearchPage() {
 
   // When category changes, reset the category-dependent filters
   function handleCategoryChange(val: string) {
-    set({ category: val, position: "", team: "", skillLevel: "" });
+    set({ category: val, position: "", skillLevel: "" }); // dance team applies to every category
   }
 
   const activeFilterCount =
@@ -224,17 +224,19 @@ export default function SearchPage() {
                 </div>
               )}
 
+              {/* Any category can dance in a team (e.g. Core members), so this filter is always available */}
+              <div>
+                <label className={label}>Dance team</label>
+                <select value={draft.team} onChange={(e) => set({ team: e.target.value })} className={control}>
+                  <option value="">Any (or none)</option>
+                  {DANCER_TEAMS.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
               {showDancerFilters && (
                 <>
-                  <div>
-                    <label className={label}>Dance team</label>
-                    <select value={draft.team} onChange={(e) => set({ team: e.target.value })} className={control}>
-                      <option value="">All teams</option>
-                      {DANCER_TEAMS.map((t) => (
-                        <option key={t} value={t}>{t}</option>
-                      ))}
-                    </select>
-                  </div>
                   <div>
                     <label className={label}>Dancer role</label>
                     <select value={draft.position} onChange={(e) => set({ position: e.target.value })} className={control}>

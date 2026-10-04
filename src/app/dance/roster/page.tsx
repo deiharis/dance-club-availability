@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getDanceUser } from "@/lib/dance";
+import { getDanceUser, pageTeam } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import RosterClient from "@/components/dance/RosterClient";
@@ -16,11 +16,8 @@ export default async function RosterPage({
   if (!dance.isLead && !dance.isCommittee) redirect("/dance");
 
   // Committee picks any team; a Lead is fixed to their own.
-  const team = dance.isCommittee
-    ? DANCER_TEAMS.includes(searchParams.team ?? "")
-      ? (searchParams.team as string)
-      : DANCER_TEAMS[0]
-    : dance.member.team;
+  // Committee: the chosen tab, else their own team if they dance. Others: their own team.
+  const team = pageTeam(dance, searchParams.team);
 
   if (!team) {
     return (
@@ -31,7 +28,7 @@ export default async function RosterPage({
   }
 
   const dancers = await db.member.findMany({
-    where: { category: "DANCER", team },
+    where: { team },
     orderBy: { fullName: "asc" },
     select: {
       id: true,
@@ -39,6 +36,7 @@ export default async function RosterPage({
       registerNumber: true,
       email: true,
       position: true,
+      category: true,
       skillLevel: true,
     },
   });
@@ -75,6 +73,7 @@ export default async function RosterPage({
           team={team}
           dancers={dancers}
           selfId={dance.member.id}
+          canTransfer={dance.isSuper}
         />
       </div>
     </div>

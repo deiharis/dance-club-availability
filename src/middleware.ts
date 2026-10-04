@@ -28,12 +28,11 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/profile", req.url));
   }
 
-  // Dancer section: dancers, Dance Leads, and admins (SuperAdmin/Core)
+  // Dance Floor: login required. Who may enter (anyone in a dance team, or the committee) is
+  // decided by app/dance/layout.tsx from the database, because the login token does not know
+  // a member's team.
   if (pathname.startsWith("/dance")) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
-    if (token.category !== "DANCER" && token.role === "MEMBER") {
-      return NextResponse.redirect(new URL("/profile", req.url));
-    }
   }
 
   // SUPERADMIN only routes

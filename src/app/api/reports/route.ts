@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
-import { getCaller } from "@/lib/dance";
+import { getCaller, leadReviewedWhere, isLeadReviewed } from "@/lib/dance";
 import { notifySuperAdmins } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
@@ -34,31 +34,24 @@ export async function GET(req: Request) {
     const userId = session.user.id;
     const caller = await getCaller();
 
-    // ?scope=dancers: the committee can LOOK at normal dancers' reports (view only; the
-    // PATCH route still lets only that team's Lead decide). No proof images are signed.
+    // ?scope=dancers: the committee can LOOK at the reports Team Leaders decide (view only;
+    // the PATCH route still lets only that team's Lead decide). No proof images are signed.
     const dancerView =
       !!caller?.isCommittee && new URL(req.url).searchParams.get("scope") === "dancers";
 
-    // Committee: every report. Dance Lead: reports from their own team's dancers
-    // (never their own). Everyone else: only their own, handled below.
+    // Routing (see leadReviewedWhere in lib/dance.ts): dance-topic reports from anyone in a
+    // team go to that team's Lead; every other report goes to the committee.
+    // Committee queue = everything not Lead-reviewed. Lead queue = Lead-reviewed reports from
+    // their own team (never their own). Everyone else: only their own, handled below.
     if (caller && (caller.isCommittee || caller.isLead)) {
       const reports = await db.report.findMany({
         where: dancerView
-          ? { member: { category: "DANCER", position: { not: "Team Leader" } } }
+          ? leadReviewedWhere
           : caller.isCommittee
-          ? // Normal dancers' reports are reviewed by their Lead only; the committee
-            // still reviews Dance Leads' own reports.
-            {
-              NOT: {
-                member: { category: "DANCER", position: { not: "Team Leader" } },
-              },
-            }
+          ? { NOT: leadReviewedWhere }
           : {
-              member: {
-                category: "DANCER",
-                team: caller.member?.team ?? "__none__",
-                id: { not: caller.member?.id },
-              },
+              ...leadReviewedWhere,
+              member: { team: caller.member?.team ?? "__none__", id: { not: caller.member?.id } },
             },
         orderBy: { submittedAt: "desc" },
         include: {
@@ -143,6 +136,15 @@ export async function POST(req: Request) {
     const workDate = formData.get("workDate") as string;
     const image = formData.get("image") as File;
 
+    // Topic: pure dancers always report dance work; members who also dance choose; everyone
+    // else reports committee work. (Never trust the browser for this.)
+    const area =
+      member.category === "DANCER"
+        ? "DANCE"
+        : member.team && formData.get("area") === "DANCE"
+        ? "DANCE"
+        : "COMMITTEE";
+
     if (!description || !workDate || !image) {
       return NextResponse.json(
         { error: "Description, work date, and image are required" },
@@ -186,13 +188,12 @@ export async function POST(req: Request) {
         imageUrl: "",
         imagePath: fileName,
         memberId: member.id,
+        area,
       },
     });
 
-    // A normal dancer's report is reviewed by their Lead, not the committee, so only
-    // every other report (and a Lead's own) pings the SuperAdmin.
-    const reviewedByLead = member.category === "DANCER" && member.position !== "Team Leader";
-    if (!reviewedByLead) {
+    // Reports a Team Leader decides do not ping the SuperAdmin; everything else does.
+    if (!isLeadReviewed({ area }, member)) {
       await notifySuperAdmins({
         actorMemberId: member.id,
         type: "REPORT_SUBMITTED",

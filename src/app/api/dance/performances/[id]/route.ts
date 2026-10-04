@@ -33,7 +33,7 @@ export async function PUT(
     const ids: string[] = Array.isArray(dancerIds) ? dancerIds : [];
 
     const teamDancers = await db.member.findMany({
-      where: { category: "DANCER", team: r.performance.team, id: { in: ids } },
+      where: { team: r.performance.team, id: { in: ids } },
       select: { id: true },
     });
     if (teamDancers.length !== new Set(ids).size) {

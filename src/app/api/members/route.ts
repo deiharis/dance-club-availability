@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
+import { danceTeamFor } from "@/lib/teams";
 import { normalizePhone } from "@/lib/phone";
 import { notifySuperAdmins } from "@/lib/notify";
 
@@ -135,7 +136,7 @@ export async function POST(req: Request) {
             category,
             isFFCS: finalIsFFCS,
             position: position || null,
-            team: category === "DANCER" ? team : null,
+            team: danceTeamFor(category, team), // any category may also dance in a team
             skillLevel: skillLevel === "PROFESSIONAL" ? "PROFESSIONAL" : "AMATEUR",
           },
         },

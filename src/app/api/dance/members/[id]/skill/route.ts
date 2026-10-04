@@ -19,8 +19,9 @@ export async function PATCH(
     }
 
     const target = await db.member.findUnique({ where: { id: params.id } });
-    if (!target || target.category !== "DANCER") {
-      return NextResponse.json({ error: "Dancer not found" }, { status: 404 });
+    // Anyone in a dance team has a skill level, including Core members who also dance.
+    if (!target || !target.team) {
+      return NextResponse.json({ error: "This member is not in a dance team" }, { status: 404 });
     }
     if (!caller.canManage(target.team)) return forbidden();
 

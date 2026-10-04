@@ -16,7 +16,7 @@ export default async function DanceMyReportsPage() {
         accent="reports"
         subtitle="Log your contributions so your Team Leader can verify them."
       />
-      <MyReports variant="stage" showOd={false} />
+      <MyReports variant="stage" showOd={false} area={dance.member.category === "DANCER" ? "DANCE" : "ask"} />
     </div>
   );
 }

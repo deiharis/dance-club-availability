@@ -36,6 +36,13 @@ export const DANCER_ROLES = [
   "Normal Dancer",
 ];
 
+// Dance team to store for a member. Pure dancers (DANCER) must have one; anyone else may
+// optionally dance in a team too (as a Normal Dancer). Unknown team names are dropped.
+export function danceTeamFor(category: string, team: string | null | undefined): string | null {
+  if (category === "DANCER") return team || null;
+  return team && DANCER_TEAMS.includes(team) ? team : null;
+}
+
 export function getTeamsForCategory(category: string): string[] {
   if (category === "CORE") return CORE_TEAMS;
   if (category === "MEMBER") return MEMBER_TEAMS;

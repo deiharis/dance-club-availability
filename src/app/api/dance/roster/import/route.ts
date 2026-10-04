@@ -2,33 +2,45 @@ import { NextResponse } from "next/server";
 import { DANCER_TEAMS } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { notifySuperAdmins } from "@/lib/notify";
-import { readRows, pick, readCommon, readDancer, alreadyExists, createMemberAccount } from "@/lib/member-import";
+import { db } from "@/lib/db";
+import {
+  readRows,
+  pick,
+  readCommon,
+  readDancer,
+  alreadyExists,
+  findExistingMember,
+  createMemberAccount,
+} from "@/lib/member-import";
 
 export const dynamic = "force-dynamic";
 
 // POST /api/dance/roster/import  (form fields: file, team)
-// Adds dancers to ONE team. A Lead's file always goes into their own team, whatever the sheet
-// says; the committee chooses the team on the Roster page. Everyone imported is a DANCER with
-// the register number as a temporary password (changed at first login).
+// SuperAdmin only, one team at a time: the team picked on the Roster page. Rows the sheet lists
+// under ANOTHER team are skipped, so one shared Google Form sheet can be imported tab by tab
+// without anyone landing in the wrong team. Rows with no team go into the picked team.
+// New people become DANCERs with the register number as a temporary password; existing accounts
+// with no team (e.g. Core members) are just added to the team.
 export async function POST(req: Request) {
   const caller = await getCaller();
   if (!caller) return unauthorized();
+  if (!caller.isSuper) return forbidden();
 
   try {
     const form = await req.formData();
     const file = form.get("file") as File | null;
-    const team = caller.isCommittee ? String(form.get("team") ?? "") : caller.member?.team ?? "";
+    const team = String(form.get("team") ?? "");
 
     if (!DANCER_TEAMS.includes(team)) {
       return NextResponse.json({ error: "Unknown team" }, { status: 400 });
     }
-    if (!caller.canManage(team)) return forbidden();
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
     const rows = await readRows(file);
     let created = 0;
+    let attached = 0; // existing accounts (e.g. Core members) added to the team
     let skipped = 0;
     const errors: string[] = [];
 
@@ -48,11 +60,31 @@ export async function POST(req: Request) {
       }
       const sheetTeam = pick(row, "Dance Team", "Team");
       if (sheetTeam && sheetTeam.toLowerCase() !== team.toLowerCase()) {
-        errors.push(`Note: ${c.fullName} was listed under "${sheetTeam}" but was added to ${team}`);
+        skipped++;
+        errors.push(`Skipped ${c.fullName}: listed under "${sheetTeam}" (import that team from its own tab)`);
+        continue;
+      }
+      // Someone who already has an account (e.g. a Core member who also dances): keep their
+      // account and committee role, and just put them in this team as a Normal Dancer.
+      const existing = await findExistingMember(c.email, c.registerNumber);
+      if (existing) {
+        if (existing.team === team) {
+          skipped++;
+          errors.push(`Skipped ${existing.fullName}: already in ${team}`);
+        } else if (existing.team) {
+          skipped++;
+          errors.push(`Skipped ${existing.fullName}: already in ${existing.team} (a member can be in one team)`);
+        } else {
+          await db.member.update({ where: { id: existing.id }, data: { team } });
+          attached++;
+          errors.push(`Added existing member ${existing.fullName} to ${team} (account kept)`);
+        }
+        continue;
       }
       if (await alreadyExists(c.email, c.registerNumber)) {
+        // A login exists without a member profile; leave it alone.
         skipped++;
-        errors.push(`Skipped ${c.fullName}: an account with this email or register number already exists`);
+        errors.push(`Skipped ${c.fullName}: an account with this email already exists`);
         continue;
       }
 
@@ -60,16 +92,16 @@ export async function POST(req: Request) {
       created++;
     }
 
-    if (created > 0) {
+    if (created + attached > 0) {
       await notifySuperAdmins({
         actorMemberId: caller.member?.id,
         type: "MEMBERS_ADDED",
-        message: `${caller.member?.fullName ?? "A Dance Lead"} imported ${created} dancer${created === 1 ? "" : "s"} into ${team}${skipped ? ` (${skipped} skipped)` : ""}.`,
+        message: `${caller.member?.fullName ?? "The Super Admin"} imported ${created + attached} dancer${created + attached === 1 ? "" : "s"} into ${team}${attached ? ` (${attached} existing member${attached === 1 ? "" : "s"})` : ""}${skipped ? `, ${skipped} skipped` : ""}.`,
         link: "/members",
       });
     }
 
-    return NextResponse.json({ created, skipped, errors });
+    return NextResponse.json({ created, attached, skipped, errors });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

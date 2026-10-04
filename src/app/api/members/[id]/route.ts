@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
+import { danceTeamFor } from "@/lib/teams";
 import { normalizePhone } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
@@ -133,7 +134,7 @@ export async function PATCH(
         category,
         isFFCS: finalIsFFCS,
         position: position || null,
-        team: category === "DANCER" ? team : null,
+        team: danceTeamFor(category, team), // any category may also dance in a team
       },
     });
 

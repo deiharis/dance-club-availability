@@ -23,7 +23,7 @@ async function MemberTimetableView() {
   });
 
   return (
-    <MemberShell name={member.fullName}>
+    <MemberShell name={member.fullName} inTeam={!!member.team}>
       <MemberHeading
         label="Availability"
         title="My timetable"

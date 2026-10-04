@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { getDanceUser } from "@/lib/dance";
+import { getDanceUser, pageTeam } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 
@@ -36,11 +36,8 @@ export default async function AttendancePage({
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
 
-  const team = dance.isCommittee
-    ? DANCER_TEAMS.includes(searchParams.team ?? "")
-      ? (searchParams.team as string)
-      : DANCER_TEAMS[0]
-    : dance.member.team;
+  // Committee: the chosen tab, else their own team if they dance. Others: their own team.
+  const team = pageTeam(dance, searchParams.team);
 
   if (!team) {
     return (
@@ -62,7 +59,7 @@ export default async function AttendancePage({
 
   const dancers = manager
     ? await db.member.findMany({
-        where: { category: "DANCER", team },
+        where: { team },
         orderBy: { fullName: "asc" },
         select: { id: true, fullName: true },
       })

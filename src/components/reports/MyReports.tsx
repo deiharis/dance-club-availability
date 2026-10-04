@@ -6,6 +6,7 @@ import { StatusChip } from "@/components/console/ui";
 
 interface Report {
   id: string;
+  area?: "COMMITTEE" | "DANCE" | null;
   description: string;
   workDate: string;
   status: string;
@@ -112,11 +113,16 @@ type Tab = "submit" | "od";
 export default function MyReports({
   variant,
   showOd,
+  area = "COMMITTEE",
 }: {
   variant: "member" | "stage";
   showOd: boolean;
+  // What reports here are about. "ask" = the member both dances and has a committee role, so
+  // they choose per report: dance work goes to their Team Leader, committee work to the committee.
+  area?: "ask" | "DANCE" | "COMMITTEE";
 }) {
   const s = SKIN[variant];
+  const [topic, setTopic] = useState<"" | "DANCE" | "COMMITTEE">(area === "ask" ? "" : area);
   const [activeTab, setActiveTab] = useState<Tab>("submit");
   const [reports, setReports] = useState<Report[]>([]);
   const [approvedReports, setApprovedReports] = useState<ApprovedReport[]>([]);
@@ -181,12 +187,17 @@ export default function MyReports({
       setError("Please attach an image as proof.");
       return;
     }
+    if (!topic) {
+      setError("Choose whether this report is about dance team work or committee work.");
+      return;
+    }
 
     setSubmitting(true);
     const formData = new FormData();
     formData.append("description", form.description);
     formData.append("workDate", form.workDate);
     formData.append("image", file);
+    formData.append("area", topic);
 
     const res = await fetch("/api/reports", { method: "POST", body: formData });
     const data = await res.json();
@@ -198,11 +209,14 @@ export default function MyReports({
     }
 
     setSuccess(
-      showOd
+      topic === "DANCE"
+        ? "Report submitted. Your Team Leader will review it."
+        : showOd
         ? "Report submitted. Once approved, you can request an OD for it."
-        : "Report submitted. Your Team Leader will review it."
+        : "Report submitted. The committee will review it."
     );
     setForm({ description: "", workDate: "" });
+    if (area === "ask") setTopic("");
     setImagePreview(null);
     if (fileRef.current) fileRef.current.value = "";
     loadAll();
@@ -298,6 +312,37 @@ export default function MyReports({
           <section className={`${s.panel} p-5 sm:p-6`}>
             <h2 className={s.title}>Submit a new report</h2>
             <form onSubmit={handleSubmitReport} className="mt-4 space-y-4">
+              {area === "ask" && (
+                <div>
+                  <label className={s.label}>What is this report about?</label>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {([
+                      { v: "DANCE", t: "Dance team work", d: "Reviewed by your Team Leader" },
+                      { v: "COMMITTEE", t: "Working committee work", d: "Reviewed by the committee" },
+                    ] as const).map((o) => (
+                      <label
+                        key={o.v}
+                        className={`flex cursor-pointer items-start gap-3 border px-3 py-2.5 transition-colors ${
+                          variant === "stage" ? "rounded-2xl" : "rounded-md"
+                        } ${topic === o.v ? s.slotOn : `${s.slotOff} border-white/10`}`}
+                      >
+                        <input
+                          type="radio"
+                          name="area"
+                          checked={topic === o.v}
+                          onChange={() => setTopic(o.v)}
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${s.check}`}
+                        />
+                        <span>
+                          <span className="block text-sm font-medium text-white">{o.t}</span>
+                          <span className={`block text-xs ${s.muted}`}>{o.d}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className={s.label}>Work description</label>
                 <textarea
@@ -366,7 +411,12 @@ export default function MyReports({
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0 flex-1">
                         <p className={`text-sm ${s.strong}`}>{report.description}</p>
-                        <p className={`mt-1 text-xs ${s.muted}`}>Work date: {fmt(report.workDate)}</p>
+                        <p className={`mt-1 text-xs ${s.muted}`}>
+                          Work date: {fmt(report.workDate)}
+                          {area === "ask" && report.area && (
+                            <span className={`ml-2 ${s.chip}`}>{report.area === "DANCE" ? "Dance team" : "Committee"}</span>
+                          )}
+                        </p>
                         {report.status === "REJECTED" && report.reviewNotes && (
                           <div className="mt-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2">
                             <p className="text-xs text-red-300">Rejection reason: {report.reviewNotes}</p>

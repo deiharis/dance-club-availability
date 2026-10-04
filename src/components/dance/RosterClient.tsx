@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, UserPlus, Upload, Download, FileSpreadsheet, X } from "lucide-react";
+import { Trash2, UserPlus, UserMinus, Upload, Download, FileSpreadsheet, X } from "lucide-react";
 import { DANCER_ROLES } from "@/lib/teams";
 
 type Dancer = {
@@ -11,7 +11,14 @@ type Dancer = {
   registerNumber: string;
   email: string;
   position: string | null;
+  category: string; // DANCER = pure dancer; anything else = member who also dances
   skillLevel: "PROFESSIONAL" | "AMATEUR";
+};
+
+const CATEGORY_BADGE: Record<string, string> = {
+  CORE: "Core",
+  MEMBER: "Member",
+  FFCS_ONLY: "FFCS",
 };
 
 const emptyForm = {
@@ -33,10 +40,13 @@ export default function RosterClient({
   team,
   dancers,
   selfId,
+  canTransfer = false,
 }: {
   team: string;
   dancers: Dancer[];
   selfId: string | null;
+  // SuperAdmin only: Excel import / export / template for this team.
+  canTransfer?: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
@@ -47,10 +57,15 @@ export default function RosterClient({
   const set = (k: keyof typeof emptyForm) => (e: any) =>
     setForm({ ...form, [k]: e.target.value });
 
-  // Excel import into this team (the server forces the team for Leads).
+  // Excel import into this team (SuperAdmin only; rows listed under another team are skipped).
   const fileRef = useRef<HTMLInputElement>(null);
   const [importing, setImporting] = useState(false);
-  const [result, setResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
+  const [result, setResult] = useState<{
+    created: number;
+    attached?: number; // existing members (e.g. Core) put into the team
+    skipped: number;
+    errors: string[];
+  } | null>(null);
   const q = `team=${encodeURIComponent(team)}`;
 
   async function importFile(e: React.ChangeEvent<HTMLInputElement>) {
@@ -82,6 +97,15 @@ export default function RosterClient({
       body: JSON.stringify({ skillLevel }),
     });
     if (!res.ok) setError((await res.json()).error ?? "Could not update");
+    router.refresh();
+  }
+
+  // Core / Normal / FFCS-only members only leave the team; their account stays.
+  async function removeFromTeam(d: Dancer) {
+    if (!confirm(`Take ${d.fullName} out of ${team}? Their account and committee role stay.`)) return;
+    setError("");
+    const res = await fetch(`/api/dance/members/${d.id}/team`, { method: "PATCH" });
+    if (!res.ok) setError((await res.json()).error ?? "Could not remove from team");
     router.refresh();
   }
 
@@ -119,6 +143,8 @@ export default function RosterClient({
           {dancers.length} dancer{dancers.length === 1 ? "" : "s"} in {team}
         </p>
         <div className="flex flex-wrap items-center gap-2">
+          {canTransfer && (
+          <>
           <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={importFile} />
           <button
             onClick={() => fileRef.current?.click()}
@@ -145,6 +171,8 @@ export default function RosterClient({
             <FileSpreadsheet size={15} />
             <span className="hidden sm:inline">Template</span>
           </a>
+          </>
+          )}
           <button
             onClick={() => setShowForm(!showForm)}
             className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
@@ -159,7 +187,8 @@ export default function RosterClient({
         <div className="mt-4 rounded-3xl border border-orange-400/25 bg-orange-500/[0.07] p-4">
           <div className="flex items-start justify-between gap-3">
             <p className="text-sm font-medium text-white">
-              Import finished: {result.created} added
+              Import finished: {result.created} new dancer{result.created === 1 ? "" : "s"}
+              {result.attached ? `, ${result.attached} existing member${result.attached === 1 ? "" : "s"} added to the team` : ""}
               {result.skipped ? `, ${result.skipped} skipped` : ""}.
               {result.created > 0 && (
                 <span className="font-normal text-orange-100/60"> Their temporary password is their register number.</span>
@@ -233,10 +262,23 @@ export default function RosterClient({
             {dancers.map((d) => (
               <tr key={d.id} className="border-b border-white/5 last:border-0">
                 <td className="px-4 py-3">
-                  <p className="text-white font-medium">{d.fullName}</p>
+                  <p className="flex flex-wrap items-center gap-2 text-white font-medium">
+                    {d.fullName}
+                    {d.category !== "DANCER" && (
+                      <span className="rounded-full bg-violet-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-200">
+                        {CATEGORY_BADGE[d.category] ?? "Member"}
+                      </span>
+                    )}
+                  </p>
                   <p className="text-orange-100/50 text-xs">{d.registerNumber} · {d.email}</p>
                 </td>
-                <td className="px-4 py-3 text-orange-100/80">{d.position ?? "Dancer"}</td>
+                <td className="px-4 py-3 text-orange-100/80">
+                  {/* Non-dancers are always Normal Dancers in their team; position is their committee role */}
+                  {d.category === "DANCER" ? d.position ?? "Normal Dancer" : "Normal Dancer"}
+                  {d.category !== "DANCER" && d.position && (
+                    <p className="text-[11px] text-orange-100/40">{d.position}</p>
+                  )}
+                </td>
                 <td className="px-4 py-3">
                   <select
                     value={d.skillLevel}
@@ -248,15 +290,25 @@ export default function RosterClient({
                   </select>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {d.id !== selfId && (
-                    <button
-                      onClick={() => remove(d)}
-                      title="Remove dancer"
-                      className="text-orange-100/50 hover:text-red-400 p-1"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  )}
+                  {d.id !== selfId &&
+                    (d.category === "DANCER" ? (
+                      <button
+                        onClick={() => remove(d)}
+                        title="Remove dancer (deletes their account)"
+                        className="text-orange-100/50 hover:text-red-400 p-1"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => removeFromTeam(d)}
+                        title="Remove from team (keeps their account)"
+                        className="inline-flex items-center gap-1 rounded-full border border-white/10 px-2.5 py-1 text-xs text-orange-100/60 hover:border-red-400/40 hover:text-red-300"
+                      >
+                        <UserMinus size={13} />
+                        Remove from team
+                      </button>
+                    ))}
                 </td>
               </tr>
             ))}

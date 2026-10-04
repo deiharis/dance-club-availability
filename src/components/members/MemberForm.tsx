@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ShieldCheck, User, KeyRound } from "lucide-react";
 import TeamSelector from "@/components/ui/TeamSelector";
@@ -65,6 +65,12 @@ export default function MemberForm({
 
   const isFFCSOnly = form.category === "FFCS_ONLY";
   const isDancer = form.category === "DANCER";
+
+  // "Also dances in a team" for non-dancers. Synced once the Edit page has loaded the member.
+  const [dances, setDances] = useState(false);
+  useEffect(() => {
+    if (form.category !== "DANCER" && form.team) setDances(true);
+  }, [form.category, form.team]);
   const isCoreOrMember = form.category === "CORE" || form.category === "MEMBER";
   const access = accessFor(form.category, form.position);
   const initials =
@@ -233,6 +239,30 @@ export default function MemberForm({
               </>
             )}
 
+            {/* Core, Normal and FFCS-only members can also dance in one team (as a Normal Dancer). */}
+            {!isDancer && (
+              <div>
+                <label className="flex cursor-pointer items-center gap-3 rounded-md border border-zinc-700 bg-black/30 px-3 py-3">
+                  <input
+                    type="checkbox"
+                    checked={dances}
+                    onChange={(e) => {
+                      setDances(e.target.checked);
+                      if (!e.target.checked) set({ team: "" });
+                    }}
+                    className="h-4 w-4 accent-violet-500"
+                  />
+                  <span className="text-sm text-zinc-300">Also dances in a dance team</span>
+                  <span className="ml-auto text-xs text-zinc-500">as a Normal Dancer</span>
+                </label>
+                {dances && (
+                  <div className="mt-3">
+                    <TeamSelector category="DANCER" value={form.team} onChange={(team) => set({ team })} />
+                  </div>
+                )}
+              </div>
+            )}
+
             <label className="flex cursor-pointer items-center gap-3 rounded-md border border-zinc-700 bg-black/30 px-3 py-3">
               <input
                 type="checkbox"
@@ -301,9 +331,9 @@ export default function MemberForm({
               <dt className="text-zinc-500">{isDancer ? "Role" : "Position"}</dt>
               <dd className="text-right text-zinc-200">{form.position || "Not set"}</dd>
             </div>
-            {isDancer && (
+            {(isDancer || form.team) && (
               <div className="flex justify-between gap-3">
-                <dt className="text-zinc-500">Team</dt>
+                <dt className="text-zinc-500">{isDancer ? "Team" : "Dance team"}</dt>
                 <dd className="text-right text-zinc-200">{form.team || "Not set"}</dd>
               </div>
             )}
