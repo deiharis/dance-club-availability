@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Calendar,
   CalendarDays,
+  ClipboardCheck,
   Users,
   FileText,
   LogOut,
@@ -28,6 +29,7 @@ const navItems = [
   { href: "/dance", label: "Dashboard", icon: LayoutDashboard },
   { href: "/dance/roster", label: "Roster", icon: Users, manageOnly: true },
   { href: "/dance/rehearsals", label: "Rehearsals", icon: CalendarDays },
+  { href: "/dance/attendance", label: "Attendance", icon: ClipboardCheck },
   { href: "/dance/timetable", label: "Timetable", icon: Calendar },
   { href: "/reports/submit", label: "Reports and OD", icon: FileText },
 ];
