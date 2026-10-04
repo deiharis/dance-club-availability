@@ -40,12 +40,18 @@ export default async function SubmitReportPage() {
     );
   }
 
-  // Normal and FFCS-only members: the member portal.
+  // Normal and FFCS-only members: the member portal. Only CORE and MEMBER may request OD
+  // (same rule as api/od), so FFCS-only members get reports without the OD tab.
+  const canOd = caller?.member?.category === "CORE" || caller?.member?.category === "MEMBER";
   return (
     <MemberShell name={name}>
-      <MemberHeading label="Work" title="My reports" subtitle="Submit work reports and request OD for approved ones." />
+      <MemberHeading
+        label="Work"
+        title="My reports"
+        subtitle={canOd ? "Submit work reports and request OD for approved ones." : "Submit work reports for review."}
+      />
       <div className="max-w-3xl">
-        <MyReports variant="member" showOd />
+        <MyReports variant="member" showOd={canOd} />
       </div>
     </MemberShell>
   );

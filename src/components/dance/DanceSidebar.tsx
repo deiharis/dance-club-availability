@@ -80,7 +80,9 @@ export default function DanceSidebar({
 
   const items = navItems
     .filter((i) => canManage || !("manageOnly" in i))
-    .filter((i) => (canManage && !isCommittee) || !("leadOnly" in i));
+    .filter((i) => (canManage && !isCommittee) || !("leadOnly" in i))
+    // Committee members file their reports (with OD) in the console, not the dancer version.
+    .map((i) => (i.href === "/dance/my-reports" && isCommittee ? { ...i, href: "/reports/submit" } : i));
 
   const content = (
     <div className="relative flex flex-col h-full">
