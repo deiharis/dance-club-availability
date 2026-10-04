@@ -5,7 +5,6 @@ export const CORE_TEAMS = [
   "Events Team Head",
   "Management Team Head",
   "Editorial Team Head",
-  "Videography & Photography Team Head",
   "Chairperson",
   "Vice Chairperson",
   "Secretary",
@@ -20,7 +19,6 @@ export const MEMBER_TEAMS = [
   "Events Team Member",
   "Management Team Member",
   "Editorial Team Member",
-  "Videography & Photography Team Member",
 ];
 
 export const DANCER_TEAMS = [
