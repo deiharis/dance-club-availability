@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import RosterClient from "@/components/dance/RosterClient";
 
@@ -44,10 +45,12 @@ export default async function RosterPage({
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
-      <h1 className="text-3xl font-light tracking-tight text-white">Roster</h1>
-      <p className="text-orange-100/60 text-sm mt-1">
-        Add dancers, set their skill level, and remove them from {team}.
-      </p>
+      <StageHeader
+        eyebrow={team}
+        title="Team"
+        accent="roster"
+        subtitle="Add dancers, set their skill level, and remove them from the team."
+      />
 
       {dance.isCommittee && (
         <div className="mt-4 flex flex-wrap gap-2">

@@ -229,7 +229,7 @@ export default function PerformancesClient({
 
   const section = (title: string, items: Performance[]) => (
     <div className="mt-6">
-      <h2 className="text-sm font-medium text-orange-100/70 mb-3">{title}</h2>
+      <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-orange-100/50 mb-3">{title}</h2>
       {items.length === 0 ? (
         <p className="text-orange-100/50 text-sm">Nothing here.</p>
       ) : (

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { CheckCircle, XCircle } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import MarkReadButton from "@/components/dance/MarkReadButton";
 
 export default async function DanceNotificationsPage() {
@@ -17,15 +18,14 @@ export default async function DanceNotificationsPage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-light tracking-tight text-white">Notifications</h1>
-          <p className="text-orange-100/60 text-sm mt-1">
-            Updates on your reports. {unread > 0 ? `${unread} unread.` : "You are all caught up."}
-          </p>
-        </div>
+      <StageHeader
+        eyebrow="Notifications"
+        title="Your"
+        accent="updates"
+        subtitle={`Updates on your reports. ${unread > 0 ? `${unread} unread.` : "You are all caught up."}`}
+      >
         {unread > 0 && <MarkReadButton />}
-      </div>
+      </StageHeader>
 
       <div className="mt-6 space-y-3">
         {notifications.length === 0 && (

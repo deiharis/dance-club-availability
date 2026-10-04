@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 
 const STATUS_STYLE: Record<string, string> = {
@@ -78,10 +79,12 @@ export default async function AttendancePage({
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl">
-      <h1 className="text-3xl font-light tracking-tight text-white">Attendance</h1>
-      <p className="text-orange-100/60 text-sm mt-1">
-        {team} rehearsal attendance. Percentage = present out of present plus absent; excused is not counted.
-      </p>
+      <StageHeader
+        eyebrow={team}
+        title="Who is"
+        accent="showing up"
+        subtitle="Percentage is present out of present plus absent; excused is not counted."
+      />
 
       {dance.isCommittee && (
         <div className="mt-4 flex flex-wrap gap-2">
@@ -143,7 +146,7 @@ export default async function AttendancePage({
         </div>
       )}
 
-      <h2 className="text-sm font-medium text-orange-100/70 mt-8 mb-3">
+      <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-orange-100/50 mt-8 mb-3">
         {manager ? "Rehearsals (tap one to mark attendance)" : "Your record"}
       </h2>
 

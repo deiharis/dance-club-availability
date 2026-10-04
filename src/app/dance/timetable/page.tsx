@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 
 const toEntries = (rows: { day: any; slot: string; status: string }[]) =>
@@ -36,10 +37,12 @@ export default async function DanceTimetablePage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
-      <h1 className="text-3xl font-light tracking-tight text-white">My Timetable</h1>
-      <p className="text-orange-100/60 text-sm mt-1">
-        Click any cell to toggle between Free and Class.
-      </p>
+      <StageHeader
+        eyebrow={member.team ?? "Dance Floor"}
+        title="My"
+        accent="timetable"
+        subtitle="Click any cell to toggle between Free and Class."
+      />
 
       <div className="mt-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4 sm:p-6">
         <TimetableGrid

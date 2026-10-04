@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import RehearsalsClient from "@/components/dance/RehearsalsClient";
 
@@ -47,10 +48,12 @@ export default async function RehearsalsPage({
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl">
-      <h1 className="text-3xl font-light tracking-tight text-white">Rehearsals</h1>
-      <p className="text-orange-100/60 text-sm mt-1">
-        {team} practice schedule.
-      </p>
+      <StageHeader
+        eyebrow={team}
+        title="Rehearsal"
+        accent="schedule"
+        subtitle="When and where the team practises."
+      />
 
       {dance.isCommittee && (
         <div className="mt-4 flex flex-wrap gap-2">

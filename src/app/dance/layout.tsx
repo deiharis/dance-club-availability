@@ -48,7 +48,7 @@ export default async function DanceLayout({
 
   return (
     <div
-      className={`${stage.className} stage-glow relative min-h-screen bg-base text-white`}
+      className={`${stage.className} stage-glow relative min-h-[100dvh] bg-base text-white`}
     >
       {/* Animated wave across the top of every Dance Floor page */}
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[30rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_55%,transparent)]">

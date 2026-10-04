@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import AttendanceMarker from "@/components/dance/AttendanceMarker";
 
 export default async function MarkAttendancePage({
@@ -44,10 +45,13 @@ export default async function MarkAttendancePage({
         <ArrowLeft size={16} />
         Back to attendance
       </Link>
-      <h1 className="text-3xl font-light tracking-tight text-white mt-4">{rehearsal.title}</h1>
-      <p className="text-orange-100/60 text-sm mt-1">
-        {rehearsal.team} · {when} · {rehearsal.startTime} - {rehearsal.endTime}
-      </p>
+      <div className="mt-4">
+        <StageHeader
+          eyebrow={rehearsal.team}
+          title={rehearsal.title}
+          subtitle={`${when} · ${rehearsal.startTime} - ${rehearsal.endTime}`}
+        />
+      </div>
 
       <div className="mt-6">
         <AttendanceMarker

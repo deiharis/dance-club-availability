@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import PerformancesClient from "@/components/dance/PerformancesClient";
 
@@ -53,10 +54,12 @@ export default async function PerformancesPage({
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl">
-      <h1 className="text-3xl font-light tracking-tight text-white">Performances</h1>
-      <p className="text-orange-100/60 text-sm mt-1">
-        {team} performances and who is dancing in them.
-      </p>
+      <StageHeader
+        eyebrow={team}
+        title="On"
+        accent="stage"
+        subtitle="Performances and who is dancing in them."
+      />
 
       {dance.isCommittee && (
         <div className="mt-4 flex flex-wrap gap-2">
