@@ -223,12 +223,16 @@ model Report {
 enum NotificationType {
   REPORT_APPROVED
   REPORT_REJECTED
+  REHEARSAL_ADDED
+  PERFORMANCE_ADDED
+  ATTENDANCE_MARKED
 }
 
 model Notification {
   id        String           @id @default(cuid())
   type      NotificationType
   message   String
+  link      String? // page to open when the notification is clicked
   read      Boolean          @default(false)
   createdAt DateTime         @default(now())
 

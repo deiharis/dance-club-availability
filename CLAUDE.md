@@ -100,6 +100,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 - "Committee" = SUPERADMIN or an ADMIN whose category is not DANCER (`isCommittee` in `lib/dance.ts`). Dance Leads (`position = "Team Leader"`) are ADMIN but NOT committee. They manage only their own `team` (`canManage(team)`); committee manages all teams.
 - Leads add/remove dancers (Normal Dancer or Team Leader) in their own team, set `skillLevel` (PROFESSIONAL | AMATEUR, default AMATEUR), create rehearsals and performances, and mark attendance (PRESENT/ABSENT/EXCUSED; % = present / (present + absent)).
 - Dancers have **Reports only, no OD**. Normal dancers' reports are reviewed ONLY by their team's Lead; Dance Leads' own reports are reviewed by the committee. Nobody reviews their own.
+- Notifications (`lib/notify.ts`, `notifyTeam`): when a Lead (or committee) creates a rehearsal, creates a performance, or FIRST saves attendance for a rehearsal, every dancer in that team plus every SuperAdmin gets a `Notification` (types `REHEARSAL_ADDED`, `PERFORMANCE_ADDED`, `ATTENDANCE_MARKED`, with a `link`). The person who did the action is not notified. A failed notification never fails the request. Shown at `/dance/notifications`; the committee sidebar has a Notifications link with an unread badge (`api/notifications/unread`).
 - Every `/api/dance/*` and member/timetable/reports API re-checks the caller server-side with `getCaller()`. Never trust a team sent from the browser.
 
 **OD**

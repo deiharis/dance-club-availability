@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { DANCER_TEAMS } from "@/lib/teams";
+import { notifyTeam, dateLabel, teamLink } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,16 @@ export async function POST(req: Request) {
         venue: venue?.trim() || null,
       },
     });
+    await notifyTeam({
+      team,
+      actorMemberId: caller.member?.id,
+      type: "REHEARSAL_ADDED",
+      message: `New rehearsal for ${team}: ${rehearsal.title}, ${dateLabel(rehearsal.date)}, ${startTime} - ${endTime}${
+        rehearsal.venue ? ` at ${rehearsal.venue}` : ""
+      }.`,
+      link: teamLink("/dance/rehearsals", team),
+    });
+
     return NextResponse.json(rehearsal, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

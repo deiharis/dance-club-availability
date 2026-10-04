@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { DANCER_TEAMS } from "@/lib/teams";
+import { notifyTeam, dateLabel, teamLink } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,16 @@ export async function POST(req: Request) {
         dancers: { connect: teamDancers },
       },
     });
+    await notifyTeam({
+      team,
+      actorMemberId: caller.member?.id,
+      type: "PERFORMANCE_ADDED",
+      message: `New performance for ${team}: ${performance.name}, ${dateLabel(performance.eventDate)}${
+        performance.venue ? ` at ${performance.venue}` : ""
+      }.`,
+      link: teamLink("/dance/performances", team),
+    });
+
     return NextResponse.json(performance, { status: 201 });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

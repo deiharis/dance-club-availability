@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { AttendanceStatus } from "@prisma/client";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { notifyTeam, dateLabel, teamLink } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +45,9 @@ export async function PUT(
       );
     }
 
+    // Only the first save notifies; later corrections to the same sheet stay quiet.
+    const firstSave = (await db.attendance.count({ where: { rehearsalId: params.id } })) === 0;
+
     await db.$transaction(
       valid.map((r: { memberId: string; status: AttendanceStatus }) =>
         db.attendance.upsert({
@@ -59,6 +63,16 @@ export async function PUT(
         })
       )
     );
+
+    if (firstSave && valid.length > 0) {
+      await notifyTeam({
+        team: rehearsal.team,
+        actorMemberId: caller.member?.id,
+        type: "ATTENDANCE_MARKED",
+        message: `Attendance was marked for ${rehearsal.title} (${dateLabel(rehearsal.date)}).`,
+        link: teamLink("/dance/attendance", rehearsal.team),
+      });
+    }
 
     return NextResponse.json({ saved: valid.length });
   } catch {

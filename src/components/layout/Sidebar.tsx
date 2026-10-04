@@ -19,6 +19,7 @@ import {
   Music,
   ArrowUpRight,
   KeyRound,
+  Bell,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -30,6 +31,7 @@ interface SidebarProps {
 export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [unread, setUnread] = useState(0);
 
   const isSuperAdmin = role === "SUPERADMIN";
   const isAdminOrAbove = role === "ADMIN" || role === "SUPERADMIN";
@@ -37,6 +39,14 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
   // Close drawer on route change
   useEffect(() => {
     setOpen(false);
+  }, [pathname]);
+
+  // Unread count for the Notifications badge; refreshed on every page change.
+  useEffect(() => {
+    fetch("/api/notifications/unread", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { count: 0 }))
+      .then((d) => setUnread(d.count ?? 0))
+      .catch(() => setUnread(0));
   }, [pathname]);
 
   // Prevent body scroll when drawer is open
@@ -58,6 +68,8 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       label: "Overview",
       items: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: isAdminOrAbove },
+        // Opens the notifications list (it lives in the Dance Floor section)
+        { href: "/dance/notifications", label: "Notifications", icon: Bell, show: isAdminOrAbove, badge: unread },
       ],
     },
     {
@@ -141,6 +153,11 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
                   >
                     <Icon size={15} />
                     {item.label}
+                    {"badge" in item && (item.badge ?? 0) > 0 && (
+                      <span className="ml-auto rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-sky-300">
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
