@@ -4,10 +4,17 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 const SUPERADMIN_EMAIL = "harisahamed.b2024@vitstudent.ac.in";
-const SUPERADMIN_PASSWORD = "harisahamed.b2024";
 
 async function main() {
   console.log("Running seed...");
+
+  // Password comes from .env (SUPERADMIN_PASSWORD), never from this file.
+  const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD;
+  if (!SUPERADMIN_PASSWORD || SUPERADMIN_PASSWORD.length < 12) {
+    throw new Error(
+      "Set SUPERADMIN_PASSWORD in .env (at least 12 characters) before running the seed."
+    );
+  }
 
   // ── SUPERADMIN ─────────────────────────────────────────
   // Always upsert so future seed runs never create duplicates
@@ -75,12 +82,14 @@ async function main() {
   console.log("─────────────────────────────────────────");
   console.log("Seed complete.");
   console.log("");
-  console.log("SUPERADMIN credentials:");
-  console.log(`  Email:    ${SUPERADMIN_EMAIL}`);
-  console.log(`  Password: ${SUPERADMIN_PASSWORD}`);
+  console.log(`SUPERADMIN login: ${SUPERADMIN_EMAIL}`);
+  console.log("Password: the value of SUPERADMIN_PASSWORD in your .env");
   console.log("─────────────────────────────────────────");
 }
 
 main()
-  .catch(console.error)
+  .catch((e) => {
+    console.error(e.message ?? e);
+    process.exitCode = 1;
+  })
   .finally(() => prisma.$disconnect());

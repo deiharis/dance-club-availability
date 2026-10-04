@@ -115,7 +115,7 @@ Pushing to `main` triggers a Vercel build. Before pushing, run `npx tsc --noEmit
 
 - The SuperAdmin cannot see normal dancers' reports in the committee review queue (Leads only). Add a read-only view if wanted.
 - `SaturdayPlanner` model exists, but there is no UI or logic yet (Saturday follows a chosen weekday's timetable).
-- `seed.ts` contains the SuperAdmin password in plaintext and is committed. Move it to an env var.
+- `seed.ts` now reads `SUPERADMIN_PASSWORD` from `.env` (local only, not needed in Vercel). The OLD plaintext password is still in git history, so the real password must stay changed.
 - One-off scripts in the project root (`seed.ts`, `migrate.ts`, `fix-*.ts`, `clear-*.ts`) are run with `npx tsx <file>`. Everything except `seed.ts` can be deleted.
 - `(session.user as any)` casts are used throughout. `src/types/index.ts` extends the Session type, and could replace them.
 - Empty leftover folders: `src/app/(member)/timetable`, `src/app/(member)/reports/submit`.
