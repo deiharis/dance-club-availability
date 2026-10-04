@@ -69,14 +69,14 @@ export default function AddMemberPage() {
 
   return (
     <div>
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4">
+      <div data-section="People" className="c-page-header">
         <h1 className="text-base sm:text-lg font-semibold text-white">
           Add New Member
         </h1>
       </div>
 
       <div className="p-4 sm:p-8 max-w-2xl">
-        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-6 sm:p-8">
+        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6 sm:p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
 
             {/* Full Name */}
@@ -90,7 +90,7 @@ export default function AddMemberPage() {
                 onChange={handleChange}
                 required
                 placeholder="John Doe"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -105,7 +105,7 @@ export default function AddMemberPage() {
                 onChange={handleChange}
                 required
                 placeholder="RA2211003010001"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm font-mono"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm font-mono"
               />
             </div>
 
@@ -121,7 +121,7 @@ export default function AddMemberPage() {
                 onChange={handleChange}
                 required
                 placeholder="john@college.edu"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -138,7 +138,7 @@ export default function AddMemberPage() {
                 value={form.phone}
                 onChange={handleChange}
                 placeholder="9876543210"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -153,7 +153,7 @@ export default function AddMemberPage() {
                 onChange={handleChange}
                 required
                 placeholder="CSE"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -167,7 +167,7 @@ export default function AddMemberPage() {
                   name="academicYear"
                   value={form.academicYear}
                   onChange={handleChange}
-                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                  className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="1">Year 1</option>
                   <option value="2">Year 2</option>
@@ -193,7 +193,7 @@ export default function AddMemberPage() {
                       team: "",
                     }));
                   }}
-                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                  className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="MEMBER">Normal Member</option>
                   <option value="CORE">Core Member</option>
@@ -218,7 +218,7 @@ export default function AddMemberPage() {
                     setForm({ ...form, position: e.target.value })
                   }
                   required
-                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                  className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="">Select a position...</option>
                   {positionOptions.map((opt) => (
@@ -245,7 +245,7 @@ export default function AddMemberPage() {
                       (required)
                     </span>
                   </label>
-                  <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-1.5">
+                  <div className="bg-[#0d0705] border border-gray-700 rounded-lg p-3 space-y-1.5">
                     {DANCER_ROLES.map((role) => (
                       <label
                         key={role}
@@ -282,7 +282,7 @@ export default function AddMemberPage() {
             )}
 
             {/* FFCS Checkbox */}
-            <div className="flex items-center gap-3 bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-3 bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-3">
               <input
                 type="checkbox"
                 name="isFFCS"
@@ -314,7 +314,7 @@ export default function AddMemberPage() {
                 onChange={handleChange}
                 required
                 placeholder="Temporary login password"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 

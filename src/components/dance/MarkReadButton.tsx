@@ -18,7 +18,7 @@ export default function MarkReadButton() {
     <button
       onClick={markAll}
       disabled={busy}
-      className="text-sm border border-fuchsia-950 hover:border-fuchsia-500/40 disabled:opacity-50 text-purple-100/80 px-3 py-2 rounded-lg"
+      className="text-sm border border-white/10 hover:border-orange-500/40 disabled:opacity-50 text-orange-100/80 px-3 py-2 rounded-2xl"
     >
       {busy ? "Marking..." : "Mark all as read"}
     </button>

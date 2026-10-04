@@ -258,10 +258,10 @@ export default function SubmitReportPage() {
   const eligibleReports = approvedReports.filter((r) => !r.odRequest);
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white">
+    <div className="min-h-screen bg-[#0d0705] text-white">
 
       {/* Top bar */}
-      <nav className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4 flex items-center justify-between">
+      <nav className="border-b border-gray-800 bg-[#17120f] px-4 sm:px-8 py-4 flex items-center justify-between">
         <div>
           <span className="text-white font-bold text-base sm:text-lg tracking-tight">
             Dance Club
@@ -319,7 +319,7 @@ export default function SubmitReportPage() {
         {activeTab === "submit" && (
           <>
             {/* Submit form */}
-            <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-4 sm:p-6">
+            <div className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6">
               <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
                 <FileText size={16} className="text-purple-400" />
                 Submit New Report
@@ -338,7 +338,7 @@ export default function SubmitReportPage() {
                     required
                     rows={3}
                     placeholder="Briefly describe the work you completed"
-                    className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
+                    className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
                   />
                 </div>
 
@@ -353,7 +353,7 @@ export default function SubmitReportPage() {
                       setForm({ ...form, workDate: e.target.value })
                     }
                     required
-                    className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                    className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                   />
                 </div>
 
@@ -416,7 +416,7 @@ export default function SubmitReportPage() {
             </div>
 
             {/* Reports history */}
-            <div className="bg-[#1a1d27] border border-gray-800 rounded-xl overflow-hidden">
+            <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
               <div className="px-4 sm:px-6 py-4 border-b border-gray-800">
                 <h2 className="text-white font-semibold text-sm">
                   My Submitted Reports
@@ -492,7 +492,7 @@ export default function SubmitReportPage() {
           <>
             {/* OD request form */}
             {canRequestOD ? (
-              <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-4 sm:p-6">
+              <div className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6">
                 <h2 className="text-white font-semibold text-sm mb-1 flex items-center gap-2">
                   <FileBadge size={16} className="text-purple-400" />
                   Request OD
@@ -513,7 +513,7 @@ export default function SubmitReportPage() {
                         setODForm({ ...odForm, reportId: e.target.value })
                       }
                       required
-                      className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                      className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                     >
                       <option value="">Select a report...</option>
                       {eligibleReports.map((r) => (
@@ -537,7 +537,7 @@ export default function SubmitReportPage() {
                       </span>
                     </label>
                     {events.length === 0 ? (
-                      <div className="bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-3">
+                      <div className="bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-3">
                         <p className="text-gray-500 text-sm">
                           No events available. Contact the Super Admin to add events.
                         </p>
@@ -549,7 +549,7 @@ export default function SubmitReportPage() {
                           setODForm({ ...odForm, eventId: e.target.value })
                         }
                         required
-                        className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                        className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                       >
                         <option value="">Select an event...</option>
                         {events.map((ev) => (
@@ -585,7 +585,7 @@ export default function SubmitReportPage() {
                         </span>
                       )}
                     </label>
-                    <div className="bg-[#0f1117] border border-gray-700 rounded-lg p-3 space-y-2 max-h-52 overflow-y-auto">
+                    <div className="bg-[#0d0705] border border-gray-700 rounded-lg p-3 space-y-2 max-h-52 overflow-y-auto">
                       {[
                         { label: "T1", time: "08:00 AM to 08:50 AM" },
                         { label: "T2", time: "08:55 AM to 09:45 AM" },
@@ -648,7 +648,7 @@ export default function SubmitReportPage() {
                       required
                       rows={2}
                       placeholder="e.g. Participated in inter-college dance competition representing the club"
-                      className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
+                      className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
                     />
                   </div>
 
@@ -674,7 +674,7 @@ export default function SubmitReportPage() {
                 </form>
               </div>
             ) : (
-              <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-6 text-center">
+              <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6 text-center">
                 <FileBadge size={28} className="text-gray-700 mx-auto mb-3" />
                 <p className="text-gray-400 text-sm font-medium mb-1">
                   No eligible reports for OD
@@ -688,7 +688,7 @@ export default function SubmitReportPage() {
             )}
 
             {/* OD request history */}
-            <div className="bg-[#1a1d27] border border-gray-800 rounded-xl overflow-hidden">
+            <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
               <div className="px-4 sm:px-6 py-4 border-b border-gray-800">
                 <h2 className="text-white font-semibold text-sm">
                   My OD Requests

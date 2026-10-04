@@ -1,4 +1,5 @@
 import React from "react";
+import { plex } from "@/lib/fonts";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
@@ -36,14 +37,14 @@ export default async function MemberTimetablePage({
   });
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white flex">
+    <div className={`${plex.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
       />
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
-        <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div data-section="People" className="c-page-header flex items-center justify-between">
           <div>
             <h1 className="text-base sm:text-lg font-semibold text-white">
               {member.fullName}
@@ -62,7 +63,7 @@ export default async function MemberTimetablePage({
         </div>
 
         <div className="p-4 sm:p-8 min-w-0">
-          <div className="bg-[#1a1d27] border border-gray-800 rounded-xl px-4 sm:px-6 py-6">
+          <div className="bg-[#17120f] border border-gray-800 rounded-xl px-4 sm:px-6 py-6">
             <TimetableGrid
               memberId={member.id}
               initialEntries={entries.map((e) => ({

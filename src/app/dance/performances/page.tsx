@@ -21,7 +21,7 @@ export default async function PerformancesPage({
 
   if (!team) {
     return (
-      <div className="p-8 text-purple-200/70 text-sm">
+      <div className="p-8 text-orange-100/70 text-sm">
         You are not assigned to a dance team yet. Ask the committee to set your team.
       </div>
     );
@@ -53,8 +53,8 @@ export default async function PerformancesPage({
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl">
-      <h1 className="text-xl font-bold text-white">Performances</h1>
-      <p className="text-purple-200/60 text-sm mt-1">
+      <h1 className="text-3xl font-light tracking-tight text-white">Performances</h1>
+      <p className="text-orange-100/60 text-sm mt-1">
         {team} performances and who is dancing in them.
       </p>
 
@@ -64,10 +64,10 @@ export default async function PerformancesPage({
             <Link
               key={t}
               href={`/dance/performances?team=${encodeURIComponent(t)}`}
-              className={`px-3 py-1.5 rounded-lg text-sm border ${
+              className={`px-3 py-1.5 rounded-full text-sm border ${
                 t === team
-                  ? "bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-200"
-                  : "border-fuchsia-950 text-purple-200/60 hover:text-white"
+                  ? "bg-orange-500/15 border-orange-500/40 text-orange-200"
+                  : "border-white/10 text-orange-100/60 hover:text-white"
               }`}
             >
               {t}

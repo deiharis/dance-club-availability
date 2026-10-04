@@ -122,7 +122,7 @@ export default function MemberReportsPage() {
       </div>
 
       {/* Submit Form */}
-      <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-6">
+      <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6">
         <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2">
           <FileText size={16} className="text-purple-400" />
           Submit New Report
@@ -142,7 +142,7 @@ export default function MemberReportsPage() {
               required
               rows={3}
               placeholder="Briefly describe the work you completed (2–3 lines)"
-              className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
+              className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
             />
           </div>
 
@@ -157,7 +157,7 @@ export default function MemberReportsPage() {
                 setForm({ ...form, workDate: e.target.value })
               }
               required
-              className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+              className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
             />
           </div>
 
@@ -223,7 +223,7 @@ export default function MemberReportsPage() {
       </div>
 
       {/* Reports History */}
-      <div className="bg-[#1a1d27] border border-gray-800 rounded-xl overflow-hidden">
+      <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-800">
           <h2 className="text-white font-semibold text-sm">My Submitted Reports</h2>
         </div>

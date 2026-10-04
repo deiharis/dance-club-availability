@@ -1,9 +1,14 @@
+import { Sora } from "next/font/google";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDanceUser } from "@/lib/dance";
 import { db } from "@/lib/db";
 import DanceSidebar from "@/components/dance/DanceSidebar";
+import WaveBackdrop from "@/components/dance/WaveBackdrop";
+
+// Dance Floor has its own display typeface; the committee keeps Inter.
+const stage = Sora({ subsets: ["latin"], weight: ["300", "400", "600"] });
 
 export default async function DanceLayout({
   children,
@@ -42,7 +47,13 @@ export default async function DanceLayout({
   ]);
 
   return (
-    <div className="min-h-screen bg-[#0b0614] text-white flex">
+    <div
+      className={`${stage.className} stage-glow relative min-h-screen bg-base text-white`}
+    >
+      {/* Animated wave across the top of every Dance Floor page */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[30rem] overflow-hidden [mask-image:linear-gradient(to_bottom,black_55%,transparent)]">
+        <WaveBackdrop />
+      </div>
       <DanceSidebar
         userName={session.user.name ?? "Dancer"}
         userEmail={session.user.email ?? ""}
@@ -51,8 +62,8 @@ export default async function DanceLayout({
         isCommittee={dance.isCommittee}
         badges={{ "/dance/notifications": unread, "/dance/reports": pending }}
       />
-      {/* pt-14 on mobile accounts for the fixed top bar */}
-      <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">{children}</main>
+      {/* Offset for the floating sidebar (desktop) and the floating top bar (mobile) */}
+      <main className="relative min-w-0 pt-20 lg:pt-4 lg:pl-[18rem]">{children}</main>
     </div>
   );
 }

@@ -16,7 +16,7 @@ type Rehearsal = {
 const emptyForm = { title: "", date: "", startTime: "", endTime: "", venue: "" };
 
 const input =
-  "w-full bg-[#0b0614] border border-fuchsia-950 rounded-lg px-3 py-2 text-sm text-white placeholder-purple-300/30 focus:outline-none focus:border-fuchsia-500 [color-scheme:dark]";
+  "w-full bg-black/30 border border-white/10 rounded-2xl px-3 py-2 text-sm text-white placeholder-orange-100/30 focus:outline-none focus:border-orange-400/70 [color-scheme:dark]";
 
 const fmtDate = (d: string) =>
   new Date(d).toLocaleDateString("en-IN", {
@@ -40,22 +40,22 @@ function List({
 }) {
   return (
     <div className="mt-6">
-      <h2 className="text-sm font-medium text-purple-200/70 mb-3">{title}</h2>
+      <h2 className="text-sm font-medium text-orange-100/70 mb-3">{title}</h2>
       {items.length === 0 ? (
-        <p className="text-purple-300/50 text-sm">Nothing here.</p>
+        <p className="text-orange-100/50 text-sm">Nothing here.</p>
       ) : (
         <div className="space-y-3">
           {items.map((r) => (
             <div
               key={r.id}
-              className="bg-[#140a1f] border border-fuchsia-950 rounded-xl px-4 py-3 flex items-start justify-between gap-3"
+              className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl px-4 py-3 flex items-start justify-between gap-3"
             >
               <div>
                 <p className="text-white font-medium">{r.title}</p>
-                <p className="text-fuchsia-200/80 text-sm mt-0.5">
+                <p className="text-orange-200/80 text-sm mt-0.5">
                   {fmtDate(r.date)}
                 </p>
-                <p className="text-purple-300/60 text-xs mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+                <p className="text-orange-100/60 text-xs mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
                   <span className="flex items-center gap-1">
                     <Clock size={12} />
                     {r.startTime} - {r.endTime}
@@ -72,7 +72,7 @@ function List({
                 <button
                   onClick={() => onDelete(r)}
                   title="Delete rehearsal"
-                  className="text-purple-300/50 hover:text-red-400 p-1"
+                  className="text-orange-100/50 hover:text-red-400 p-1"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -137,7 +137,7 @@ export default function RehearsalsClient({
       {canManage && (
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
         >
           <CalendarPlus size={16} />
           New rehearsal
@@ -145,7 +145,7 @@ export default function RehearsalsClient({
       )}
 
       {error && (
-        <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2">
           {error}
         </p>
       )}
@@ -153,7 +153,7 @@ export default function RehearsalsClient({
       {canManage && showForm && (
         <form
           onSubmit={add}
-          className="mt-4 grid sm:grid-cols-3 gap-3 bg-[#140a1f] border border-fuchsia-950 rounded-xl p-4"
+          className="mt-4 grid sm:grid-cols-3 gap-3 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4"
         >
           <input required placeholder="Title (e.g. Choreo practice)" className={`${input} sm:col-span-3`} value={form.title} onChange={set("title")} />
           <input required type="date" className={input} value={form.date} onChange={set("date")} />
@@ -162,7 +162,7 @@ export default function RehearsalsClient({
           <input placeholder="Venue (optional)" className={`${input} sm:col-span-3`} value={form.venue} onChange={set("venue")} />
           <button
             disabled={busy}
-            className="sm:col-span-3 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg"
+            className="sm:col-span-3 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-full"
           >
             {busy ? "Saving..." : `Create for ${team}`}
           </button>

@@ -36,12 +36,12 @@ export default async function DanceTimetablePage() {
 
   return (
     <div className="p-4 sm:p-8 max-w-5xl">
-      <h1 className="text-xl font-bold text-white">My Timetable</h1>
-      <p className="text-purple-200/60 text-sm mt-1">
+      <h1 className="text-3xl font-light tracking-tight text-white">My Timetable</h1>
+      <p className="text-orange-100/60 text-sm mt-1">
         Click any cell to toggle between Free and Class.
       </p>
 
-      <div className="mt-6 bg-[#140a1f] border border-fuchsia-950 rounded-xl p-4 sm:p-6">
+      <div className="mt-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4 sm:p-6">
         <TimetableGrid
           memberId={member.id}
           initialEntries={toEntries(myEntries)}
@@ -54,14 +54,14 @@ export default async function DanceTimetablePage() {
           <h2 className="text-lg font-semibold text-white">
             {member.team} timetables
           </h2>
-          <p className="text-purple-200/60 text-sm mt-1">
+          <p className="text-orange-100/60 text-sm mt-1">
             View only. Use these to find a time when everyone is free.
           </p>
           <div className="mt-4 space-y-6">
             {teammates.map((t) => (
               <div
                 key={t.id}
-                className="bg-[#140a1f] border border-fuchsia-950 rounded-xl p-4 sm:p-6"
+                className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4 sm:p-6"
               >
                 <p className="text-white text-sm font-medium mb-3">
                   {t.fullName}

@@ -139,7 +139,7 @@ export default function SearchPage() {
   return (
     <div>
 
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4">
+      <div data-section="People" className="c-page-header">
         <h1 className="text-base sm:text-lg font-semibold text-white">Search</h1>
         <p className="text-gray-500 text-xs mt-0.5">
           Build your filters then press Search
@@ -149,7 +149,7 @@ export default function SearchPage() {
       <div className="p-4 sm:p-8">
 
         {/* Filter Panel */}
-        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
+        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6 mb-6">
 
           {/* Name search */}
           <div className="relative mb-4">
@@ -164,7 +164,7 @@ export default function SearchPage() {
               }
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Search by name, register number..."
-              className="w-full bg-[#0f1117] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+              className="w-full bg-[#0d0705] border border-gray-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
             />
           </div>
 
@@ -178,7 +178,7 @@ export default function SearchPage() {
               <select
                 value={draft.category}
                 onChange={(e) => handleCategoryChange(e.target.value)}
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
                 <option value="">All</option>
                 <option value="CORE">Core Members</option>
@@ -197,7 +197,7 @@ export default function SearchPage() {
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, isFFCS: e.target.value }))
                 }
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
                 <option value="">All</option>
                 <option value="true">FFCS Enrolled</option>
@@ -215,7 +215,7 @@ export default function SearchPage() {
                 }
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 placeholder="e.g. CSE"
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -228,7 +228,7 @@ export default function SearchPage() {
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, academicYear: e.target.value }))
                 }
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
                 <option value="">All</option>
                 <option value="1">Year 1</option>
@@ -247,7 +247,7 @@ export default function SearchPage() {
                 onChange={(e) =>
                   setDraft((prev) => ({ ...prev, day: e.target.value }))
                 }
-                className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
               >
                 <option value="">Any day</option>
                 {DAYS.map((d) => (
@@ -275,7 +275,7 @@ export default function SearchPage() {
                   onChange={(e) =>
                     setDraft((prev) => ({ ...prev, position: e.target.value }))
                   }
-                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                  className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="">All positions</option>
                   {(draft.category === "CORE" ? CORE_TEAMS : MEMBER_TEAMS).map(
@@ -305,7 +305,7 @@ export default function SearchPage() {
                   onChange={(e) =>
                     setDraft((prev) => ({ ...prev, team: e.target.value }))
                   }
-                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                  className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="">All teams</option>
                   {DANCER_TEAMS.map((t) => (
@@ -328,7 +328,7 @@ export default function SearchPage() {
                   onChange={(e) =>
                     setDraft((prev) => ({ ...prev, position: e.target.value }))
                   }
-                  className="w-full bg-[#0f1117] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                  className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                 >
                   <option value="">All roles</option>
                   {DANCER_ROLES.map((r) => (
@@ -363,7 +363,7 @@ export default function SearchPage() {
                     className={`text-xs font-medium px-2.5 py-1.5 rounded-lg border transition-colors ${
                       active
                         ? "bg-purple-600 border-purple-500 text-white"
-                        : "bg-[#0f1117] border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300"
+                        : "bg-[#0d0705] border-gray-700 text-gray-400 hover:border-gray-600 hover:text-gray-300"
                     }`}
                   >
                     {s.slot}
@@ -459,18 +459,18 @@ export default function SearchPage() {
 
         {/* Results */}
         {!searched ? (
-          <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
             <SearchIcon size={28} className="text-gray-700 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">
               Set your filters above and press Search
             </p>
           </div>
         ) : loading ? (
-          <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
             <p className="text-gray-500 text-sm">Searching...</p>
           </div>
         ) : (
-          <div className="bg-[#1a1d27] border border-gray-800 rounded-xl overflow-hidden">
+          <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
 
             <div className="px-4 sm:px-6 py-3 border-b border-gray-800 flex items-center justify-between">
               <p className="text-gray-400 text-xs">

@@ -27,7 +27,7 @@ const emptyForm = {
 };
 
 const input =
-  "w-full bg-[#0b0614] border border-fuchsia-950 rounded-lg px-3 py-2 text-sm text-white placeholder-purple-300/30 focus:outline-none focus:border-fuchsia-500";
+  "w-full bg-black/30 border border-white/10 rounded-2xl px-3 py-2 text-sm text-white placeholder-orange-100/30 focus:outline-none focus:border-orange-400/70";
 
 export default function RosterClient({
   team,
@@ -88,12 +88,12 @@ export default function RosterClient({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <p className="text-purple-200/60 text-sm">
+        <p className="text-orange-100/60 text-sm">
           {dancers.length} dancer{dancers.length === 1 ? "" : "s"} in {team}
         </p>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-fuchsia-600 hover:bg-fuchsia-500 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
         >
           <UserPlus size={16} />
           Add dancer
@@ -101,7 +101,7 @@ export default function RosterClient({
       </div>
 
       {error && (
-        <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2">
           {error}
         </p>
       )}
@@ -109,7 +109,7 @@ export default function RosterClient({
       {showForm && (
         <form
           onSubmit={add}
-          className="mt-4 grid sm:grid-cols-2 gap-3 bg-[#140a1f] border border-fuchsia-950 rounded-xl p-4"
+          className="mt-4 grid sm:grid-cols-2 gap-3 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4"
         >
           <input required placeholder="Full name" className={input} value={form.fullName} onChange={set("fullName")} />
           <input required placeholder="Register number" className={input} value={form.registerNumber} onChange={set("registerNumber")} />
@@ -133,17 +133,17 @@ export default function RosterClient({
           <input required type="password" minLength={6} placeholder="Temporary password" className={`${input} sm:col-span-2`} value={form.password} onChange={set("password")} />
           <button
             disabled={busy}
-            className="sm:col-span-2 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-lg"
+            className="sm:col-span-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 disabled:opacity-50 text-white text-sm font-medium py-2 rounded-full"
           >
             {busy ? "Adding..." : `Add to ${team}`}
           </button>
         </form>
       )}
 
-      <div className="mt-4 bg-[#140a1f] border border-fuchsia-950 rounded-xl overflow-x-auto">
+      <div className="mt-4 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-purple-300/50 text-xs border-b border-fuchsia-950">
+            <tr className="text-left text-orange-100/50 text-xs border-b border-white/10">
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Skill level</th>
@@ -152,17 +152,17 @@ export default function RosterClient({
           </thead>
           <tbody>
             {dancers.map((d) => (
-              <tr key={d.id} className="border-b border-fuchsia-950/60 last:border-0">
+              <tr key={d.id} className="border-b border-white/5 last:border-0">
                 <td className="px-4 py-3">
                   <p className="text-white font-medium">{d.fullName}</p>
-                  <p className="text-purple-300/50 text-xs">{d.registerNumber} · {d.email}</p>
+                  <p className="text-orange-100/50 text-xs">{d.registerNumber} · {d.email}</p>
                 </td>
-                <td className="px-4 py-3 text-purple-100/80">{d.position ?? "Dancer"}</td>
+                <td className="px-4 py-3 text-orange-100/80">{d.position ?? "Dancer"}</td>
                 <td className="px-4 py-3">
                   <select
                     value={d.skillLevel}
                     onChange={(e) => setSkill(d.id, e.target.value)}
-                    className="bg-[#0b0614] border border-fuchsia-950 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-fuchsia-500"
+                    className="bg-black/30 border border-white/10 rounded-2xl px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-400/70"
                   >
                     <option value="AMATEUR">Amateur</option>
                     <option value="PROFESSIONAL">Professional</option>
@@ -173,7 +173,7 @@ export default function RosterClient({
                     <button
                       onClick={() => remove(d)}
                       title="Remove dancer"
-                      className="text-purple-300/50 hover:text-red-400 p-1"
+                      className="text-orange-100/50 hover:text-red-400 p-1"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -183,7 +183,7 @@ export default function RosterClient({
             ))}
             {dancers.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-purple-300/50">
+                <td colSpan={4} className="px-4 py-8 text-center text-orange-100/50">
                   No dancers in this team yet.
                 </td>
               </tr>

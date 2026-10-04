@@ -98,7 +98,7 @@ export default function ODManagementPage() {
   return (
     <div>
 
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4 flex items-center justify-between">
+      <div data-section="Super admin" className="c-page-header flex items-center justify-between">
         <div>
           <h1 className="text-base sm:text-lg font-semibold text-white">
             OD Requests
@@ -149,7 +149,7 @@ export default function ODManagementPage() {
             <p className="text-gray-500 text-sm">Loading OD requests...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
             <FileText size={28} className="text-gray-700 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">No OD requests found.</p>
           </div>
@@ -158,7 +158,7 @@ export default function ODManagementPage() {
             {filtered.map((req) => (
               <div
                 key={req.id}
-                className="bg-[#1a1d27] border border-gray-800 rounded-xl p-4 sm:p-6"
+                className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6"
               >
                 {/* Member info */}
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -181,7 +181,7 @@ export default function ODManagementPage() {
                 </div>
 
                 {/* OD details */}
-                <div className="bg-[#0f1117] border border-gray-800 rounded-lg p-4 mb-4 space-y-2">
+                <div className="bg-[#0d0705] border border-gray-800 rounded-lg p-4 mb-4 space-y-2">
                   <div>
                     <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
                       Activity Date

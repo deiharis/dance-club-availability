@@ -43,7 +43,7 @@ export default async function AttendancePage({
 
   if (!team) {
     return (
-      <div className="p-8 text-purple-200/70 text-sm">
+      <div className="p-8 text-orange-100/70 text-sm">
         You are not assigned to a dance team yet. Ask the committee to set your team.
       </div>
     );
@@ -78,8 +78,8 @@ export default async function AttendancePage({
 
   return (
     <div className="p-4 sm:p-8 max-w-3xl">
-      <h1 className="text-xl font-bold text-white">Attendance</h1>
-      <p className="text-purple-200/60 text-sm mt-1">
+      <h1 className="text-3xl font-light tracking-tight text-white">Attendance</h1>
+      <p className="text-orange-100/60 text-sm mt-1">
         {team} rehearsal attendance. Percentage = present out of present plus absent; excused is not counted.
       </p>
 
@@ -89,10 +89,10 @@ export default async function AttendancePage({
             <Link
               key={t}
               href={`/dance/attendance?team=${encodeURIComponent(t)}`}
-              className={`px-3 py-1.5 rounded-lg text-sm border ${
+              className={`px-3 py-1.5 rounded-full text-sm border ${
                 t === team
-                  ? "bg-fuchsia-500/15 border-fuchsia-500/40 text-fuchsia-200"
-                  : "border-fuchsia-950 text-purple-200/60 hover:text-white"
+                  ? "bg-orange-500/15 border-orange-500/40 text-orange-200"
+                  : "border-white/10 text-orange-100/60 hover:text-white"
               }`}
             >
               {t}
@@ -103,10 +103,10 @@ export default async function AttendancePage({
 
       {/* Lead / committee: per-dancer percentages */}
       {manager && dancers.length > 0 && (
-        <div className="mt-6 bg-[#140a1f] border border-fuchsia-950 rounded-xl overflow-x-auto">
+        <div className="mt-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left text-purple-300/50 text-xs border-b border-fuchsia-950">
+              <tr className="text-left text-orange-100/50 text-xs border-b border-white/10">
                 <th className="px-4 py-3 font-medium">Dancer</th>
                 <th className="px-4 py-3 font-medium">Present</th>
                 <th className="px-4 py-3 font-medium">Absent</th>
@@ -119,12 +119,12 @@ export default async function AttendancePage({
                 const p = count(d.id, "PRESENT");
                 const a = count(d.id, "ABSENT");
                 return (
-                  <tr key={d.id} className="border-b border-fuchsia-950/60 last:border-0">
+                  <tr key={d.id} className="border-b border-white/5 last:border-0">
                     <td className="px-4 py-3 text-white">{d.fullName}</td>
-                    <td className="px-4 py-3 text-purple-100/80">{p}</td>
-                    <td className="px-4 py-3 text-purple-100/80">{a}</td>
-                    <td className="px-4 py-3 text-purple-100/80">{count(d.id, "EXCUSED")}</td>
-                    <td className="px-4 py-3 text-fuchsia-200 font-medium">{pct(p, a)}</td>
+                    <td className="px-4 py-3 text-orange-100/80">{p}</td>
+                    <td className="px-4 py-3 text-orange-100/80">{a}</td>
+                    <td className="px-4 py-3 text-orange-100/80">{count(d.id, "EXCUSED")}</td>
+                    <td className="px-4 py-3 text-orange-200 font-medium">{pct(p, a)}</td>
                   </tr>
                 );
               })}
@@ -135,20 +135,20 @@ export default async function AttendancePage({
 
       {/* Dancers: own percentage */}
       {!manager && (
-        <div className="mt-6 inline-block bg-[#140a1f] border border-fuchsia-950 rounded-xl px-5 py-4">
-          <p className="text-purple-300/50 text-xs">Your attendance</p>
+        <div className="mt-6 inline-block bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl px-5 py-4">
+          <p className="text-orange-100/50 text-xs">Your attendance</p>
           <p className="text-white text-2xl font-semibold mt-1">
             {pct(myPresent, myAbsent)}
           </p>
         </div>
       )}
 
-      <h2 className="text-sm font-medium text-purple-200/70 mt-8 mb-3">
+      <h2 className="text-sm font-medium text-orange-100/70 mt-8 mb-3">
         {manager ? "Rehearsals (tap one to mark attendance)" : "Your record"}
       </h2>
 
       {rehearsals.length === 0 ? (
-        <p className="text-purple-300/50 text-sm">
+        <p className="text-orange-100/50 text-sm">
           No rehearsals have happened yet.
         </p>
       ) : (
@@ -156,21 +156,21 @@ export default async function AttendancePage({
           {rehearsals.map((r) => {
             const mine = r.attendance.find((a) => a.memberId === myId)?.status;
             const body = (
-              <div className="bg-[#140a1f] border border-fuchsia-950 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
+              <div className="bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl px-4 py-3 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-white font-medium">{r.title}</p>
-                  <p className="text-purple-300/60 text-xs mt-0.5">
+                  <p className="text-orange-100/60 text-xs mt-0.5">
                     {fmt(r.date)} · {r.startTime} - {r.endTime}
                   </p>
                 </div>
                 {manager ? (
-                  <span className="text-xs text-purple-300/60">
+                  <span className="text-xs text-orange-100/60">
                     {r.attendance.length}/{dancers.length} marked
                   </span>
                 ) : (
                   <span
-                    className={`text-xs font-medium px-2.5 py-1 rounded-lg ${
-                      mine ? STATUS_STYLE[mine] : "text-purple-300/50"
+                    className={`text-xs font-medium px-2.5 py-1 rounded-2xl ${
+                      mine ? STATUS_STYLE[mine] : "text-orange-100/50"
                     }`}
                   >
                     {mine ? STATUS_LABEL[mine] : "Not marked"}

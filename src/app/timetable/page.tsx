@@ -1,4 +1,5 @@
 import React from "react";
+import { plex } from "@/lib/fonts";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
@@ -22,8 +23,8 @@ async function MemberTimetableView() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white">
-      <nav className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-[#0d0705] text-white">
+      <nav data-section="People" className="c-page-header flex items-center justify-between">
         <div>
           <span className="text-white font-bold text-base sm:text-lg tracking-tight">
             Dance Club
@@ -49,7 +50,7 @@ async function MemberTimetableView() {
           </p>
         </div>
 
-        <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-4 sm:p-6">
+        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6">
           <TimetableGrid
             memberId={member.id}
             initialEntries={entries.map((e) => ({
@@ -82,7 +83,7 @@ async function MemberTimetableCard({
   });
 
   return (
-    <div className="bg-[#1a1d27] border border-gray-800 rounded-xl overflow-hidden">
+    <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center">
@@ -140,14 +141,14 @@ export default async function TimetablePage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0f1117] text-white flex">
+    <div className={`${plex.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
       />
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
-        <div className="border-b border-gray-800 bg-[#1a1d27] px-4 sm:px-8 py-4">
+        <div data-section="People" className="c-page-header">
           <h1 className="text-base sm:text-lg font-semibold text-white">
             Timetable
           </h1>
@@ -157,7 +158,7 @@ export default async function TimetablePage() {
         </div>
         <div className="p-4 sm:p-8">
           {members.length === 0 ? (
-            <div className="bg-[#1a1d27] border border-gray-800 rounded-xl p-12 text-center">
+            <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
               <p className="text-gray-500 text-sm mb-4">
                 No members yet. Add members first.
               </p>

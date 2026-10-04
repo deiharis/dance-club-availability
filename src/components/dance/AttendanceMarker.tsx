@@ -56,16 +56,16 @@ export default function AttendanceMarker({
           onClick={() =>
             setMarks(Object.fromEntries(dancers.map((d) => [d.id, "PRESENT" as Status])))
           }
-          className="text-sm border border-fuchsia-950 hover:border-fuchsia-500/40 text-purple-100/80 px-3 py-2 rounded-lg"
+          className="text-sm border border-white/10 hover:border-orange-500/40 text-orange-100/80 px-3 py-2 rounded-2xl"
         >
           Mark all present
         </button>
-        <span className="text-purple-300/50 text-sm">
+        <span className="text-orange-100/50 text-sm">
           {markedCount} of {dancers.length} marked
         </span>
       </div>
 
-      <div className="mt-4 bg-[#140a1f] border border-fuchsia-950 rounded-xl divide-y divide-fuchsia-950/60">
+      <div className="mt-4 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl divide-y divide-white/5">
         {dancers.map((d) => (
           <div
             key={d.id}
@@ -77,10 +77,10 @@ export default function AttendanceMarker({
                 <button
                   key={o.value}
                   onClick={() => setMarks({ ...marks, [d.id]: o.value })}
-                  className={`px-3 py-1.5 rounded-lg border text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
                     marks[d.id] === o.value
                       ? o.on
-                      : "border-fuchsia-950 text-purple-300/60 hover:text-white"
+                      : "border-white/10 text-orange-100/60 hover:text-white"
                   }`}
                 >
                   {o.label}
@@ -90,7 +90,7 @@ export default function AttendanceMarker({
           </div>
         ))}
         {dancers.length === 0 && (
-          <p className="px-4 py-8 text-center text-purple-300/50 text-sm">
+          <p className="px-4 py-8 text-center text-orange-100/50 text-sm">
             No dancers in this team yet.
           </p>
         )}
@@ -105,7 +105,7 @@ export default function AttendanceMarker({
       <button
         onClick={save}
         disabled={busy || dancers.length === 0}
-        className="mt-4 bg-fuchsia-600 hover:bg-fuchsia-500 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg"
+        className="mt-4 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-full"
       >
         {busy ? "Saving..." : "Save attendance"}
       </button>

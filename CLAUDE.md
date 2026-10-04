@@ -69,6 +69,13 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 | Events | `(dashboard)/events` (SuperAdmin) | `api/events`, `/[id]` |
 | FFCS grades | `(dashboard)/grades` (SuperAdmin) | `api/grades`, `/[id]` |
 
+## UI design: two sections, one base
+
+- **Shared:** page background is `bg-base` (`#0d0705`, set in `tailwind.config.ts` and `globals.css`). Never use another page background in either section.
+- **Working Committee** = flat management console: grouped sidebar with a left-edge active marker (`components/layout/Sidebar.tsx`), squarer corners via the `.committee-ui` wrapper in `globals.css`, steel-blue accent (Tailwind `purple-*` is remapped to `sky` and `gray-*` to warm `stone` in `tailwind.config.ts`), IBM Plex Sans (`lib/fonts.ts`), panels `#17120f`. Every committee page header uses `className="c-page-header ..." data-section="People"` (sticky bar plus "Working Committee / Section" breadcrumb, defined in `globals.css`). Dashboard = KPI strip + panels + right rail; Members = search, category filters, dense table.
+- **Dance Floor** (`app/dance`, `components/dance`) = stage look: floating glass sidebar with pill nav (`DanceSidebar.tsx`), orange glow accents, `rounded-3xl` glass cards, pill buttons, light large headings with gold-gradient accent words, Sora font, ambient `.stage-glow` background plus an animated golden wave (`components/dance/WaveBackdrop.tsx`, canvas, in `app/dance/layout.tsx`), twinkling stars, `Orbit.tsx`, and a fade-up on every page change (`app/dance/template.tsx`). All motion must respect `prefers-reduced-motion` (see `globals.css`). Do not reuse committee components or the blue accent here.
+- Keep the two looks distinct in structure, not just colour. Don't use emojis; use lucide-react outline icons.
+
 ## Timetable
 
 `src/lib/timetable.ts`: days MONDAY–FRIDAY (no Saturday), slots T1–T12 plus a non-editable `Lunch` column (01:25–02:00 PM). Status is only `FREE` (green) or `CLASS` (red). One `TimetableEntry` row per member+day+slot, unique on `[memberId, day, slot]`. A missing row means FREE. `components/timetable/TimetableGrid.tsx` is a spreadsheet layout: days are rows, slots are columns, the day column is sticky, and it scrolls horizontally inside its own container only.
@@ -116,6 +123,5 @@ Pushing to `main` triggers a Vercel build. Before pushing, run `npx tsc --noEmit
 - The SuperAdmin cannot see normal dancers' reports in the committee review queue (Leads only). Add a read-only view if wanted.
 - `SaturdayPlanner` model exists, but there is no UI or logic yet (Saturday follows a chosen weekday's timetable).
 - `seed.ts` now reads `SUPERADMIN_PASSWORD` from `.env` (local only, not needed in Vercel). The OLD plaintext password is still in git history, so the real password must stay changed.
-- One-off scripts in the project root (`seed.ts`, `migrate.ts`, `fix-*.ts`, `clear-*.ts`) are run with `npx tsx <file>`. Everything except `seed.ts` can be deleted.
+- `seed.ts` is the only script in the project root (run with `npx tsx seed.ts`). The old one-off scripts were deleted; they are still in git history if ever needed.
 - `(session.user as any)` casts are used throughout. `src/types/index.ts` extends the Session type, and could replace them.
-- Empty leftover folders: `src/app/(member)/timetable`, `src/app/(member)/reports/submit`.

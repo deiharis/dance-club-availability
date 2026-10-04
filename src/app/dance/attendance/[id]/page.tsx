@@ -39,13 +39,13 @@ export default async function MarkAttendancePage({
     <div className="p-4 sm:p-8 max-w-3xl">
       <Link
         href={`/dance/attendance?team=${encodeURIComponent(rehearsal.team)}`}
-        className="inline-flex items-center gap-2 text-sm text-purple-300/60 hover:text-white"
+        className="inline-flex items-center gap-2 text-sm text-orange-100/60 hover:text-white"
       >
         <ArrowLeft size={16} />
         Back to attendance
       </Link>
-      <h1 className="text-xl font-bold text-white mt-3">{rehearsal.title}</h1>
-      <p className="text-purple-200/60 text-sm mt-1">
+      <h1 className="text-3xl font-light tracking-tight text-white mt-4">{rehearsal.title}</h1>
+      <p className="text-orange-100/60 text-sm mt-1">
         {rehearsal.team} · {when} · {rehearsal.startTime} - {rehearsal.endTime}
       </p>
 

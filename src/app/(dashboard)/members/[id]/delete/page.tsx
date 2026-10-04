@@ -57,7 +57,7 @@ export default function DeleteMemberPage() {
   return (
     <div>
 
-      <div className="border-b border-gray-800 bg-[#1a1d27] px-8 py-4 flex items-center justify-between">
+      <div data-section="People" className="c-page-header flex items-center justify-between">
         <h1 className="text-lg font-semibold text-white">Delete Member</h1>
         <Link
           href="/members"
@@ -68,7 +68,7 @@ export default function DeleteMemberPage() {
       </div>
 
       <div className="p-8 max-w-md">
-        <div className="bg-[#1a1d27] border border-red-500/20 rounded-xl p-8">
+        <div className="bg-[#17120f] border border-red-500/20 rounded-xl p-8">
 
           <div className="w-10 h-10 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center justify-center mb-5">
             <AlertTriangle size={18} className="text-red-400" />
@@ -83,7 +83,7 @@ export default function DeleteMemberPage() {
           </p>
 
           {member && (
-            <div className="bg-[#0f1117] border border-gray-800 rounded-lg px-4 py-3 mb-6">
+            <div className="bg-[#0d0705] border border-gray-800 rounded-lg px-4 py-3 mb-6">
               <p className="text-white text-sm font-medium">{member.fullName}</p>
               <p className="text-gray-500 text-xs mt-0.5">{member.email}</p>
               <p className="text-gray-500 text-xs mt-0.5 font-mono">
