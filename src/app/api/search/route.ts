@@ -62,6 +62,12 @@ export async function GET(req: Request) {
       where.team = team;
     }
 
+    // Skill level — meaningful for dancers (the page only offers it for the Dancer category)
+    const skillLevel = searchParams.get("skillLevel") || "";
+    if (skillLevel === "PROFESSIONAL" || skillLevel === "AMATEUR") {
+      where.skillLevel = skillLevel;
+    }
+
     if (day && slots.length > 0) {
       where.NOT = {
         timetableEntries: {
