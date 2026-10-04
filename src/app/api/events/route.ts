@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if ((session.user as any).role !== "SUPERADMIN") {
+    if (session.user.role !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

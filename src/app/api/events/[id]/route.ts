@@ -15,7 +15,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if ((session.user as any).role !== "SUPERADMIN") {
+    if (session.user.role !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

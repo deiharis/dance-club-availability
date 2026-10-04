@@ -195,6 +195,9 @@ body {
 }
 @keyframes splash-fade { to { opacity: 0; } }
 
+/* Dance Floor team insights reuse the console chart cards; give them the stage's rounder corners. */
+.stage-charts section { border-radius: 1.5rem; }
+
 /* Dance Floor motion. All of it is switched off for users who prefer reduced motion. */
 @keyframes stage-fade-up {
   from { opacity: 0; transform: translateY(14px); }

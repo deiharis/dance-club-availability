@@ -13,7 +13,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     const member = await db.member.findUnique({ where: { userId } });
     if (!member) {
@@ -42,7 +42,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
     const member = await db.member.findUnique({ where: { userId } });
     if (!member) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });

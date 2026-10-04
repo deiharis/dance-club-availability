@@ -61,6 +61,34 @@ export interface ActivityData {
   topContributors: { name: string; approved: number }[];
 }
 
+// /api/dance/analytics: one team, for its Dance Lead (or the committee).
+export interface TeamAnalytics {
+  team: string;
+  dancers: number;
+  professional: number;
+  amateur: number;
+  attendanceRate: number | null;
+  rehearsalsHeld: number;
+  rehearsalsUpcoming: number;
+  performancesUpcoming: number;
+  pendingReports: number;
+  heatmap: HeatCell[];
+  bestSlots: HeatCell[];
+  everyoneFreeSlots: number; // slots where 100% of the team is free
+  members: {
+    id: string;
+    fullName: string;
+    skillLevel: "PROFESSIONAL" | "AMATEUR";
+    isLead: boolean;
+    present: number;
+    absent: number;
+    excused: number;
+    rate: number | null;
+    marked: number;
+  }[];
+  trend: { label: string; title: string; rate: number }[];
+}
+
 export interface AnalyticsData {
   generatedAt: string;
   availability: AvailabilityData;

@@ -13,8 +13,8 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
-    const userId = (session.user as any).id;
+    const role = session.user.role;
+    const userId = session.user.id;
 
     if (role === "SUPERADMIN") {
       const requests = await db.oDRequest.findMany({
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     const member = await db.member.findUnique({ where: { userId } });
     if (!member) {

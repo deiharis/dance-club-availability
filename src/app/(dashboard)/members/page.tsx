@@ -58,7 +58,7 @@ export default function MembersPage() {
 
   // "Tidy departments": preview how many spellings would be merged, then apply on request.
   const [tidy, setTidy] = useState<{
-    changes: { from: string; to: string; count: number }[];
+    changes: { field: string; from: string; to: string; count: number }[];
     done?: number;
   } | null>(null);
   const [tidyBusy, setTidyBusy] = useState(false);
@@ -152,9 +152,9 @@ export default function MembersPage() {
               <Download size={13} />
               Export
             </a>
-            <button onClick={openTidy} disabled={tidyBusy} className={secondaryBtn} title="Merge different spellings of the same department">
+            <button onClick={openTidy} disabled={tidyBusy} className={secondaryBtn} title="Standardise department names and phone numbers">
               <Sparkles size={13} />
-              <span className="hidden sm:inline">Tidy departments</span>
+              <span className="hidden sm:inline">Tidy data</span>
             </button>
             <a href="/api/timetable/export" className={secondaryBtn}>
               <FileSpreadsheet size={13} />
@@ -173,13 +173,13 @@ export default function MembersPage() {
           <div className="mb-4 rounded-lg border border-violet-400/30 bg-violet-500/[0.06] p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm font-bold text-white">Tidy departments</p>
+                <p className="text-sm font-bold text-white">Tidy data</p>
                 <p className="mt-0.5 text-xs text-zinc-400">
                   {tidy.done !== undefined
                     ? `Done. ${tidy.done} member${tidy.done === 1 ? "" : "s"} updated.`
                     : tidy.changes.length === 0
-                    ? "Every department already uses one standard spelling."
-                    : `${tidy.changes.reduce((s, c) => s + c.count, 0)} members will be renamed to a standard spelling. Nothing changes until you press Apply.`}
+                    ? "Departments and phone numbers already use one standard format."
+                    : `${tidy.changes.reduce((s, c) => s + c.count, 0)} members will be updated to a standard format. Nothing changes until you press Apply.`}
                 </p>
               </div>
               <button onClick={() => setTidy(null)} className="rounded p-1 text-zinc-500 hover:bg-white/5 hover:text-white" title="Close">
@@ -191,7 +191,7 @@ export default function MembersPage() {
               <>
                 <ul className="mt-3 max-h-56 divide-y divide-white/5 overflow-y-auto rounded-md border border-white/10 bg-black/30 text-sm">
                   {tidy.changes.map((c) => (
-                    <li key={c.from} className="flex items-center gap-3 px-3 py-2">
+                    <li key={c.field + c.from} className="flex items-center gap-3 px-3 py-2"><span className="w-20 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-violet-400">{c.field}</span>
                       <span className="min-w-0 flex-1 truncate text-zinc-400 line-through decoration-zinc-600">{c.from.trim() || "(blank)"}</span>
                       <span className="text-zinc-600">to</span>
                       <span className="min-w-0 flex-1 truncate font-medium text-white">{c.to}</span>

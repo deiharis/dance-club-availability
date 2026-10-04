@@ -12,7 +12,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
+    const role = session.user.role;
     if (role !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -50,8 +50,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
-    const userId = (session.user as any).id;
+    const role = session.user.role;
+    const userId = session.user.id;
 
     if (role !== "SUPERADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });

@@ -16,7 +16,7 @@ export default async function MemberTimetablePage({
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const role = (session.user as any).role;
+  const role = session.user.role;
 
   // Members can only view their own individual timetable
   if (role === "MEMBER") {
@@ -24,7 +24,7 @@ export default async function MemberTimetablePage({
   }
 
   // Dance Leads use the dancer section instead of the committee view
-  if ((session.user as any).category === "DANCER") redirect("/dance/timetable");
+  if (session.user.category === "DANCER") redirect("/dance/timetable");
 
   const member = await db.member.findUnique({
     where: { id: params.memberId },

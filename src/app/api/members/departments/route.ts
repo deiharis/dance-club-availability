@@ -2,16 +2,30 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
+import { normalizePhone } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
-// Which stored department spellings differ from their canonical form, and how many members use each.
-async function findChanges() {
-  const groups = await db.member.groupBy({ by: ["department"], _count: true });
-  return groups
-    .map((g) => ({ from: g.department, to: normalizeDepartment(g.department).label, count: g._count }))
-    .filter((c) => c.to && c.to !== c.from)
-    .sort((a, b) => b.count - a.count);
+type Change = { field: "Department" | "Phone"; from: string; to: string; count: number };
+
+// Stored spellings that differ from their standard form, for departments and phone numbers.
+async function findChanges(): Promise<Change[]> {
+  const [depts, phones] = await Promise.all([
+    db.member.groupBy({ by: ["department"], _count: true }),
+    db.member.groupBy({ by: ["phone"], _count: true, where: { phone: { not: null } } }),
+  ]);
+
+  const out: Change[] = [];
+  for (const g of depts) {
+    const to = normalizeDepartment(g.department).label;
+    if (to && to !== g.department) out.push({ field: "Department", from: g.department, to, count: g._count });
+  }
+  for (const g of phones) {
+    const from = g.phone ?? "";
+    const to = normalizePhone(from);
+    if (to && to !== from) out.push({ field: "Phone", from, to, count: g._count });
+  }
+  return out.sort((a, b) => b.count - a.count);
 }
 
 // Preview only: nothing is changed.
@@ -34,10 +48,12 @@ export async function POST() {
   if (!caller.isCommittee) return forbidden();
 
   try {
-    const changes = await findChanges();
     let updated = 0;
-    for (const c of changes) {
-      const r = await db.member.updateMany({ where: { department: c.from }, data: { department: c.to } });
+    for (const c of await findChanges()) {
+      const r =
+        c.field === "Department"
+          ? await db.member.updateMany({ where: { department: c.from }, data: { department: c.to } })
+          : await db.member.updateMany({ where: { phone: c.from }, data: { phone: c.to } });
       updated += r.count;
     }
     return NextResponse.json({ updated });

@@ -50,6 +50,20 @@ async function createFor(
 const superAdminMembers = () =>
   db.member.findMany({ where: { user: { role: "SUPERADMIN" } }, select: { id: true } });
 
+// Notify specific members (e.g. the dancers just added to a performance).
+export async function notifyMembers(opts: {
+  memberIds: string[];
+  type: NotificationType;
+  message: string;
+  link: string;
+}) {
+  try {
+    await createFor(new Set(opts.memberIds), opts);
+  } catch (error) {
+    console.error("notifyMembers failed:", error);
+  }
+}
+
 // Dance Floor: every dancer in `team` plus every SuperAdmin, except whoever did the action.
 export async function notifyTeam(opts: {
   team: string;

@@ -33,7 +33,7 @@ export async function POST(req: Request) {
     }
 
     const user = await db.user.findUnique({
-      where: { id: (session.user as any).id },
+      where: { id: session.user.id },
       include: { member: { select: { registerNumber: true } } },
     });
     if (!user) {

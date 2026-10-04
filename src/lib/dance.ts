@@ -7,7 +7,7 @@ import { db } from "@/lib/db";
 // so team/position changes apply instantly.
 export async function getCaller() {
   const session = await getServerSession(authOptions);
-  const user = session?.user as any;
+  const user = session?.user;
   if (!user) return null;
 
   const member = await db.member.findUnique({ where: { userId: user.id } });

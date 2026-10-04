@@ -25,7 +25,7 @@ const CATEGORY_LABEL: Record<string, string> = {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  const isSuper = (session?.user as any)?.role === "SUPERADMIN";
+  const isSuper = session?.user?.role === "SUPERADMIN";
   const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
 
   const [byCategory, ffcs, pendingReports, pendingOD, noTimetable, events, recent] =

@@ -37,7 +37,7 @@ The owner (Haris) is a beginner. Explain what each change does and why, give exa
 - **ADMIN**: given automatically to `category = CORE`, and to `DANCER` with `position = "Team Leader"`. Role is recalculated on member create/edit in `api/members`.
 - **MEMBER**: everyone else. Can view profile, edit **their own** timetable, submit reports, request OD.
 
-Route protection lives in `src/middleware.ts` and is re-checked in each API route via `getServerSession(authOptions)`. Role is read as `(session.user as any).role`.
+Route protection lives in `src/middleware.ts` and is re-checked in each API route via `getServerSession(authOptions)`. Role is read as `session.user.role` (the Session, User and JWT types are extended once in `src/types/index.ts`, so no casts are needed; keep new fields there).
 
 ## Member model
 
@@ -49,7 +49,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
   - DANCER: `team` from `DANCER_TEAMS`, `position` from `DANCER_ROLES` ("Team Leader" | "Normal Dancer")
   - FFCS_ONLY: neither
 - `components/ui/TeamSelector.tsx` renders the dance-team radio list.
-- `department` is typed by hand, so it is normalised by `normalizeDepartment()` in `src/lib/departments.ts` (e.g. "BBA Hons", "BBA HONS", "BBA Honours" -> "BBA (Hons)"; "B TECH : CSE-CORE" -> "B.Tech CSE (Core)"). It runs on member add/edit (`api/members`), on import, in search matching, and in analytics grouping (programme and degree). Add new programmes/branches there, then run `npx tsx src/lib/departments.check.ts`. Existing rows are merged with the "Tidy departments" button on the Members page (`api/members/departments`: GET previews, POST applies).
+- `department` is typed by hand, so it is normalised by `normalizeDepartment()` in `src/lib/departments.ts` (e.g. "BBA Hons", "BBA HONS", "BBA Honours" -> "BBA (Hons)"; "B TECH : CSE-CORE" -> "B.Tech CSE (Core)"). It runs on member add/edit (`api/members`), on import, in search matching, and in analytics grouping (programme and degree). Add new programmes/branches there, then run `npx tsx src/lib/departments.check.ts`. Phone numbers are standardised the same way by `normalizePhone()` in `src/lib/phone.ts` (plain 10 digits; check with `npx tsx src/lib/phone.check.ts`). Existing rows are fixed with the "Tidy data" button on the Members page (`api/members/departments`: GET previews, POST applies; covers departments and phones).
 
 ## Features and where they live
 
@@ -67,6 +67,8 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 | Notifications on profile | `(member)/profile` | `api/notifications` |
 | OD requests | submit tab above; SuperAdmin `(dashboard)/od` | `api/od`, `/[id]` |
 | Dancer section (own purple layout `app/dance/layout.tsx` + `components/dance/DanceSidebar.tsx`): dashboard, roster, rehearsals, attendance, performances, timetable, report review | `app/dance`, `/roster`, `/rehearsals`, `/attendance`, `/attendance/[id]`, `/performances`, `/timetable`, `/reports` | `api/dance/*` (rehearsals, attendance, performances, members/[id]/skill); helper `lib/dance.ts` (`getCaller`, `getDanceUser`) |
+| Member portal (Normal and FFCS-only members; violet top bar `components/member/MemberShell.tsx`): profile with updates and timetable, own timetable, My reports + OD | `(member)/profile`, `app/timetable` (member view), `app/reports/submit` (picks its frame by user type: dancers are sent to `/dance/my-reports`, committee get the console sidebar, members get the portal) | `components/reports/MyReports.tsx` (one component, `variant="member"` or `"stage"`, `showOd`) |
+| Dance team insights for Leads (own team) / committee (any team) | `app/dance/analytics`, `components/dance/TeamAnalyticsView.tsx` | `api/dance/analytics` |
 | Events | `(dashboard)/events` (SuperAdmin) | `api/events`, `/[id]` |
 | FFCS grades | `(dashboard)/grades` (SuperAdmin) | `api/grades`, `/[id]` |
 
@@ -108,7 +110,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 - "Committee" = SUPERADMIN or an ADMIN whose category is not DANCER (`isCommittee` in `lib/dance.ts`). Dance Leads (`position = "Team Leader"`) are ADMIN but NOT committee. They manage only their own `team` (`canManage(team)`); committee manages all teams.
 - Leads add/remove dancers (Normal Dancer or Team Leader) in their own team, set `skillLevel` (PROFESSIONAL | AMATEUR, default AMATEUR), create rehearsals and performances, and mark attendance (PRESENT/ABSENT/EXCUSED; % = present / (present + absent)).
 - Dancers have **Reports only, no OD**. Normal dancers' reports are reviewed ONLY by their team's Lead; Dance Leads' own reports are reviewed by the committee. Nobody reviews their own.
-- Notifications (`lib/notify.ts`, `notifyTeam`): when a Lead (or committee) creates a rehearsal, creates a performance, or FIRST saves attendance for a rehearsal, every dancer in that team plus every SuperAdmin gets a `Notification` (types `REHEARSAL_ADDED`, `PERFORMANCE_ADDED`, `ATTENDANCE_MARKED`, with a `link`). The person who did the action is not notified. A failed notification never fails the request. There are TWO separate feeds, worked out in `lib/notify.ts` (`sectionWhere`, no extra DB column): **Dance Floor** = the three team types above, or anything sent to a `DANCER` member (e.g. a dancer's report decision), shown at `/dance/notifications` (stage style, orange badge in `DanceSidebar`); **Working Committee** = everything else, shown at `/notifications` (console style, violet badge in the committee `Sidebar`). New committee types: `REPORT_SUBMITTED` (any report except a normal dancer's, which goes to their Lead) and `OD_REQUESTED`, both sent to SuperAdmins by `notifySuperAdmins`. `api/notifications` PATCH and `api/notifications/unread` accept `section=COMMITTEE|DANCE`. The SuperAdmin has a cross-link between the two pages.
+- Notifications (`lib/notify.ts`, `notifyTeam`): when a Lead (or committee) creates a rehearsal, creates a performance, or FIRST saves attendance for a rehearsal, every dancer in that team plus every SuperAdmin gets a `Notification` (types `REHEARSAL_ADDED`, `PERFORMANCE_ADDED`, `ATTENDANCE_MARKED`, with a `link`). The person who did the action is not notified. A failed notification never fails the request. There are TWO separate feeds, worked out in `lib/notify.ts` (`sectionWhere`, no extra DB column): **Dance Floor** = the three team types above, or anything sent to a `DANCER` member (e.g. a dancer's report decision), shown at `/dance/notifications` (stage style, orange badge in `DanceSidebar`); **Working Committee** = everything else, shown at `/notifications` (console style, violet badge in the committee `Sidebar`). New committee types: `REPORT_SUBMITTED` (any report except a normal dancer's, which goes to their Lead), `OD_REQUESTED`, and `MEMBERS_ADDED` (an Excel import finished, or a Dance Lead added a dancer), all sent to SuperAdmins by `notifySuperAdmins`. Adding dancers to an existing performance notifies just those dancers (`notifyMembers`). The SuperAdmin can also view normal dancers' reports read-only (`/reports/review`, "Dancer reports (view only)", `api/reports?scope=dancers`); only the team's Lead can decide them. `api/notifications` PATCH and `api/notifications/unread` accept `section=COMMITTEE|DANCE`. The SuperAdmin has a cross-link between the two pages.
 - Every `/api/dance/*` and member/timetable/reports API re-checks the caller server-side with `getCaller()`. Never trust a team sent from the browser.
 
 **OD**
@@ -134,8 +136,6 @@ Pushing to `main` triggers a Vercel build. Before pushing, run `npx tsc --noEmit
 
 ## Not built yet / known debt
 
-- The SuperAdmin cannot see normal dancers' reports in the committee review queue (Leads only). Add a read-only view if wanted.
-- `SaturdayPlanner` model exists, but there is no UI or logic yet (Saturday follows a chosen weekday's timetable).
+- `SaturdayPlanner` model exists, but there is no UI or logic yet (Saturday follows a chosen weekday's timetable). Not part of any current request; the timetable only covers Monday to Friday.
 - `seed.ts` now reads `SUPERADMIN_PASSWORD` from `.env` (local only, not needed in Vercel). The OLD plaintext password is still in git history, so the real password must stay changed.
 - `seed.ts` is the only script in the project root (run with `npx tsx seed.ts`). The old one-off scripts were deleted; they are still in git history if ever needed.
-- `(session.user as any)` casts are used throughout. `src/types/index.ts` extends the Session type, and could replace them.

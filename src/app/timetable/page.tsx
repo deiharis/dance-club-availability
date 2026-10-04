@@ -5,16 +5,16 @@ import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 import Sidebar from "@/components/layout/Sidebar";
+import MemberShell, { MemberHeading } from "@/components/member/MemberShell";
 
 // ── Member's own editable timetable ──────────────────────
 async function MemberTimetableView() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
   const member = await db.member.findUnique({ where: { userId } });
   if (!member) redirect("/profile");
 
@@ -23,46 +23,24 @@ async function MemberTimetableView() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white">
-      <nav data-section="People" className="c-page-header flex items-center justify-between">
-        <div>
-          <span className="text-white font-bold text-base sm:text-lg tracking-tight">
-            Dance Club
-          </span>
-          <p className="text-gray-500 text-xs mt-0.5">My Timetable</p>
-        </div>
-        <Link
-          href="/profile"
-          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors"
-        >
-          <ArrowLeft size={16} />
-          <span className="hidden sm:inline">Back to Profile</span>
-        </Link>
-      </nav>
-
-      <div className="p-4 sm:p-8 max-w-5xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-lg sm:text-xl font-bold text-white">
-            My Timetable
-          </h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Click any cell to toggle between Free and Class.
-          </p>
-        </div>
-
-        <div className="bg-[#111014] border border-gray-800 rounded-xl p-4 sm:p-6">
-          <TimetableGrid
-            memberId={member.id}
-            initialEntries={entries.map((e) => ({
-              day: e.day,
-              slot: e.slot,
-              status: e.status as "FREE" | "CLASS",
-            }))}
-            readonly={false}
-          />
-        </div>
+    <MemberShell name={member.fullName}>
+      <MemberHeading
+        label="Availability"
+        title="My timetable"
+        subtitle="Click any cell to switch it between Free and Class. Your Core Team uses this to plan around you."
+      />
+      <div className="rounded-xl border border-white/15 bg-gradient-to-b from-white/[0.04] to-transparent p-4 sm:p-6">
+        <TimetableGrid
+          memberId={member.id}
+          initialEntries={entries.map((e) => ({
+            day: e.day,
+            slot: e.slot,
+            status: e.status as "FREE" | "CLASS",
+          }))}
+          readonly={false}
+        />
       </div>
-    </div>
+    </MemberShell>
   );
 }
 
@@ -125,10 +103,10 @@ export default async function TimetablePage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
-  const role = (session.user as any).role;
+  const role = session.user.role;
 
   // Dancers and Dance Leads use the dancer-section timetable
-  if ((session.user as any).category === "DANCER") redirect("/dance/timetable");
+  if (session.user.category === "DANCER") redirect("/dance/timetable");
 
   // Normal members see their own editable timetable
   if (role === "MEMBER") {

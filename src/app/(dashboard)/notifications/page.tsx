@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, FileText, FileBadge, ArrowUpRight, Music } from "lucide-react";
+import { CheckCircle, XCircle, FileText, FileBadge, ArrowUpRight, Music, UserPlus } from "lucide-react";
 import { db } from "@/lib/db";
 import { getCaller } from "@/lib/dance";
 import { sectionWhere } from "@/lib/notify";
@@ -10,6 +10,7 @@ import MarkAllRead from "@/components/notifications/MarkAllRead";
 const KIND: Record<string, { icon: React.ElementType; color: string }> = {
   REPORT_SUBMITTED: { icon: FileText, color: "text-violet-300 bg-violet-500/15" },
   OD_REQUESTED: { icon: FileBadge, color: "text-violet-300 bg-violet-500/15" },
+  MEMBERS_ADDED: { icon: UserPlus, color: "text-sky-300 bg-sky-500/15" },
   REPORT_APPROVED: { icon: CheckCircle, color: "text-emerald-300 bg-emerald-500/15" },
   REPORT_REJECTED: { icon: XCircle, color: "text-red-300 bg-red-500/15" },
 };

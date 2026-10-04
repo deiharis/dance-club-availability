@@ -18,6 +18,7 @@ interface Report {
     registerNumber: string;
     category: string;
     position: string | null;
+    team?: string | null;
     isFFCS: boolean;
   };
   reviewedBy: {
@@ -77,8 +78,17 @@ const SKIN = {
 const fmt = (d: string) =>
   new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 
-export default function ReviewReports({ variant }: { variant: "console" | "stage" }) {
+export default function ReviewReports({
+  variant,
+  canViewDancers = false,
+}: {
+  variant: "console" | "stage";
+  // Committee only: adds a view-only list of normal dancers' reports (their Lead decides them).
+  canViewDancers?: boolean;
+}) {
   const s = SKIN[variant];
+  const [scope, setScope] = useState<"queue" | "dancers">("queue");
+  const viewOnly = scope === "dancers";
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("PENDING");
@@ -89,7 +99,7 @@ export default function ReviewReports({ variant }: { variant: "console" | "stage
 
   function loadReports() {
     setLoading(true);
-    fetch("/api/reports", { cache: "no-store" })
+    fetch(`/api/reports${viewOnly ? "?scope=dancers" : ""}`, { cache: "no-store" })
       .then((r) => r.json())
       .then((data) => {
         setReports(Array.isArray(data) ? data : []);
@@ -98,8 +108,11 @@ export default function ReviewReports({ variant }: { variant: "console" | "stage
   }
 
   useEffect(() => {
+    setReviewingId(null);
+    setFilter(viewOnly ? "ALL" : "PENDING");
     loadReports();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope]);
 
   async function handleAction(id: string, action: "APPROVE" | "REJECT") {
     setActionLoading(true);
@@ -135,6 +148,30 @@ export default function ReviewReports({ variant }: { variant: "console" | "stage
 
   return (
     <div>
+      {canViewDancers && (
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <div className={s.tabWrap}>
+            {([
+              { key: "queue", label: "Needs a decision" },
+              { key: "dancers", label: "Dancer reports (view only)" },
+            ] as const).map((o) => (
+              <button
+                key={o.key}
+                onClick={() => setScope(o.key)}
+                className={`whitespace-nowrap px-3.5 py-1.5 text-xs font-semibold transition-colors ${
+                  scope === o.key ? s.tabOn : s.tabOff
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          {viewOnly && (
+            <p className={`text-xs ${s.muted}`}>Dancers&apos; reports are approved by their own Team Leader.</p>
+          )}
+        </div>
+      )}
+
       <div className={`mb-6 overflow-x-auto ${s.tabWrap}`}>
         {tabs.map((t) => (
           <button
@@ -192,6 +229,11 @@ export default function ReviewReports({ variant }: { variant: "console" | "stage
                       <p className={`flex flex-wrap items-center gap-x-2 text-xs ${s.label}`}>
                         <span className="font-mono">{report.member.registerNumber}</span>
                         {report.member.position && <span>· {report.member.position}</span>}
+                        {viewOnly && report.member.team && (
+                          <span className="rounded bg-pink-500/15 px-1.5 py-0.5 text-[10px] font-medium text-pink-300">
+                            {report.member.team}
+                          </span>
+                        )}
                         {report.member.isFFCS && (
                           <span className="rounded bg-teal-500/15 px-1.5 py-0.5 text-[10px] font-medium text-teal-300">FFCS</span>
                         )}
@@ -214,7 +256,7 @@ export default function ReviewReports({ variant }: { variant: "console" | "stage
                   </div>
 
                   {/* Proof image: only for pending reports (deleted after review) */}
-                  {pending && (
+                  {pending && !viewOnly && (
                     <div>
                       <p className={`mb-2 text-[10px] font-semibold uppercase tracking-widest ${s.label}`}>
                         Proof image
@@ -258,7 +300,7 @@ export default function ReviewReports({ variant }: { variant: "console" | "stage
                 </div>
 
                 <footer className={`border-t px-5 py-3 ${s.divider} ${s.footer}`}>
-                  {pending ? (
+                  {pending && !viewOnly ? (
                     reviewingId === report.id ? (
                       <div className="space-y-3">
                         <textarea

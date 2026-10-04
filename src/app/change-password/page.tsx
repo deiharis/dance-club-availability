@@ -11,7 +11,7 @@ export default async function ChangePasswordPage() {
 
   // Read the flag from the database (not the login token) so it is always current.
   const user = await db.user.findUnique({
-    where: { id: (session.user as any).id },
+    where: { id: session.user.id },
     select: { mustChangePassword: true },
   });
 

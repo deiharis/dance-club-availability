@@ -16,7 +16,7 @@ export async function GET(req: Request) {
     }
 
     const member = await db.member.findUnique({
-      where: { userId: (session.user as any).id },
+      where: { userId: session.user.id },
       select: { id: true },
     });
     if (!member) return NextResponse.json({ count: 0 });

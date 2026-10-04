@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { notifyMembers, dateLabel, teamLink } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -42,10 +43,28 @@ export async function PUT(
       );
     }
 
+    // Tell only the dancers who were just added (not the ones already in it).
+    const before = await db.performance.findUnique({
+      where: { id: params.id },
+      select: { dancers: { select: { id: true } } },
+    });
+    const already = new Set((before?.dancers ?? []).map((d) => d.id));
+    const added = teamDancers.map((d) => d.id).filter((id) => !already.has(id));
+
     await db.performance.update({
       where: { id: params.id },
       data: { dancers: { set: teamDancers } },
     });
+
+    if (added.length > 0) {
+      const p = r.performance;
+      await notifyMembers({
+        memberIds: added,
+        type: "PERFORMANCE_ADDED",
+        message: `You have been added to ${p.name} on ${dateLabel(p.eventDate)}${p.venue ? ` at ${p.venue}` : ""}.`,
+        link: teamLink("/dance/performances", p.team),
+      });
+    }
     return NextResponse.json({ saved: teamDancers.length });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });

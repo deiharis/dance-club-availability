@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
   ClipboardList,
   Bell,
+  BarChart3,
   Star,
   Users,
   FileText,
@@ -37,9 +38,10 @@ const navItems = [
   { href: "/dance/rehearsals", label: "Rehearsals", icon: CalendarDays },
   { href: "/dance/attendance", label: "Attendance", icon: ClipboardCheck },
   { href: "/dance/performances", label: "Performances", icon: Star },
+  { href: "/dance/analytics", label: "Team insights", icon: BarChart3, manageOnly: true },
   { href: "/dance/timetable", label: "Timetable", icon: Calendar },
   { href: "/dance/reports", label: "Review reports", icon: ClipboardList, leadOnly: true },
-  { href: "/reports/submit", label: "My Reports", icon: FileText },
+  { href: "/dance/my-reports", label: "My Reports", icon: FileText },
   { href: "/dance/notifications", label: "Notifications", icon: Bell },
 ];
 

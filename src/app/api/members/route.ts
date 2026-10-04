@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
+import { normalizePhone } from "@/lib/phone";
+import { notifySuperAdmins } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -126,7 +128,7 @@ export async function POST(req: Request) {
             fullName,
             registerNumber,
             email,
-            phone: phone || null,
+            phone: normalizePhone(phone),
             // One canonical spelling, whatever was typed ("btech cse core" -> "B.Tech CSE (Core)")
             department: normalizeDepartment(department).label || department,
             academicYear: parseInt(academicYear),
@@ -140,6 +142,16 @@ export async function POST(req: Request) {
       },
       include: { member: true },
     });
+
+    // A Lead adding a dancer is worth the SuperAdmin knowing about; committee adds are not.
+    if (!caller.isCommittee) {
+      await notifySuperAdmins({
+        actorMemberId: caller.member?.id,
+        type: "MEMBERS_ADDED",
+        message: `${caller.member?.fullName ?? "A Dance Lead"} added ${fullName} to ${team}.`,
+        link: "/members",
+      });
+    }
 
     return NextResponse.json(user.member, { status: 201 });
   } catch (error) {

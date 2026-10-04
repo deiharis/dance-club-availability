@@ -10,6 +10,8 @@ import {
 } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
+import { normalizePhone } from "@/lib/phone";
+import { notifySuperAdmins } from "@/lib/notify";
 
 function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" {
   const v = value.trim().toLowerCase();
@@ -72,7 +74,7 @@ export async function POST(req: Request) {
       // Capitals, so the temporary password (the register number) is always the same case.
       const registerNumber = pick(row, "Register Number").toUpperCase();
       const email = pick(row, "Email", "Email Address").toLowerCase();
-      const phone = pick(row, "Phone") || null;
+      const phone = normalizePhone(pick(row, "Phone"));
       const rawDepartment = pick(row, "Department");
       const department = normalizeDepartment(rawDepartment).label || rawDepartment;
       const academicYear = parseInt(pick(row, "Academic Year")) || 1;
@@ -149,6 +151,15 @@ export async function POST(req: Request) {
       });
 
       created++;
+    }
+
+    if (created > 0) {
+      await notifySuperAdmins({
+        actorMemberId: caller.member?.id,
+        type: "MEMBERS_ADDED",
+        message: `${caller.member?.fullName ?? "A committee member"} imported ${created} member${created === 1 ? "" : "s"}${skipped ? ` (${skipped} skipped)` : ""}.`,
+        link: "/members",
+      });
     }
 
     return NextResponse.json({ created, skipped, errors });

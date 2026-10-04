@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
+import { normalizePhone } from "@/lib/phone";
 
 export const dynamic = "force-dynamic";
 
@@ -126,7 +127,7 @@ export async function PATCH(
         fullName,
         registerNumber,
         email,
-        phone: phone || null,
+        phone: normalizePhone(phone),
         department: normalizeDepartment(department).label || department,
         academicYear: parseInt(academicYear),
         category,

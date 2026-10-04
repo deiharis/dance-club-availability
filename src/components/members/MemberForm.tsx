@@ -6,6 +6,7 @@ import { ShieldCheck, User, KeyRound } from "lucide-react";
 import TeamSelector from "@/components/ui/TeamSelector";
 import { getTeamsForCategory, DANCER_ROLES } from "@/lib/teams";
 import { normalizeDepartment, DEPARTMENT_SUGGESTIONS } from "@/lib/departments";
+import { normalizePhone } from "@/lib/phone";
 
 export type MemberFormState = {
   fullName: string;
@@ -109,7 +110,15 @@ export default function MemberForm({
               <label className={label}>
                 Phone <span className="text-zinc-600">(optional)</span>
               </label>
-              <input name="phone" value={form.phone} onChange={text("phone")} placeholder="9876543210" className={control} />
+              <input
+                name="phone"
+                value={form.phone}
+                onChange={text("phone")}
+                // "+91 98765 43210" becomes "9876543210" when you leave the field
+                onBlur={() => set({ phone: normalizePhone(form.phone) ?? "" })}
+                placeholder="9876543210"
+                className={control}
+              />
             </div>
             <div>
               <label className={label}>Department</label>

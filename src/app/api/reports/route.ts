@@ -24,21 +24,28 @@ async function getSignedUrl(imagePath: string): Promise<string> {
   return data.signedUrl;
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
     const caller = await getCaller();
+
+    // ?scope=dancers: the committee can LOOK at normal dancers' reports (view only; the
+    // PATCH route still lets only that team's Lead decide). No proof images are signed.
+    const dancerView =
+      !!caller?.isCommittee && new URL(req.url).searchParams.get("scope") === "dancers";
 
     // Committee: every report. Dance Lead: reports from their own team's dancers
     // (never their own). Everyone else: only their own, handled below.
     if (caller && (caller.isCommittee || caller.isLead)) {
       const reports = await db.report.findMany({
-        where: caller.isCommittee
+        where: dancerView
+          ? { member: { category: "DANCER", position: { not: "Team Leader" } } }
+          : caller.isCommittee
           ? // Normal dancers' reports are reviewed by their Lead only; the committee
             // still reviews Dance Leads' own reports.
             {
@@ -61,6 +68,7 @@ export async function GET() {
               registerNumber: true,
               category: true,
               position: true,
+              team: true,
               isFFCS: true,
             },
           },
@@ -76,7 +84,7 @@ export async function GET() {
 
       const reportsWithSignedUrls = await Promise.all(
         reports.map(async (report) => {
-          if (report.status === "PENDING" && report.imagePath) {
+          if (!dancerView && report.status === "PENDING" && report.imagePath) {
             const signedUrl = await getSignedUrl(report.imagePath);
             return { ...report, imageUrl: signedUrl };
           }
@@ -117,7 +125,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
+    const userId = session.user.id;
 
     const member = await db.member.findUnique({
       where: { userId },

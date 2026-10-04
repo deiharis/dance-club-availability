@@ -16,7 +16,7 @@ export async function PATCH(
     }
 
     // Only SuperAdmin can approve OD
-    if ((session.user as any).role !== "SUPERADMIN") {
+    if (session.user.role !== "SUPERADMIN") {
       return NextResponse.json(
         { error: "Only the Super Admin can approve OD requests" },
         { status: 403 }
@@ -78,8 +78,8 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = (session.user as any).id;
-    const role = (session.user as any).role;
+    const userId = session.user.id;
+    const role = session.user.role;
 
     const odRequest = await db.oDRequest.findUnique({
       where: { id: params.id },

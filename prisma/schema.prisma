@@ -228,6 +228,7 @@ enum NotificationType {
   ATTENDANCE_MARKED
   REPORT_SUBMITTED
   OD_REQUESTED
+  MEMBERS_ADDED
 }
 
 model Notification {
