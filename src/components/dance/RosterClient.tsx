@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, UserPlus } from "lucide-react";
+import { Trash2, UserPlus, Upload, Download, FileSpreadsheet, X } from "lucide-react";
 import { DANCER_ROLES } from "@/lib/teams";
 
 type Dancer = {
@@ -47,6 +47,33 @@ export default function RosterClient({
   const set = (k: keyof typeof emptyForm) => (e: any) =>
     setForm({ ...form, [k]: e.target.value });
 
+  // Excel import into this team (the server forces the team for Leads).
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<{ created: number; skipped: number; errors: string[] } | null>(null);
+  const q = `team=${encodeURIComponent(team)}`;
+
+  async function importFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    setError("");
+    setResult(null);
+    const body = new FormData();
+    body.append("file", file);
+    body.append("team", team);
+    const res = await fetch("/api/dance/roster/import", { method: "POST", body });
+    const data = await res.json();
+    setImporting(false);
+    if (fileRef.current) fileRef.current.value = "";
+    if (!res.ok) {
+      setError(data.error ?? "Import failed");
+      return;
+    }
+    setResult(data);
+    router.refresh();
+  }
+
   async function setSkill(id: string, skillLevel: string) {
     setError("");
     const res = await fetch(`/api/dance/members/${id}/skill`, {
@@ -87,18 +114,70 @@ export default function RosterClient({
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-orange-100/60 text-sm">
           {dancers.length} dancer{dancers.length === 1 ? "" : "s"} in {team}
         </p>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
-        >
-          <UserPlus size={16} />
-          Add dancer
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={importFile} />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={importing}
+            title="Add dancers from an Excel file"
+            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-orange-50/80 transition-colors hover:border-orange-400/40 hover:text-white disabled:opacity-50"
+          >
+            <Upload size={15} />
+            {importing ? "Importing..." : "Import"}
+          </button>
+          <a
+            href={`/api/dance/roster/export?${q}`}
+            title="Download this team's dancers and attendance as Excel"
+            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-orange-50/80 transition-colors hover:border-orange-400/40 hover:text-white"
+          >
+            <Download size={15} />
+            Export
+          </a>
+          <a
+            href={`/api/dance/roster/export?${q}&template=1`}
+            title="Download an empty Excel file with the right columns"
+            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-orange-50/80 transition-colors hover:border-orange-400/40 hover:text-white"
+          >
+            <FileSpreadsheet size={15} />
+            <span className="hidden sm:inline">Template</span>
+          </a>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
+          >
+            <UserPlus size={16} />
+            Add dancer
+          </button>
+        </div>
       </div>
+
+      {result && (
+        <div className="mt-4 rounded-3xl border border-orange-400/25 bg-orange-500/[0.07] p-4">
+          <div className="flex items-start justify-between gap-3">
+            <p className="text-sm font-medium text-white">
+              Import finished: {result.created} added
+              {result.skipped ? `, ${result.skipped} skipped` : ""}.
+              {result.created > 0 && (
+                <span className="font-normal text-orange-100/60"> Their temporary password is their register number.</span>
+              )}
+            </p>
+            <button onClick={() => setResult(null)} title="Close" className="rounded-full p-1 text-orange-100/50 hover:text-white">
+              <X size={15} />
+            </button>
+          </div>
+          {result.errors.length > 0 && (
+            <ul className="mt-2 max-h-40 space-y-0.5 overflow-y-auto text-xs text-orange-100/60">
+              {result.errors.map((e, i) => (
+                <li key={i}>{e}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {error && (
         <p className="mt-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-2xl px-3 py-2">
