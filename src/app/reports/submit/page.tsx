@@ -266,7 +266,9 @@ export default function SubmitReportPage() {
           <span className="text-white font-bold text-base sm:text-lg tracking-tight">
             Dance Club
           </span>
-          <p className="text-gray-500 text-xs mt-0.5">My Reports & OD</p>
+          <p className="text-gray-500 text-xs mt-0.5">
+            {userCategory === "DANCER" ? "My Reports" : "My Reports & OD"}
+          </p>
         </div>
         <Link
           href={getBackLink()}
@@ -292,6 +294,8 @@ export default function SubmitReportPage() {
             <FileText size={15} />
             Reports
           </button>
+          {/* Dancers have reports only; OD is for Core and Normal Members */}
+          {userCategory !== "DANCER" && (
           <button
             onClick={() => setActiveTab("od")}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
@@ -308,6 +312,7 @@ export default function SubmitReportPage() {
               </span>
             )}
           </button>
+          )}
         </div>
 
         {/* ── REPORTS TAB ── */}
@@ -483,7 +488,7 @@ export default function SubmitReportPage() {
         )}
 
         {/* ── OD TAB ── */}
-        {activeTab === "od" && (
+        {activeTab === "od" && userCategory !== "DANCER" && (
           <>
             {/* OD request form */}
             {canRequestOD ? (

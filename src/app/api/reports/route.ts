@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getCaller } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -29,11 +30,28 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
     const userId = (session.user as any).id;
+    const caller = await getCaller();
 
-    if (role === "ADMIN" || role === "SUPERADMIN") {
+    // Committee: every report. Dance Lead: reports from their own team's dancers
+    // (never their own). Everyone else: only their own, handled below.
+    if (caller && (caller.isCommittee || caller.isLead)) {
       const reports = await db.report.findMany({
+        where: caller.isCommittee
+          ? // Normal dancers' reports are reviewed by their Lead only; the committee
+            // still reviews Dance Leads' own reports.
+            {
+              NOT: {
+                member: { category: "DANCER", position: { not: "Team Leader" } },
+              },
+            }
+          : {
+              member: {
+                category: "DANCER",
+                team: caller.member?.team ?? "__none__",
+                id: { not: caller.member?.id },
+              },
+            },
         orderBy: { submittedAt: "desc" },
         include: {
           member: {

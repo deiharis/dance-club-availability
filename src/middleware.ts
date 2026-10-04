@@ -47,6 +47,11 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/reports/review")
   ) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
+    // Dancers and Dance Leads have their own section; keep them out of committee pages
+    if (token.category === "DANCER" && token.role !== "SUPERADMIN") {
+      const to = pathname.startsWith("/reports/review") ? "/dance/reports" : "/dance";
+      return NextResponse.redirect(new URL(to, req.url));
+    }
     if (token.role === "MEMBER") {
       return NextResponse.redirect(new URL("/profile", req.url));
     }

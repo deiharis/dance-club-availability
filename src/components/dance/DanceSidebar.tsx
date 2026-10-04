@@ -8,6 +8,7 @@ import {
   Calendar,
   CalendarDays,
   ClipboardCheck,
+  ClipboardList,
   Star,
   Users,
   FileText,
@@ -33,7 +34,8 @@ const navItems = [
   { href: "/dance/attendance", label: "Attendance", icon: ClipboardCheck },
   { href: "/dance/performances", label: "Performances", icon: Star },
   { href: "/dance/timetable", label: "Timetable", icon: Calendar },
-  { href: "/reports/submit", label: "Reports and OD", icon: FileText },
+  { href: "/dance/reports", label: "Review reports", icon: ClipboardList, leadOnly: true },
+  { href: "/reports/submit", label: "My Reports", icon: FileText },
 ];
 
 export default function DanceSidebar({
@@ -79,7 +81,10 @@ export default function DanceSidebar({
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.filter((i) => canManage || !("manageOnly" in i)).map((item) => {
+        {navItems
+          .filter((i) => canManage || !("manageOnly" in i))
+          .filter((i) => (canManage && !isCommittee) || !("leadOnly" in i))
+          .map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
           return (

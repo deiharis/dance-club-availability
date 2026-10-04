@@ -65,6 +65,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 | Reports: review | `(dashboard)/reports/review` | `api/reports/[id]` (PATCH approve/reject) |
 | Notifications on profile | `(member)/profile` | `api/notifications` |
 | OD requests | submit tab above; SuperAdmin `(dashboard)/od` | `api/od`, `/[id]` |
+| Dancer section (own purple layout `app/dance/layout.tsx` + `components/dance/DanceSidebar.tsx`): dashboard, roster, rehearsals, attendance, performances, timetable, report review | `app/dance`, `/roster`, `/rehearsals`, `/attendance`, `/attendance/[id]`, `/performances`, `/timetable`, `/reports` | `api/dance/*` (rehearsals, attendance, performances, members/[id]/skill); helper `lib/dance.ts` (`getCaller`, `getDanceUser`) |
 | Events | `(dashboard)/events` (SuperAdmin) | `api/events`, `/[id]` |
 | FFCS grades | `(dashboard)/grades` (SuperAdmin) | `api/grades`, `/[id]` |
 
@@ -82,8 +83,15 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 - Reviewing creates a Notification for the member.
 - The reviewer's name and position are shown on the report.
 
+**Dancer section** (`/dance`, `category = DANCER`)
+- Login sends dancers and Dance Leads to `/dance`; middleware keeps them out of committee pages (`/dashboard`, `/members`, `/search`, `/analytics`, `/reports/review`).
+- "Committee" = SUPERADMIN or an ADMIN whose category is not DANCER (`isCommittee` in `lib/dance.ts`). Dance Leads (`position = "Team Leader"`) are ADMIN but NOT committee. They manage only their own `team` (`canManage(team)`); committee manages all teams.
+- Leads add/remove dancers (Normal Dancer or Team Leader) in their own team, set `skillLevel` (PROFESSIONAL | AMATEUR, default AMATEUR), create rehearsals and performances, and mark attendance (PRESENT/ABSENT/EXCUSED; % = present / (present + absent)).
+- Dancers have **Reports only, no OD**. Normal dancers' reports are reviewed ONLY by their team's Lead; Dance Leads' own reports are reviewed by the committee. Nobody reviews their own.
+- Every `/api/dance/*` and member/timetable/reports API re-checks the caller server-side with `getCaller()`. Never trust a team sent from the browser.
+
 **OD**
-- Only CORE and MEMBER categories can request OD.
+- Only CORE and MEMBER categories can request OD (dancers cannot).
 - An OD must be based on the member's own APPROVED report. One OD per report (`reportId` is unique).
 - The member must pick an Event (`eventId`). Events are created by the SuperAdmin.
 - Slots are stored as time-range strings. The member must pick an even number of slots, minimum 2.
@@ -105,6 +113,8 @@ Pushing to `main` triggers a Vercel build. Before pushing, run `npx tsc --noEmit
 
 ## Not built yet / known debt
 
+- Dancer notifications (report approved/rejected) still show on `/profile`, outside the dancer section. A notifications view inside `/dance` is not built.
+- The SuperAdmin cannot see normal dancers' reports in the committee review queue (Leads only). Add a read-only view if wanted.
 - `SaturdayPlanner` model exists, but there is no UI or logic yet (Saturday follows a chosen weekday's timetable).
 - `seed.ts` contains the SuperAdmin password in plaintext and is committed. Move it to an env var.
 - One-off scripts in the project root (`seed.ts`, `migrate.ts`, `fix-*.ts`, `clear-*.ts`) are run with `npx tsx <file>`. Everything except `seed.ts` can be deleted.

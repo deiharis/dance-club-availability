@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getCaller } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 
@@ -16,14 +17,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const role = (session.user as any).role;
-    const userId = (session.user as any).id;
-
-    if (role !== "ADMIN" && role !== "SUPERADMIN") {
+    const caller = await getCaller();
+    if (!caller || (!caller.isCommittee && !caller.isLead)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const reviewer = await db.member.findUnique({ where: { userId } });
+    const reviewer = caller.member;
     if (!reviewer) {
       return NextResponse.json(
         { error: "Reviewer profile not found" },
@@ -33,6 +32,9 @@ export async function PATCH(
 
     const report = await db.report.findUnique({
       where: { id: params.id },
+      include: {
+        member: { select: { category: true, team: true, position: true } },
+      },
     });
 
     if (!report) {
@@ -40,6 +42,18 @@ export async function PATCH(
         { error: "Report not found" },
         { status: 404 }
       );
+    }
+
+    // Normal dancers' reports: only their own team's Dance Lead reviews them.
+    // The committee reviews Dance Leads' reports (a Lead can't review their own).
+    const isNormalDancer =
+      report.member.category === "DANCER" &&
+      report.member.position !== "Team Leader";
+    const allowed = caller.isCommittee
+      ? !isNormalDancer
+      : report.member.category === "DANCER" && caller.canManage(report.member.team);
+    if (!allowed) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Prevent self-approval
