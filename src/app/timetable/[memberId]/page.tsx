@@ -22,6 +22,9 @@ export default async function MemberTimetablePage({
     redirect("/timetable");
   }
 
+  // Dance Leads use the dancer section instead of the committee view
+  if ((session.user as any).category === "DANCER") redirect("/dance/timetable");
+
   const member = await db.member.findUnique({
     where: { id: params.memberId },
   });

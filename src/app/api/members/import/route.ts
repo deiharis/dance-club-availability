@@ -8,6 +8,7 @@ import {
   DANCER_TEAMS,
   DANCER_ROLES,
 } from "@/lib/teams";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" {
   const v = value.trim().toLowerCase();
@@ -31,6 +32,10 @@ function validateTeam(category: string, team: string): boolean {
 }
 
 export async function POST(req: Request) {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee) return forbidden();
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

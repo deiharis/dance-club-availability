@@ -8,10 +8,22 @@ export async function middleware(req: NextRequest) {
   // Root redirect
   if (pathname === "/") {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
+    // Dancers and Dance Leads land in the dancer section
+    if (token.category === "DANCER") {
+      return NextResponse.redirect(new URL("/dance", req.url));
+    }
     if (token.role === "SUPERADMIN" || token.role === "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
     return NextResponse.redirect(new URL("/profile", req.url));
+  }
+
+  // Dancer section: dancers, Dance Leads, and admins (SuperAdmin/Core)
+  if (pathname.startsWith("/dance")) {
+    if (!token) return NextResponse.redirect(new URL("/login", req.url));
+    if (token.category !== "DANCER" && token.role === "MEMBER") {
+      return NextResponse.redirect(new URL("/profile", req.url));
+    }
   }
 
   // SUPERADMIN only routes
@@ -71,5 +83,6 @@ export const config = {
     "/events/:path*",
     "/reports/:path*",
     "/profile/:path*",
+    "/dance/:path*",
   ],
 };

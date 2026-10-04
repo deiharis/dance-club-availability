@@ -106,6 +106,7 @@ export default function SubmitReportPage() {
   const [odSuccess, setODSuccess] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>("");
+  const [userCategory, setUserCategory] = useState<string>("");
   const [canRequestOD, setCanRequestOD] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
 
@@ -133,6 +134,7 @@ export default function SubmitReportPage() {
           return;
         }
         setUserRole(session.user.role ?? "MEMBER");
+        setUserCategory(session.user.category ?? "");
       });
 
     loadAll();
@@ -248,6 +250,7 @@ export default function SubmitReportPage() {
   }
 
   function getBackLink() {
+    if (userCategory === "DANCER") return "/dance";
     if (userRole === "SUPERADMIN" || userRole === "ADMIN") return "/dashboard";
     return "/profile";
   }

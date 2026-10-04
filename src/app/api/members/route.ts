@@ -1,12 +1,21 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee && !caller.isLead) return forbidden();
+
   try {
+    // Committee sees everyone; a Dance Lead only their own team's dancers.
     const members = await db.member.findMany({
+      where: caller.isCommittee
+        ? undefined
+        : { category: "DANCER", team: caller.member?.team ?? "__none__" },
       orderBy: { createdAt: "desc" },
     });
     return NextResponse.json(members);
@@ -20,6 +29,10 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee && !caller.isLead) return forbidden();
+
   try {
     const body = await req.json();
 
@@ -42,6 +55,11 @@ export async function POST(req: Request) {
         { error: "All required fields must be filled" },
         { status: 400 }
       );
+    }
+
+    // A Dance Lead may only create dancers in their own team.
+    if (!caller.isCommittee && !(category === "DANCER" && caller.canManage(team))) {
+      return forbidden();
     }
 
     // CORE and MEMBER require a position (from their team list)

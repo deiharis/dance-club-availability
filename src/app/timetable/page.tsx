@@ -126,6 +126,9 @@ export default async function TimetablePage() {
 
   const role = (session.user as any).role;
 
+  // Dancers and Dance Leads use the dancer-section timetable
+  if ((session.user as any).category === "DANCER") redirect("/dance/timetable");
+
   // Normal members see their own editable timetable
   if (role === "MEMBER") {
     return <MemberTimetableView />;

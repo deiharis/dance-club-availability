@@ -2,10 +2,15 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { SLOTS, DAYS, DAY_LABELS } from "@/lib/timetable";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
 
 export async function GET() {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee) return forbidden();
+
   try {
     const members = await db.member.findMany({
       orderBy: { fullName: "asc" },

@@ -1,15 +1,34 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
+
+// Allowed: your own timetable, anyone's if you are committee/SuperAdmin,
+// or a dancer in your team if you are that team's Dance Lead.
+async function authorize(memberId: string) {
+  const caller = await getCaller();
+  if (!caller) return { res: unauthorized() };
+
+  if (caller.member?.id === memberId || caller.isCommittee) return { caller };
+
+  if (caller.isLead) {
+    const target = await db.member.findUnique({ where: { id: memberId } });
+    if (target?.category === "DANCER" && caller.canManage(target.team)) {
+      return { caller };
+    }
+  }
+  return { res: forbidden() };
+}
 
 export async function GET(
   req: Request,
   { params }: { params: { memberId: string } }
 ) {
   try {
+    const auth = await authorize(params.memberId);
+    if ("res" in auth) return auth.res;
+
     const entries = await db.timetableEntry.findMany({
       where: { memberId: params.memberId },
     });
@@ -27,25 +46,8 @@ export async function POST(
   { params }: { params: { memberId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const role = (session.user as any).role;
-    const userId = (session.user as any).id;
-
-    // Admins and SuperAdmins can edit anyone's timetable
-    // Members can only edit their own
-    if (role === "MEMBER") {
-      const member = await db.member.findUnique({ where: { userId } });
-      if (!member || member.id !== params.memberId) {
-        return NextResponse.json(
-          { error: "You can only edit your own timetable" },
-          { status: 403 }
-        );
-      }
-    }
+    const auth = await authorize(params.memberId);
+    if ("res" in auth) return auth.res;
 
     const { day, slot, status } = await req.json();
 

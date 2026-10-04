@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 function getCategoryLabel(category: string) {
   if (category === "CORE") return "Core Members";
@@ -10,6 +11,10 @@ function getCategoryLabel(category: string) {
 }
 
 export async function GET() {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee) return forbidden();
+
   try {
     const members = await db.member.findMany({
       orderBy: { fullName: "asc" },

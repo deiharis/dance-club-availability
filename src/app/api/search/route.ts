@@ -1,9 +1,14 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee) return forbidden();
+
   try {
     const { searchParams } = new URL(req.url);
 

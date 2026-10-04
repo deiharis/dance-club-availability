@@ -36,6 +36,11 @@ enum Category {
   FFCS_ONLY
 }
 
+enum SkillLevel {
+  PROFESSIONAL
+  AMATEUR
+}
+
 enum FFCSGrade_Enum {
   S
   A
@@ -57,6 +62,7 @@ model Member {
   isFFCS         Boolean   @default(false)
  position       String?
   team           String?
+  skillLevel     SkillLevel @default(AMATEUR)
   photoUrl       String?
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -70,6 +76,54 @@ model Member {
   reviewedReports  Report[]         @relation("ReviewedReports")
   notifications    Notification[]
   odRequests       ODRequest[]
+  attendance       Attendance[]
+  performances     Performance[]    @relation("PerformanceDancers")
+}
+
+// ─── DANCER SECTION ─────────────────────────────────────
+// Rehearsals, attendance and performances are scoped by `team`
+// (a value from DANCER_TEAMS). Leads manage only their own team.
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+model Rehearsal {
+  id        String   @id @default(cuid())
+  title     String
+  team      String
+  date      DateTime
+  startTime String
+  endTime   String
+  venue     String?
+  createdAt DateTime @default(now())
+
+  attendance Attendance[]
+}
+
+model Attendance {
+  id     String           @id @default(cuid())
+  status AttendanceStatus
+
+  rehearsalId String
+  rehearsal   Rehearsal @relation(fields: [rehearsalId], references: [id], onDelete: Cascade)
+
+  memberId String
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([rehearsalId, memberId])
+}
+
+model Performance {
+  id        String   @id @default(cuid())
+  name      String
+  team      String
+  eventDate DateTime
+  venue     String?
+  createdAt DateTime @default(now())
+
+  dancers Member[] @relation("PerformanceDancers")
 }
 
 // ─── TIMETABLE ──────────────────────────────────────────

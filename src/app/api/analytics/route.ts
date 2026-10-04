@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { SLOTS, DAYS } from "@/lib/timetable";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -8,6 +9,10 @@ export const revalidate = 0;
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
 
 export async function GET() {
+  const caller = await getCaller();
+  if (!caller) return unauthorized();
+  if (!caller.isCommittee) return forbidden();
+
   try {
     const members = await db.member.findMany();
     const allEntries = await db.timetableEntry.findMany();

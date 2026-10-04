@@ -1,19 +1,48 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
+import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 
 export const dynamic = "force-dynamic";
+
+// Loads the target member and works out what the caller may do with it.
+// Committee: anyone. Dance Lead: dancers in their own team. Nobody but the
+// SuperAdmin may touch the SuperAdmin account.
+async function load(id: string) {
+  const caller = await getCaller();
+  if (!caller) return { res: unauthorized() };
+
+  const member = await db.member.findUnique({
+    where: { id },
+    include: { user: { select: { role: true } } },
+  });
+  if (!member) {
+    return {
+      res: NextResponse.json({ error: "Member not found" }, { status: 404 }),
+    };
+  }
+
+  const targetIsSuper = member.user.role === "SUPERADMIN";
+  const canManage =
+    (caller.isSuper || !targetIsSuper) &&
+    (caller.isCommittee ||
+      (caller.isLead &&
+        member.category === "DANCER" &&
+        caller.canManage(member.team)));
+  const isSelf = caller.member?.id === member.id;
+
+  return { caller, member, targetIsSuper, canManage, isSelf };
+}
 
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
-    const member = await db.member.findUnique({
-      where: { id: params.id },
-    });
-    if (!member) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
-    }
+    const r = await load(params.id);
+    if ("res" in r) return r.res;
+    if (!r.canManage && !r.isSelf) return forbidden();
+
+    const { user, ...member } = r.member;
     return NextResponse.json(member);
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
@@ -25,6 +54,10 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const r = await load(params.id);
+    if ("res" in r) return r.res;
+    if (!r.canManage) return forbidden();
+
     const body = await req.json();
 
     const {
@@ -39,6 +72,11 @@ export async function PATCH(
       position,
       team,
     } = body;
+
+    // A Dance Lead can only keep a dancer inside their own team.
+    if (!r.caller.isCommittee && !(category === "DANCER" && r.caller.canManage(team))) {
+      return forbidden();
+    }
 
     const validCategories = ["CORE", "MEMBER", "DANCER", "FFCS_ONLY"];
     if (category && !validCategories.includes(category)) {
@@ -69,20 +107,17 @@ export async function PATCH(
 
     const finalIsFFCS = category === "FFCS_ONLY" ? true : Boolean(isFFCS);
 
-    // Role logic same as POST
-    let newRole: "ADMIN" | "MEMBER" = "MEMBER";
-    if (category === "CORE") newRole = "ADMIN";
-    if (category === "DANCER" && position === "Team Leader") newRole = "ADMIN";
+    // Role logic same as POST. The SuperAdmin role is never recalculated.
+    if (!r.targetIsSuper) {
+      let newRole: "ADMIN" | "MEMBER" = "MEMBER";
+      if (category === "CORE") newRole = "ADMIN";
+      if (category === "DANCER" && position === "Team Leader") newRole = "ADMIN";
 
-    const member = await db.member.findUnique({ where: { id: params.id } });
-    if (!member) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
+      await db.user.update({
+        where: { id: r.member.userId },
+        data: { role: newRole },
+      });
     }
-
-    await db.user.update({
-      where: { id: member.userId },
-      data: { role: newRole },
-    });
 
     const updated = await db.member.update({
       where: { id: params.id },
@@ -111,11 +146,11 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const member = await db.member.findUnique({ where: { id: params.id } });
-    if (!member) {
-      return NextResponse.json({ error: "Member not found" }, { status: 404 });
-    }
-    await db.user.delete({ where: { id: member.userId } });
+    const r = await load(params.id);
+    if ("res" in r) return r.res;
+    if (!r.canManage || r.targetIsSuper || r.isSelf) return forbidden();
+
+    await db.user.delete({ where: { id: r.member.userId } });
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
