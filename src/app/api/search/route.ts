@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { normalizeDepartment } from "@/lib/departments";
 
 export const dynamic = "force-dynamic";
 
@@ -45,7 +46,15 @@ export async function GET(req: Request) {
     }
 
     if (department) {
-      where.department = { contains: department, mode: "insensitive" };
+      // Match ignoring case, dots, dashes and spaces, against both the stored text and its
+      // canonical form, so "btech", "B.Tech" and "cse core" all find "B.Tech CSE (Core)".
+      const key = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+      const q = key(department);
+      const stored = await db.member.findMany({ distinct: ["department"], select: { department: true } });
+      const matches = stored
+        .map((s) => s.department)
+        .filter((d) => key(d).includes(q) || key(normalizeDepartment(d).label).includes(q));
+      where.department = { in: matches.length ? matches : ["__no_match__"] };
     }
 
     if (academicYear) {

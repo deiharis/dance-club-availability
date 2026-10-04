@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShieldCheck, User, KeyRound } from "lucide-react";
 import TeamSelector from "@/components/ui/TeamSelector";
 import { getTeamsForCategory, DANCER_ROLES } from "@/lib/teams";
+import { normalizeDepartment, DEPARTMENT_SUGGESTIONS } from "@/lib/departments";
 
 export type MemberFormState = {
   fullName: string;
@@ -112,7 +113,26 @@ export default function MemberForm({
             </div>
             <div>
               <label className={label}>Department</label>
-              <input name="department" value={form.department} onChange={text("department")} required placeholder="CSE" className={control} />
+              <input
+                name="department"
+                list="dept-suggestions"
+                value={form.department}
+                onChange={text("department")}
+                // On leaving the field, rewrite any spelling into the standard one.
+                onBlur={() => {
+                  const n = normalizeDepartment(form.department).label;
+                  if (n && n !== form.department) set({ department: n });
+                }}
+                required
+                placeholder="e.g. B.Tech CSE (Core)"
+                className={control}
+              />
+              <datalist id="dept-suggestions">
+                {DEPARTMENT_SUGGESTIONS.map((s) => (
+                  <option key={s} value={s} />
+                ))}
+              </datalist>
+              <p className="mt-1 text-[11px] text-zinc-600">Any spelling works; it is saved in one standard form.</p>
             </div>
           </div>
         </section>

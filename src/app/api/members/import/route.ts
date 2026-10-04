@@ -9,6 +9,7 @@ import {
   DANCER_ROLES,
 } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { normalizeDepartment } from "@/lib/departments";
 
 function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" {
   const v = value.trim().toLowerCase();
@@ -72,7 +73,8 @@ export async function POST(req: Request) {
       const registerNumber = pick(row, "Register Number").toUpperCase();
       const email = pick(row, "Email", "Email Address").toLowerCase();
       const phone = pick(row, "Phone") || null;
-      const department = pick(row, "Department");
+      const rawDepartment = pick(row, "Department");
+      const department = normalizeDepartment(rawDepartment).label || rawDepartment;
       const academicYear = parseInt(pick(row, "Academic Year")) || 1;
       const category = mapCategory(pick(row, "Category") || "Normal Members");
       const isFFCS =

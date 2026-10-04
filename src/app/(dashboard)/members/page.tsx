@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Download, Upload, FileSpreadsheet, Search, Pencil, Trash2 } from "lucide-react";
+import { Plus, Download, Upload, FileSpreadsheet, Search, Pencil, Trash2, Sparkles, X } from "lucide-react";
 
 interface Member {
   id: string;
@@ -55,6 +55,32 @@ export default function MembersPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("ALL");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // "Tidy departments": preview how many spellings would be merged, then apply on request.
+  const [tidy, setTidy] = useState<{
+    changes: { from: string; to: string; count: number }[];
+    done?: number;
+  } | null>(null);
+  const [tidyBusy, setTidyBusy] = useState(false);
+
+  async function openTidy() {
+    setTidyBusy(true);
+    const res = await fetch("/api/members/departments", { cache: "no-store" });
+    const data = await res.json();
+    setTidyBusy(false);
+    setTidy({ changes: res.ok ? data.changes : [] });
+  }
+
+  async function applyTidy() {
+    setTidyBusy(true);
+    const res = await fetch("/api/members/departments", { method: "POST" });
+    const data = await res.json();
+    setTidyBusy(false);
+    if (res.ok) {
+      setTidy({ changes: [], done: data.updated });
+      loadMembers();
+    }
+  }
 
   function loadMembers() {
     setLoading(true);
@@ -126,6 +152,10 @@ export default function MembersPage() {
               <Download size={13} />
               Export
             </a>
+            <button onClick={openTidy} disabled={tidyBusy} className={secondaryBtn} title="Merge different spellings of the same department">
+              <Sparkles size={13} />
+              <span className="hidden sm:inline">Tidy departments</span>
+            </button>
             <a href="/api/timetable/export" className={secondaryBtn}>
               <FileSpreadsheet size={13} />
               <span className="hidden sm:inline">Availability</span>
@@ -139,6 +169,48 @@ export default function MembersPage() {
       </div>
 
       <div className="p-4 sm:p-8">
+        {tidy && (
+          <div className="mb-4 rounded-lg border border-violet-400/30 bg-violet-500/[0.06] p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-sm font-bold text-white">Tidy departments</p>
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  {tidy.done !== undefined
+                    ? `Done. ${tidy.done} member${tidy.done === 1 ? "" : "s"} updated.`
+                    : tidy.changes.length === 0
+                    ? "Every department already uses one standard spelling."
+                    : `${tidy.changes.reduce((s, c) => s + c.count, 0)} members will be renamed to a standard spelling. Nothing changes until you press Apply.`}
+                </p>
+              </div>
+              <button onClick={() => setTidy(null)} className="rounded p-1 text-zinc-500 hover:bg-white/5 hover:text-white" title="Close">
+                <X size={15} />
+              </button>
+            </div>
+
+            {tidy.changes.length > 0 && (
+              <>
+                <ul className="mt-3 max-h-56 divide-y divide-white/5 overflow-y-auto rounded-md border border-white/10 bg-black/30 text-sm">
+                  {tidy.changes.map((c) => (
+                    <li key={c.from} className="flex items-center gap-3 px-3 py-2">
+                      <span className="min-w-0 flex-1 truncate text-zinc-400 line-through decoration-zinc-600">{c.from.trim() || "(blank)"}</span>
+                      <span className="text-zinc-600">to</span>
+                      <span className="min-w-0 flex-1 truncate font-medium text-white">{c.to}</span>
+                      <span className="text-xs tabular-nums text-zinc-500">{c.count}</span>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={applyTidy}
+                  disabled={tidyBusy}
+                  className="mt-3 rounded-md bg-violet-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-violet-500 disabled:opacity-50"
+                >
+                  {tidyBusy ? "Applying..." : `Apply ${tidy.changes.length} change${tidy.changes.length === 1 ? "" : "s"}`}
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
         {importResult && (
           <div className="bg-[#111014] border border-zinc-800 rounded-lg p-4 mb-4">
             <p className="text-white text-sm font-medium mb-1">

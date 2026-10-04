@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { CheckCircle, Clock, FileText } from "lucide-react";
+import { panel, Tabs, StatusChip, Field, Avatar, stripe, dateIN } from "@/components/console/ui";
 
 interface ODRequest {
   id: string;
@@ -27,23 +28,6 @@ interface ODRequest {
     name: string;
     eventDate: string;
   } | null;
-}
-
-function StatusBadge({ status }: { status: string }) {
-  if (status === "APPROVED") {
-    return (
-      <span className="flex items-center gap-1.5 text-xs font-medium text-green-400 bg-green-500/10 border border-green-500/20 px-2 py-1 rounded-md">
-        <CheckCircle size={12} />
-        Approved
-      </span>
-    );
-  }
-  return (
-    <span className="flex items-center gap-1.5 text-xs font-medium text-yellow-400 bg-yellow-500/10 border border-yellow-500/20 px-2 py-1 rounded-md">
-      <Clock size={12} />
-      Pending
-    </span>
-  );
 }
 
 export default function ODManagementPage() {
@@ -89,205 +73,122 @@ export default function ODManagementPage() {
     loadRequests();
   }
 
-  const filtered = requests.filter((r) =>
-    filter === "ALL" ? true : r.status === filter
-  );
-
+  const filtered = requests.filter((r) => (filter === "ALL" ? true : r.status === filter));
   const pendingCount = requests.filter((r) => r.status === "PENDING").length;
+  const approvedCount = requests.length - pendingCount;
 
   return (
     <div>
-
-      <div data-section="Super admin" className="c-page-header flex items-center justify-between">
-        <div>
-          <h1 className="text-base sm:text-lg font-semibold text-white">
-            OD Requests
-          </h1>
-          <p className="text-gray-500 text-xs mt-0.5">
-            Approve OD requests after college grants them
-          </p>
-        </div>
-        {pendingCount > 0 && (
-          <span className="bg-yellow-500/20 text-yellow-400 text-xs font-medium px-3 py-1 rounded-full border border-yellow-500/30">
-            {pendingCount} pending
-          </span>
-        )}
+      <div data-section="Super admin" className="c-page-header">
+        <h1 className="text-white">OD requests</h1>
+        <p className="text-zinc-500 mt-0.5">Approve each request after the college grants it</p>
       </div>
 
-      <div className="p-4 sm:p-8">
-
-        {/* Filter tabs */}
-        <div className="flex gap-2 mb-6">
-          {(["PENDING", "ALL", "APPROVED"] as const).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-lg border transition-colors ${
-                filter === f
-                  ? "bg-white/5 border-gray-600 text-white"
-                  : "border-gray-800 text-gray-500 hover:text-gray-300"
-              }`}
-            >
-              {f.charAt(0) + f.slice(1).toLowerCase()}
-              {f === "PENDING" && pendingCount > 0 && (
-                <span className="ml-1.5 bg-yellow-500/30 text-yellow-400 px-1.5 rounded-full">
-                  {pendingCount}
-                </span>
-              )}
-            </button>
-          ))}
+      <div className="p-4 sm:p-8 max-w-4xl">
+        <div className="mb-6">
+          <Tabs
+            value={filter}
+            onChange={setFilter}
+            options={[
+              { key: "PENDING", label: "Pending", count: pendingCount },
+              { key: "APPROVED", label: "Approved", count: approvedCount },
+              { key: "ALL", label: "All", count: requests.length },
+            ]}
+          />
         </div>
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 mb-4">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="mb-4 rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
 
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-sm">Loading OD requests...</p>
-          </div>
+          <p className="py-12 text-center text-sm text-zinc-500">Loading OD requests...</p>
         ) : filtered.length === 0 ? (
-          <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
-            <FileText size={28} className="text-gray-700 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">No OD requests found.</p>
+          <div className={`${panel} p-14 text-center`}>
+            <FileText size={28} className="mx-auto mb-3 text-zinc-700" />
+            <p className="text-sm text-zinc-400">
+              {filter === "PENDING" ? "Nothing waiting for approval." : "No OD requests found."}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {filtered.map((req) => (
-              <div
-                key={req.id}
-                className="bg-[#111014] border border-gray-800 rounded-xl p-4 sm:p-6"
-              >
-                {/* Member info */}
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-purple-400 text-xs font-semibold">
-                        {req.member.fullName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        {req.member.fullName}
-                      </p>
-                      <p className="text-gray-500 text-xs">
-                        {req.member.registerNumber} · {req.member.department} · {req.member.position}
-                      </p>
-                    </div>
-                  </div>
-                  <StatusBadge status={req.status} />
-                </div>
-
-                {/* OD details */}
-                <div className="bg-[#0a0a0c] border border-gray-800 rounded-lg p-4 mb-4 space-y-2">
-                  <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
-                      Activity Date
-                    </p>
-                    <p className="text-white text-sm">
-                      {new Date(req.activityDate).toLocaleDateString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
-                      OD Reason
-                    </p>
-                    <p className="text-white text-sm">{req.reason}</p>
-                  </div>
-                  
-                  {req.event && (
-                    <div>
-                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
-                        Event
-                      </p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-white text-sm font-medium">
-                          {req.event.name}
+            {filtered.map((req) => {
+              const pending = req.status === "PENDING";
+              return (
+                <article key={req.id} className={`${panel} ${pending ? stripe.amber : stripe.green} overflow-hidden`}>
+                  <header className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <Avatar name={req.member.fullName} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold text-white">{req.member.fullName}</p>
+                        <p className="truncate text-xs text-zinc-500">
+                          <span className="font-mono">{req.member.registerNumber}</span> · {req.member.department}
+                          {req.member.position ? ` · ${req.member.position}` : ""}
                         </p>
-                        <span className="text-gray-500 text-xs">
-                          ·{" "}
-                          {new Date(req.event.eventDate).toLocaleDateString(
-                            "en-IN",
-                            {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
-                            }
-                          )}
-                        </span>
                       </div>
                     </div>
-                  )}
+                    {pending ? (
+                      <StatusChip tone="amber" icon={<Clock size={12} />}>Pending</StatusChip>
+                    ) : (
+                      <StatusChip tone="green" icon={<CheckCircle size={12} />}>Approved</StatusChip>
+                    )}
+                  </header>
 
-                  {req.slots && req.slots.length > 0 && (
-                    <div>
-                      <p className="text-gray-500 text-xs uppercase tracking-wide mb-1.5">
-                        Requested Time Slots
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {req.slots.map((slot) => (
-                          <span
-                            key={slot}
-                            className="text-xs font-medium px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 border border-purple-500/30"
-                          >
-                            {slot}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  <div className="pt-2 border-t border-gray-800">
-                    <p className="text-gray-500 text-xs uppercase tracking-wide mb-0.5">
-                      Linked Report
-                    </p>
-                    <p className="text-gray-300 text-sm">{req.report.description}</p>
+                  <div className="grid gap-4 px-5 py-4 sm:grid-cols-2">
+                    <Field label="Activity date">{dateIN(req.activityDate)}</Field>
+                    <Field label="Event">
+                      {req.event ? (
+                        <>
+                          {req.event.name}
+                          <span className="text-zinc-500"> · {dateIN(req.event.eventDate)}</span>
+                        </>
+                      ) : (
+                        <span className="text-zinc-500">Not set</span>
+                      )}
+                    </Field>
+                    <Field label="Reason" className="sm:col-span-2">{req.reason}</Field>
+                    {req.slots && req.slots.length > 0 && (
+                      <Field label="Requested time slots" className="sm:col-span-2">
+                        <div className="flex flex-wrap gap-1.5">
+                          {req.slots.map((slot) => (
+                            <span
+                              key={slot}
+                              className="rounded bg-violet-500/15 px-2 py-1 text-xs font-medium text-violet-200"
+                            >
+                              {slot}
+                            </span>
+                          ))}
+                        </div>
+                      </Field>
+                    )}
+                    <Field label="Linked report" className="sm:col-span-2">
+                      <span className="text-zinc-300">{req.report.description}</span>
+                    </Field>
                   </div>
-                </div>
 
-                {/* Approve action */}
-                {req.status === "PENDING" && (
-                  <button
-                    onClick={() => handleApprove(req.id)}
-                    disabled={actionLoading === req.id}
-                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-                  >
-                    <CheckCircle size={14} />
-                    {actionLoading === req.id
-                      ? "Approving..."
-                      : "Mark as Approved"}
-                  </button>
-                )}
-
-                {req.status === "APPROVED" && req.approvedAt && (
-                  <p className="text-green-400 text-xs">
-                    Approved on{" "}
-                    {new Date(req.approvedAt).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })}
-                  </p>
-                )}
-
-                <p className="text-gray-600 text-xs mt-2">
-                  Requested on{" "}
-                  {new Date(req.createdAt).toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-            ))}
+                  <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-white/[0.02] px-5 py-3">
+                    <p className="text-[11px] text-zinc-500">
+                      Requested {dateIN(req.createdAt)}
+                      {req.approvedAt && ` · Approved ${dateIN(req.approvedAt)}`}
+                    </p>
+                    {pending && (
+                      <button
+                        onClick={() => handleApprove(req.id)}
+                        disabled={actionLoading === req.id}
+                        className="flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                      >
+                        <CheckCircle size={14} />
+                        {actionLoading === req.id ? "Approving..." : "Mark as approved"}
+                      </button>
+                    )}
+                  </footer>
+                </article>
+              );
+            })}
           </div>
         )}
-
       </div>
     </div>
   );

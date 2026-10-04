@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { normalizeDepartment } from "@/lib/departments";
 
 export const dynamic = "force-dynamic";
 
@@ -126,7 +127,8 @@ export async function POST(req: Request) {
             registerNumber,
             email,
             phone: phone || null,
-            department,
+            // One canonical spelling, whatever was typed ("btech cse core" -> "B.Tech CSE (Core)")
+            department: normalizeDepartment(department).label || department,
             academicYear: parseInt(academicYear),
             category,
             isFFCS: finalIsFFCS,

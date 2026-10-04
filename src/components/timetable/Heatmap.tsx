@@ -3,29 +3,33 @@
 import React from "react";
 import { DAY_LABELS } from "@/lib/timetable";
 
-interface HeatmapCell {
+interface HeatCell {
   day: string;
   slot: string;
   freeCount: number;
   percentage: number;
 }
 
+// Availability heatmap: days across, slots down. Cells pop in one after another, and the
+// best slot gets a ring. (Animation is turned off for reduced-motion users in globals.css.)
 export default function Heatmap({
   data,
   days,
   slots,
+  highlight,
 }: {
-  data: HeatmapCell[];
+  data: HeatCell[];
   days: readonly string[];
   slots: { slot: string; time: string }[];
+  highlight?: { day: string; slot: string } | null;
 }) {
   function getCell(day: string, slot: string) {
     return data.find((d) => d.day === day && d.slot === slot);
   }
 
   function getColor(percentage: number) {
-    if (percentage >= 80) return "bg-green-500";
-    if (percentage >= 60) return "bg-green-600/70";
+    if (percentage >= 80) return "bg-emerald-500";
+    if (percentage >= 60) return "bg-emerald-600/70";
     if (percentage >= 40) return "bg-yellow-500/60";
     if (percentage >= 20) return "bg-orange-500/60";
     return "bg-red-500/60";
@@ -36,13 +40,13 @@ export default function Heatmap({
       <table className="w-full border-collapse">
         <thead>
           <tr>
-            <th className="text-left text-gray-400 text-xs font-medium uppercase tracking-wide px-3 py-2 w-20">
+            <th className="w-20 px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
               Slot
             </th>
             {days.map((day) => (
               <th
                 key={day}
-                className="text-center text-gray-400 text-xs font-medium uppercase tracking-wide px-2 py-2"
+                className="px-2 py-2 text-center text-[10px] font-semibold uppercase tracking-widest text-zinc-500"
               >
                 {DAY_LABELS[day].slice(0, 3)}
               </th>
@@ -50,25 +54,27 @@ export default function Heatmap({
           </tr>
         </thead>
         <tbody>
-          {slots.map((slotInfo) => (
+          {slots.map((slotInfo, si) => (
             <tr key={slotInfo.slot}>
               <td className="px-3 py-1">
-                <span className="text-gray-300 text-xs font-medium">
+                <span className="text-xs font-medium text-zinc-300" title={slotInfo.time}>
                   {slotInfo.slot}
                 </span>
               </td>
-              {days.map((day) => {
+              {days.map((day, di) => {
                 const cell = getCell(day, slotInfo.slot);
                 const percentage = cell?.percentage ?? 0;
+                const best = highlight?.day === day && highlight?.slot === slotInfo.slot;
                 return (
                   <td key={day} className="px-1 py-1">
                     <div
-                      title={`${DAY_LABELS[day]} ${slotInfo.slot}: ${percentage}% free`}
-                      className={`h-7 rounded ${getColor(percentage)} flex items-center justify-center transition-all hover:opacity-80 cursor-default`}
+                      title={`${DAY_LABELS[day]} ${slotInfo.slot} (${slotInfo.time}): ${percentage}% free, ${cell?.freeCount ?? 0} members`}
+                      className={`heat-pop flex h-8 cursor-default items-center justify-center rounded transition-transform hover:scale-110 ${getColor(
+                        percentage
+                      )} ${best ? "ring-2 ring-violet-300 ring-offset-1 ring-offset-[#0a0a0c]" : ""}`}
+                      style={{ animationDelay: `${di * 60 + si * 28}ms` }}
                     >
-                      <span className="text-white text-xs font-medium">
-                        {percentage}%
-                      </span>
+                      <span className="text-xs font-semibold text-white">{percentage}%</span>
                     </div>
                   </td>
                 );
@@ -79,28 +85,26 @@ export default function Heatmap({
       </table>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 mt-4">
-        <span className="text-gray-500 text-xs">Free %:</span>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-red-500/60" />
-          <span className="text-gray-500 text-xs">0–20</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-orange-500/60" />
-          <span className="text-gray-500 text-xs">20–40</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-yellow-500/60" />
-          <span className="text-gray-500 text-xs">40–60</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-green-600/70" />
-          <span className="text-gray-500 text-xs">60–80</span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm bg-green-500" />
-          <span className="text-gray-500 text-xs">80–100</span>
-        </div>
+      <div className="mt-4 flex flex-wrap items-center gap-4">
+        <span className="text-xs text-zinc-500">Free %</span>
+        {[
+          ["bg-red-500/60", "0-20"],
+          ["bg-orange-500/60", "20-40"],
+          ["bg-yellow-500/60", "40-60"],
+          ["bg-emerald-600/70", "60-80"],
+          ["bg-emerald-500", "80-100"],
+        ].map(([c, l]) => (
+          <div key={l} className="flex items-center gap-1.5">
+            <div className={`h-3 w-3 rounded-sm ${c}`} />
+            <span className="text-xs text-zinc-500">{l}</span>
+          </div>
+        ))}
+        {highlight && (
+          <div className="flex items-center gap-1.5">
+            <div className="h-3 w-3 rounded-sm ring-2 ring-violet-300" />
+            <span className="text-xs text-zinc-500">Best slot</span>
+          </div>
+        )}
       </div>
     </div>
   );

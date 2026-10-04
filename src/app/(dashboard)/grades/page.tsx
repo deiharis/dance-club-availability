@@ -1,25 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Plus, Pencil, Trash2, GraduationCap, X, Check } from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Plus, Pencil, Trash2, GraduationCap, X, Check, Search } from "lucide-react";
+import { panel, control, controlLabel, sectionTitle, Avatar } from "@/components/console/ui";
 
 const GRADE_VALUES = ["S", "A", "B", "C", "D", "E"] as const;
 type GradeValue = typeof GRADE_VALUES[number];
 
 function gradeColor(grade: string) {
-  if (grade === "S") return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
-  if (grade === "A") return "bg-green-500/20 text-green-400 border-green-500/30";
-  if (grade === "B") return "bg-blue-500/20 text-blue-400 border-blue-500/30";
-  if (grade === "C") return "bg-yellow-500/20 text-yellow-400 border-yellow-500/30";
-  if (grade === "D") return "bg-orange-500/20 text-orange-400 border-orange-500/30";
-  return "bg-red-500/20 text-red-400 border-red-500/30";
+  if (grade === "S") return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+  if (grade === "A") return "bg-green-500/20 text-green-300 border-green-500/30";
+  if (grade === "B") return "bg-sky-500/20 text-sky-300 border-sky-500/30";
+  if (grade === "C") return "bg-yellow-500/20 text-yellow-300 border-yellow-500/30";
+  if (grade === "D") return "bg-orange-500/20 text-orange-300 border-orange-500/30";
+  return "bg-red-500/20 text-red-300 border-red-500/30";
 }
 
 function getCategoryLabel(category: string) {
   if (category === "CORE") return "Core";
   if (category === "DANCER") return "Dancer";
-  if (category === "FFCS_ONLY") return "FFCS Only";
-  return "Member";
+  if (category === "FFCS_ONLY") return "FFCS only";
+  return "Normal";
 }
 
 interface Grade {
@@ -41,27 +42,56 @@ interface Member {
   ffcsGrades: Grade[];
 }
 
+// Grade picker: S A B C D E buttons.
+function GradePicker({ value, onChange }: { value: GradeValue; onChange: (g: GradeValue) => void }) {
+  return (
+    <div className="flex gap-1.5">
+      {GRADE_VALUES.map((g) => (
+        <button
+          key={g}
+          type="button"
+          onClick={() => onChange(g)}
+          className={`flex-1 rounded-md border py-2 text-xs font-bold transition-colors ${
+            value === g ? gradeColor(g) : "border-zinc-700 bg-black/30 text-zinc-500 hover:border-zinc-500"
+          }`}
+        >
+          {g}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// "S x2  A x3" summary chips for a member's grades.
+function Distribution({ grades }: { grades: Grade[] }) {
+  const counts = GRADE_VALUES.map((g) => [g, grades.filter((x) => x.grade === g).length] as const).filter(
+    ([, n]) => n > 0
+  );
+  if (counts.length === 0) return <span className="text-[11px] text-zinc-600">No grades yet</span>;
+  return (
+    <span className="flex flex-wrap gap-1">
+      {counts.map(([g, n]) => (
+        <span key={g} className={`rounded border px-1.5 py-0.5 text-[10px] font-bold ${gradeColor(g)}`}>
+          {g}
+          <span className="font-medium opacity-70"> x{n}</span>
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function GradesPage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
 
-  // Add grade form state
-  const [addingFor, setAddingFor] = useState<string | null>(null);
-  const [newGrade, setNewGrade] = useState({
-    subject: "",
-    grade: "S" as GradeValue,
-    remarks: "",
-  });
+  const [newGrade, setNewGrade] = useState({ subject: "", grade: "S" as GradeValue, remarks: "" });
   const [addLoading, setAddLoading] = useState(false);
 
-  // Edit grade state
   const [editingGrade, setEditingGrade] = useState<Grade | null>(null);
-  const [editForm, setEditForm] = useState({
-    subject: "",
-    grade: "S" as GradeValue,
-    remarks: "",
-  });
+  const [editForm, setEditForm] = useState({ subject: "", grade: "S" as GradeValue, remarks: "" });
   const [editLoading, setEditLoading] = useState(false);
 
   function loadMembers() {
@@ -79,21 +109,37 @@ export default function GradesPage() {
     loadMembers();
   }, []);
 
-  async function handleAddGrade(memberId: string) {
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q
+      ? members.filter((m) => `${m.fullName} ${m.registerNumber}`.toLowerCase().includes(q))
+      : members;
+  }, [members, query]);
+
+  // Keep a valid selection: default to the first member in the list.
+  const selected = members.find((m) => m.id === selectedId) ?? filtered[0] ?? members[0] ?? null;
+
+  function select(id: string) {
+    setSelectedId(id);
+    setEditingGrade(null);
+    setNewGrade({ subject: "", grade: "S", remarks: "" });
+    setError("");
+  }
+
+  async function handleAddGrade() {
+    if (!selected) return;
     if (!newGrade.subject.trim()) {
       setError("Subject is required");
       return;
     }
-
     setAddLoading(true);
     setError("");
 
     const res = await fetch("/api/grades", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId, ...newGrade }),
+      body: JSON.stringify({ memberId: selected.id, ...newGrade }),
     });
-
     const data = await res.json();
     setAddLoading(false);
 
@@ -101,8 +147,6 @@ export default function GradesPage() {
       setError(data.error || "Failed to add grade");
       return;
     }
-
-    setAddingFor(null);
     setNewGrade({ subject: "", grade: "S", remarks: "" });
     loadMembers();
   }
@@ -113,7 +157,6 @@ export default function GradesPage() {
       setError("Subject is required");
       return;
     }
-
     setEditLoading(true);
     setError("");
 
@@ -122,7 +165,6 @@ export default function GradesPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(editForm),
     });
-
     const data = await res.json();
     setEditLoading(false);
 
@@ -130,255 +172,161 @@ export default function GradesPage() {
       setError(data.error || "Failed to update grade");
       return;
     }
-
     setEditingGrade(null);
     loadMembers();
   }
 
   async function handleDeleteGrade(gradeId: string) {
     if (!confirm("Delete this grade entry?")) return;
-
     const res = await fetch(`/api/grades/${gradeId}`, { method: "DELETE" });
-    if (res.ok) {
-      loadMembers();
-    }
+    if (res.ok) loadMembers();
   }
 
   function startEdit(grade: Grade) {
     setEditingGrade(grade);
-    setEditForm({
-      subject: grade.subject,
-      grade: grade.grade,
-      remarks: grade.remarks ?? "",
-    });
+    setEditForm({ subject: grade.subject, grade: grade.grade, remarks: grade.remarks ?? "" });
     setError("");
   }
 
   return (
     <div>
-
       <div data-section="Super admin" className="c-page-header">
-        <div className="flex items-center gap-3">
-          <GraduationCap size={20} className="text-purple-400" />
-          <div>
-            <h1 className="text-lg font-semibold text-white">FFCS Grades</h1>
-            <p className="text-gray-500 text-xs mt-0.5">
-              Manage grades for FFCS-enrolled members
-            </p>
-          </div>
-        </div>
+        <h1 className="text-white">FFCS grades</h1>
+        <p className="text-zinc-500 mt-0.5">Record grades for FFCS-enrolled members</p>
       </div>
 
-      <div className="p-8">
-
+      <div className="p-4 sm:p-8">
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 mb-6">
-            <p className="text-red-400 text-sm">{error}</p>
+          <div className="mb-6 rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3">
+            <p className="text-sm text-red-400">{error}</p>
           </div>
         )}
 
         {loading ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-sm">Loading FFCS members...</p>
-          </div>
-        ) : members.length === 0 ? (
-          <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
-            <GraduationCap size={32} className="text-gray-600 mx-auto mb-3" />
-            <p className="text-gray-500 text-sm">
-              No FFCS-enrolled members found.
-            </p>
-            <p className="text-gray-600 text-xs mt-1">
+          <p className="py-12 text-center text-sm text-zinc-500">Loading FFCS members...</p>
+        ) : members.length === 0 || !selected ? (
+          <div className={`${panel} p-14 text-center`}>
+            <GraduationCap size={32} className="mx-auto mb-3 text-zinc-600" />
+            <p className="text-sm text-zinc-400">No FFCS-enrolled members found.</p>
+            <p className="mt-1 text-xs text-zinc-600">
               Add members with FFCS enabled to manage their grades here.
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {members.map((member) => (
-              <div
-                key={member.id}
-                className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden"
+          <div className="lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:items-start lg:gap-8">
+            {/* ── Left: member list ─────────────────────────────── */}
+            <aside className="mb-6 lg:mb-0">
+              {/* Phone: a simple picker */}
+              <select
+                value={selected.id}
+                onChange={(e) => select(e.target.value)}
+                className={`${control} lg:hidden`}
               >
+                {members.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.fullName} ({m.registerNumber})
+                  </option>
+                ))}
+              </select>
 
-                {/* Member Header */}
-                <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
-                      <span className="text-purple-400 text-sm font-semibold">
-                        {member.fullName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-white text-sm font-medium">
-                          {member.fullName}
-                        </p>
-                        <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-400 border border-teal-500/20">
-                          FFCS
-                        </span>
-                        <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-gray-500/20 text-gray-400">
-                          {getCategoryLabel(member.category)}
-                        </span>
-                      </div>
-                      <p className="text-gray-500 text-xs mt-0.5">
-                        {member.registerNumber} · {member.department} · Year {member.academicYear}
-                      </p>
-                    </div>
+              {/* Desktop: searchable list */}
+              <div className={`${panel} hidden overflow-hidden lg:block`}>
+                <div className="border-b border-white/10 p-3">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+                    <input
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      placeholder="Search members"
+                      className={`${control} pl-9`}
+                    />
                   </div>
-                  <button
-                    onClick={() => {
-                      setAddingFor(
-                        addingFor === member.id ? null : member.id
-                      );
-                      setNewGrade({ subject: "", grade: "S", remarks: "" });
-                      setError("");
-                    }}
-                    className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
-                  >
-                    <Plus size={13} />
-                    Add Grade
-                  </button>
                 </div>
+                <ul className="max-h-[70vh] divide-y divide-white/5 overflow-y-auto">
+                  {filtered.map((m) => {
+                    const on = m.id === selected.id;
+                    return (
+                      <li key={m.id}>
+                        <button
+                          onClick={() => select(m.id)}
+                          className={`w-full px-4 py-3 text-left transition-colors ${
+                            on ? "border-l-2 border-l-violet-400 bg-violet-500/10" : "border-l-2 border-l-transparent hover:bg-white/[0.03]"
+                          }`}
+                        >
+                          <p className={`truncate text-sm font-semibold ${on ? "text-white" : "text-zinc-200"}`}>
+                            {m.fullName}
+                          </p>
+                          <p className="font-mono text-[11px] text-zinc-500">{m.registerNumber}</p>
+                          <div className="mt-1.5">
+                            <Distribution grades={m.ffcsGrades} />
+                          </div>
+                        </button>
+                      </li>
+                    );
+                  })}
+                  {filtered.length === 0 && (
+                    <li className="px-4 py-6 text-center text-xs text-zinc-500">No members match.</li>
+                  )}
+                </ul>
+              </div>
+            </aside>
 
-                {/* Add Grade Form */}
-                {addingFor === member.id && (
-                  <div className="px-6 py-4 bg-[#0a0a0c] border-b border-gray-800">
-                    <p className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-3">
-                      New Grade Entry
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="text-gray-500 text-xs mb-1 block">
-                          Subject
-                        </label>
-                        <input
-                          value={newGrade.subject}
-                          onChange={(e) =>
-                            setNewGrade({ ...newGrade, subject: e.target.value })
-                          }
-                          placeholder="e.g. Mathematics"
-                          className="w-full bg-[#111014] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-gray-500 text-xs mb-1 block">
-                          Grade
-                        </label>
-                        <div className="flex gap-1.5">
-                          {GRADE_VALUES.map((g) => (
-                            <button
-                              key={g}
-                              type="button"
-                              onClick={() =>
-                                setNewGrade({ ...newGrade, grade: g })
-                              }
-                              className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
-                                newGrade.grade === g
-                                  ? gradeColor(g)
-                                  : "bg-[#111014] border-gray-700 text-gray-500 hover:border-gray-600"
-                              }`}
-                            >
-                              {g}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-gray-500 text-xs mb-1 block">
-                          Remarks (optional)
-                        </label>
-                        <input
-                          value={newGrade.remarks}
-                          onChange={(e) =>
-                            setNewGrade({ ...newGrade, remarks: e.target.value })
-                          }
-                          placeholder="Optional note"
-                          className="w-full bg-[#111014] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => handleAddGrade(member.id)}
-                        disabled={addLoading}
-                        className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-                      >
-                        <Check size={13} />
-                        {addLoading ? "Saving..." : "Save Grade"}
-                      </button>
-                      <button
-                        onClick={() => setAddingFor(null)}
-                        className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium px-4 py-2 rounded-lg transition-colors"
-                      >
-                        <X size={13} />
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Grades Table */}
-                {member.ffcsGrades.length === 0 ? (
-                  <div className="px-6 py-6 text-center">
-                    <p className="text-gray-600 text-sm">
-                      No grades recorded yet.
+            {/* ── Right: selected member ───────────────────────── */}
+            <section className="min-w-0 space-y-6">
+              <div className={`${panel} flex flex-wrap items-center justify-between gap-4 p-5`}>
+                <div className="flex min-w-0 items-center gap-4">
+                  <Avatar name={selected.fullName} size={12} />
+                  <div className="min-w-0">
+                    <p className="truncate text-base font-bold text-white">{selected.fullName}</p>
+                    <p className="text-xs text-zinc-500">
+                      <span className="font-mono">{selected.registerNumber}</span> · {selected.department} · Year{" "}
+                      {selected.academicYear} · {getCategoryLabel(selected.category)}
                     </p>
                   </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold tabular-nums text-white">{selected.ffcsGrades.length}</p>
+                  <p className="text-[11px] text-zinc-500">grade{selected.ffcsGrades.length === 1 ? "" : "s"} recorded</p>
+                </div>
+              </div>
+
+              {/* Grades */}
+              <div className={`${panel} overflow-hidden`}>
+                <header className="border-b border-white/10 px-5 py-3">
+                  <h2 className={sectionTitle}>Grades</h2>
+                </header>
+                {selected.ffcsGrades.length === 0 ? (
+                  <p className="px-5 py-8 text-center text-sm text-zinc-500">No grades recorded yet.</p>
                 ) : (
-                  <div className="divide-y divide-gray-800/50">
-                    {member.ffcsGrades.map((grade) => (
-                      <div key={grade.id} className="px-6 py-3">
+                  <ul className="divide-y divide-white/5">
+                    {selected.ffcsGrades.map((grade) => (
+                      <li key={grade.id} className="px-5 py-3">
                         {editingGrade?.id === grade.id ? (
-                          // Edit form inline
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            <div>
-                              <input
-                                value={editForm.subject}
-                                onChange={(e) =>
-                                  setEditForm({ ...editForm, subject: e.target.value })
-                                }
-                                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
-                              />
-                            </div>
-                            <div className="flex gap-1.5">
-                              {GRADE_VALUES.map((g) => (
-                                <button
-                                  key={g}
-                                  type="button"
-                                  onClick={() =>
-                                    setEditForm({ ...editForm, grade: g })
-                                  }
-                                  className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
-                                    editForm.grade === g
-                                      ? gradeColor(g)
-                                      : "bg-[#0a0a0c] border-gray-700 text-gray-500 hover:border-gray-600"
-                                  }`}
-                                >
-                                  {g}
-                                </button>
-                              ))}
-                            </div>
-                            <div>
-                              <input
-                                value={editForm.remarks}
-                                onChange={(e) =>
-                                  setEditForm({ ...editForm, remarks: e.target.value })
-                                }
-                                placeholder="Remarks"
-                                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
-                              />
-                            </div>
+                          <div className="grid gap-3 md:grid-cols-3">
+                            <input
+                              value={editForm.subject}
+                              onChange={(e) => setEditForm({ ...editForm, subject: e.target.value })}
+                              className={control}
+                            />
+                            <GradePicker value={editForm.grade} onChange={(g) => setEditForm({ ...editForm, grade: g })} />
+                            <input
+                              value={editForm.remarks}
+                              onChange={(e) => setEditForm({ ...editForm, remarks: e.target.value })}
+                              placeholder="Remarks"
+                              className={control}
+                            />
                             <div className="flex gap-2 md:col-span-3">
                               <button
                                 onClick={handleEditGrade}
                                 disabled={editLoading}
-                                className="flex items-center gap-1.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 rounded-md bg-violet-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-violet-500 disabled:opacity-50"
                               >
                                 <Check size={12} />
                                 {editLoading ? "Saving..." : "Save"}
                               </button>
                               <button
                                 onClick={() => setEditingGrade(null)}
-                                className="flex items-center gap-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors"
+                                className="flex items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:bg-white/5"
                               >
                                 <X size={12} />
                                 Cancel
@@ -386,49 +334,79 @@ export default function GradesPage() {
                             </div>
                           </div>
                         ) : (
-                          // Display row
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
-                              <span className={`text-sm font-bold px-2.5 py-1 rounded-lg border ${gradeColor(grade.grade)}`}>
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex min-w-0 items-center gap-4">
+                              <span className={`w-9 shrink-0 rounded-md border py-1 text-center text-sm font-bold ${gradeColor(grade.grade)}`}>
                                 {grade.grade}
                               </span>
-                              <div>
-                                <p className="text-white text-sm">{grade.subject}</p>
-                                {grade.remarks && (
-                                  <p className="text-gray-500 text-xs mt-0.5">
-                                    {grade.remarks}
-                                  </p>
-                                )}
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-white">{grade.subject}</p>
+                                {grade.remarks && <p className="truncate text-xs text-zinc-500">{grade.remarks}</p>}
                               </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex shrink-0 items-center gap-1">
                               <button
                                 onClick={() => startEdit(grade)}
-                                className="p-1.5 text-gray-500 hover:text-blue-400 transition-colors"
+                                className="rounded p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-violet-300"
                                 title="Edit grade"
                               >
-                                <Pencil size={13} />
+                                <Pencil size={14} />
                               </button>
                               <button
                                 onClick={() => handleDeleteGrade(grade.id)}
-                                className="p-1.5 text-gray-500 hover:text-red-400 transition-colors"
+                                className="rounded p-2 text-zinc-500 transition-colors hover:bg-white/5 hover:text-red-400"
                                 title="Delete grade"
                               >
-                                <Trash2 size={13} />
+                                <Trash2 size={14} />
                               </button>
                             </div>
                           </div>
                         )}
-                      </div>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 )}
-
               </div>
-            ))}
+
+              {/* Add grade: always open */}
+              <div className={`${panel} p-5`}>
+                <h2 className={sectionTitle}>Add a grade</h2>
+                <div className="mt-4 grid gap-4 md:grid-cols-3">
+                  <div>
+                    <label className={controlLabel}>Subject</label>
+                    <input
+                      value={newGrade.subject}
+                      onChange={(e) => setNewGrade({ ...newGrade, subject: e.target.value })}
+                      placeholder="e.g. Mathematics"
+                      className={control}
+                    />
+                  </div>
+                  <div>
+                    <label className={controlLabel}>Grade</label>
+                    <GradePicker value={newGrade.grade} onChange={(g) => setNewGrade({ ...newGrade, grade: g })} />
+                  </div>
+                  <div>
+                    <label className={controlLabel}>Remarks (optional)</label>
+                    <input
+                      value={newGrade.remarks}
+                      onChange={(e) => setNewGrade({ ...newGrade, remarks: e.target.value })}
+                      placeholder="Optional note"
+                      className={control}
+                    />
+                  </div>
+                </div>
+                <button
+                  onClick={handleAddGrade}
+                  disabled={addLoading}
+                  className="mt-4 flex items-center gap-2 rounded-md bg-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_-8px_rgba(124,58,237,0.9)] transition-colors hover:bg-violet-500 disabled:opacity-50"
+                >
+                  <Plus size={14} />
+                  {addLoading ? "Saving..." : "Save grade"}
+                </button>
+              </div>
+            </section>
           </div>
         )}
-
       </div>
     </div>
   );
