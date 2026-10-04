@@ -29,6 +29,8 @@ export default async function DanceLayout({
         userName={session.user.name ?? "Dancer"}
         userEmail={session.user.email ?? ""}
         label={label}
+        canManage={dance.isLead || dance.isCommittee}
+        isCommittee={dance.isCommittee}
       />
       {/* pt-14 on mobile accounts for the fixed top bar */}
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">{children}</main>

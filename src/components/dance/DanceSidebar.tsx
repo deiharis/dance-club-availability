@@ -6,8 +6,11 @@ import { useState, useEffect } from "react";
 import {
   LayoutDashboard,
   Calendar,
+  CalendarDays,
+  Users,
   FileText,
   LogOut,
+  ArrowLeft,
   Menu,
   X,
 } from "lucide-react";
@@ -16,11 +19,15 @@ interface DanceSidebarProps {
   userName: string;
   userEmail: string;
   label: string; // e.g. "Dance Lead", "Dancer", "Super Admin"
+  canManage: boolean; // Dance Lead or committee
+  isCommittee: boolean; // SuperAdmin or Core: gets a link back to the committee dashboard
 }
 
 // Only link pages that exist. Add rehearsals, attendance, etc. as they are built.
 const navItems = [
   { href: "/dance", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dance/roster", label: "Roster", icon: Users, manageOnly: true },
+  { href: "/dance/rehearsals", label: "Rehearsals", icon: CalendarDays },
   { href: "/dance/timetable", label: "Timetable", icon: Calendar },
   { href: "/reports/submit", label: "Reports and OD", icon: FileText },
 ];
@@ -29,6 +36,8 @@ export default function DanceSidebar({
   userName,
   userEmail,
   label,
+  canManage,
+  isCommittee,
 }: DanceSidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -66,7 +75,7 @@ export default function DanceSidebar({
       </div>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
+        {navItems.filter((i) => canManage || !("manageOnly" in i)).map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
           return (
@@ -92,6 +101,15 @@ export default function DanceSidebar({
           <p className="text-purple-300/50 text-xs truncate">{userEmail}</p>
           <span className="text-fuchsia-400 text-xs font-medium">{label}</span>
         </div>
+        {isCommittee && (
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-purple-200/60 hover:text-white hover:bg-fuchsia-500/10 text-sm transition-colors w-full"
+          >
+            <ArrowLeft size={16} />
+            Committee dashboard
+          </Link>
+        )}
         <Link
           href="/api/auth/signout"
           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-purple-200/60 hover:text-white hover:bg-fuchsia-500/10 text-sm transition-colors w-full"

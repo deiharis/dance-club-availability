@@ -48,6 +48,7 @@ export async function POST(req: Request) {
       position,
       team,
       password,
+      skillLevel,
     } = body;
 
     if (!fullName || !registerNumber || !email || !department || !password || !category) {
@@ -130,6 +131,7 @@ export async function POST(req: Request) {
             isFFCS: finalIsFFCS,
             position: position || null,
             team: category === "DANCER" ? team : null,
+            skillLevel: skillLevel === "PROFESSIONAL" ? "PROFESSIONAL" : "AMATEUR",
           },
         },
       },

@@ -16,6 +16,7 @@ import {
   X,
   FileBadge,
   CalendarDays,
+  Music,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -58,6 +59,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
     { href: "/members", label: "Members", icon: Users, show: isAdminOrAbove },
     { href: "/timetable", label: "Timetable", icon: Calendar, show: isAdminOrAbove },
     { href: "/events", label: "Events", icon: CalendarDays, show: isSuperAdmin },
+    { href: "/dance", label: "Dancer Section", icon: Music, show: isAdminOrAbove },
     { href: "/search", label: "Search", icon: Search, show: isAdminOrAbove },
     { href: "/analytics", label: "Analytics", icon: BarChart2, show: isAdminOrAbove },
     { href: "/reports/review", label: "Reports", icon: FileText, show: isAdminOrAbove },
