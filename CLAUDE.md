@@ -70,6 +70,13 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 | Events | `(dashboard)/events` (SuperAdmin) | `api/events`, `/[id]` |
 | FFCS grades | `(dashboard)/grades` (SuperAdmin) | `api/grades`, `/[id]` |
 
+## Branding (Dance Club VIT Chennai)
+
+- **Mark:** a dancer mid-leap (grand jete) inside a spotlight halo; the back leg breaks out of the halo. Paths live ONLY in `MARK` in `src/components/brand/Logo.tsx` (`LogoMark` gold/white/ink, `LogoLockup` mark + "DANCE CLUB / VIT CHENNAI"). Do not redraw it elsewhere.
+- **Palette:** Stage Black `#0A0A0C`, Spotlight Gold `#FBBF24`, Ember `#F97316`, Champagne `#FFE7A8` (gradient champagne -> gold -> ember), Ivory `#F6F3EE`, Ink `#1C1917`, Console Violet `#8B5CF6` (Working Committee accent only). Wordmark font: Sora (`brandFont` in `lib/fonts.ts`), 600 with 0.24em tracking; "VIT CHENNAI" 300 with 0.5em tracking.
+- **Usage:** gold mark on dark (login, Dance Floor), white mark on the violet console sidebar, ink mark on light backgrounds. Favicon is `src/app/icon.svg` (thicker strokes for small sizes). Files for posters and social media: `public/brand/` (SVG marks in gold/white/ink, `logo-icon-1024.png`, `logo-lockup-dark.png`, `logo-lockup-light.png`).
+- **Intro splash** (`components/brand/Splash.tsx`, CSS under "Intro splash" in `globals.css`): about 3s before the login page, once per browser session (`sessionStorage` key `dc-intro-seen`), skippable by click, any key or the Skip button, and reduced to a brief still for reduced-motion users. The login form fades up as the splash dissolves.
+
 ## UI design: two sections, one base
 
 - **Shared:** page background is `bg-base` (`#0a0a0c` neutral near-black, set in `tailwind.config.ts` and `globals.css`). Never use another page background in either section.

@@ -19,6 +19,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { LogoMark } from "@/components/brand/Logo";
 
 interface DanceSidebarProps {
   userName: string;
@@ -88,7 +89,7 @@ export default function DanceSidebar({
       <div className="relative px-6 pt-7 pb-5 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-orange-400 shadow-[0_0_14px_3px_rgba(251,146,60,0.8)]" />
+            <LogoMark size={34} />
             <span className="text-white text-xl font-light tracking-tight">
               Dance Floor
             </span>
@@ -183,7 +184,7 @@ export default function DanceSidebar({
       {/* Mobile: floating pill bar */}
       <div className="lg:hidden fixed top-3 left-3 right-3 z-30 h-12 rounded-full border border-white/10 bg-black/40 backdrop-blur-xl px-5 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-orange-400 shadow-[0_0_10px_2px_rgba(251,146,60,0.8)]" />
+          <LogoMark size={26} />
           <span className="text-white font-light tracking-tight">Dance Floor</span>
         </div>
         <button

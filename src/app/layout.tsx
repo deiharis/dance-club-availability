@@ -6,8 +6,8 @@ import { Providers } from "./providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Dance Club - Availability Management",
-  description: "Manage your dance club member availability",
+  title: "Dance Club VIT Chennai",
+  description: "Members, timetables, rehearsals and performances for Dance Club VIT Chennai",
 };
 
 export default function RootLayout({

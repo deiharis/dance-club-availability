@@ -21,6 +21,7 @@ import {
   KeyRound,
   Bell,
 } from "lucide-react";
+import { LogoMark } from "@/components/brand/Logo";
 
 interface SidebarProps {
   userName: string;
@@ -110,9 +111,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       {/* Brand */}
       <div className="h-14 px-4 border-b border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px] font-bold flex items-center justify-center">
-            DC
-          </div>
+          <LogoMark size={30} variant="white" />
           <div className="leading-tight">
             <p className="text-white text-sm font-semibold">Working Committee</p>
             <p className="text-zinc-500 text-[10px] uppercase tracking-wider">
@@ -216,9 +215,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       {/* Mobile top bar */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-[#0d0c10] border-b border-zinc-800 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px] font-bold flex items-center justify-center">
-            DC
-          </div>
+          <LogoMark size={30} variant="white" />
           <span className="text-white font-semibold text-sm">Working Committee</span>
         </div>
         <button

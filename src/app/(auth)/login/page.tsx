@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Splash from "@/components/brand/Splash";
+import { LogoLockup } from "@/components/brand/Logo";
+import { brandFont } from "@/lib/fonts";
+
+const input =
+  "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-zinc-600 transition-colors focus:border-amber-400/70 focus:outline-none focus:ring-2 focus:ring-amber-400/20";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +17,8 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [changed, setChanged] = useState(false);
+  // The form rises in as the intro splash dissolves (or straight away if the intro was already seen).
+  const [ready, setReady] = useState(false);
 
   // Shown after /change-password signs the user out (?changed=1).
   useEffect(() => {
@@ -39,83 +47,78 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0a0c] px-4 py-10">
+      <Splash onDone={() => setReady(true)} />
 
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-lg">D</span>
-          </div>
-          <h1 className="text-white text-2xl font-bold">Dance Club</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Availability Management System
-          </p>
+      {/* Same spotlight as the end of the splash, so the hand-off feels continuous */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[70vh] bg-[radial-gradient(ellipse_at_top,rgba(251,191,36,0.16),transparent_60%)]" />
+      <div className="pointer-events-none absolute left-1/2 top-1/3 h-[60vmin] w-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.12),transparent_65%)]" />
+
+      <div className={`relative w-full max-w-md ${ready ? "anim-fade-up" : "login-pending"}`}>
+        <div className={`mb-8 flex justify-center ${brandFont.className}`}>
+          <LogoLockup size={68} stacked />
         </div>
 
-        <div className="bg-[#111014] border border-gray-800 rounded-xl p-8">
-          <h2 className="text-white text-base font-semibold mb-6">
-            Sign in to your account
-          </h2>
+        <div className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-8">
+          <h1 className="text-base font-semibold text-white">Sign in</h1>
+          <p className="mt-1 text-xs text-zinc-500">Members and dancers use their club account.</p>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-
+          <form onSubmit={handleLogin} className="mt-6 space-y-4">
             <div>
-              <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-zinc-500">
                 Email address
               </label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@college.edu"
+                placeholder="name@vitstudent.ac.in"
+                autoComplete="email"
                 required
-                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className={input}
               />
             </div>
 
             <div>
-              <label className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-2 block">
+              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-zinc-500">
                 Password
               </label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Your password"
+                autoComplete="current-password"
                 required
-                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className={input}
               />
             </div>
 
             {changed && !error && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3">
-                <p className="text-green-400 text-sm">
-                  Password updated. Sign in with your new password.
-                </p>
+              <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3">
+                <p className="text-sm text-green-400">Password updated. Sign in with your new password.</p>
               </div>
             )}
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
-                <p className="text-red-400 text-sm">{error}</p>
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+                <p className="text-sm text-red-400">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-medium py-2.5 rounded-lg transition-colors text-sm mt-2"
+              className="mt-2 w-full rounded-xl bg-gradient-to-b from-amber-300 to-orange-500 py-3 text-sm font-semibold text-stone-950 shadow-[0_0_30px_-8px_rgba(249,115,22,0.8)] transition hover:from-amber-200 hover:to-orange-400 disabled:opacity-50"
             >
               {loading ? "Signing in..." : "Sign in"}
             </button>
-
           </form>
         </div>
 
-        <p className="text-gray-600 text-xs text-center mt-6">
-          Contact your Core Team admin if you need access
+        <p className="mt-6 text-center text-xs text-zinc-600">
+          New member? Ask your Core Team admin for access.
         </p>
-
       </div>
     </div>
   );
