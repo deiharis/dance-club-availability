@@ -7,6 +7,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 import Sidebar from "@/components/layout/Sidebar";
+import { getCaller } from "@/lib/dance";
 
 export default async function MemberTimetablePage({
   params,
@@ -18,13 +19,11 @@ export default async function MemberTimetablePage({
 
   const role = session.user.role;
 
-  // Members can only view their own individual timetable
-  if (role === "MEMBER") {
-    redirect("/timetable");
-  }
-
-  // Dance Leads use the dancer section instead of the committee view
-  if (session.user.category === "DANCER") redirect("/dance/timetable");
+  // Committee only, checked against the database (not the possibly stale login token).
+  // Dance Leads use the dancer section; members can only see their own timetable.
+  const caller = await getCaller();
+  if (caller?.member?.category === "DANCER") redirect("/dance/timetable");
+  if (!caller?.isCommittee) redirect("/timetable");
 
   const member = await db.member.findUnique({
     where: { id: params.memberId },
@@ -32,10 +31,7 @@ export default async function MemberTimetablePage({
 
   if (!member) notFound();
 
-  const [entries, me] = await Promise.all([
-    db.timetableEntry.findMany({ where: { memberId: member.id } }),
-    db.member.findUnique({ where: { userId: session.user.id }, select: { team: true } }),
-  ]);
+  const entries = await db.timetableEntry.findMany({ where: { memberId: member.id } });
 
   return (
     <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
@@ -43,7 +39,7 @@ export default async function MemberTimetablePage({
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
-        showDanceFloor={role === "SUPERADMIN" || !!me?.team}
+        showDanceFloor={caller.isSuper || caller.inTeam}
       />
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
         <div data-section="People" className="c-page-header flex items-center justify-between">

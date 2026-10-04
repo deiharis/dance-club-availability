@@ -1,30 +1,28 @@
-import { getServerSession } from "next-auth";
 import { consoleFont } from "@/lib/fonts";
-import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
-import { db } from "@/lib/db";
+import { getCaller } from "@/lib/dance";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
+  const caller = await getCaller();
+  if (!caller) redirect("/login");
 
-  const role = session.user.role;
-  if (role === "MEMBER") redirect("/profile");
-
-  const me = await db.member.findUnique({ where: { userId: session.user.id }, select: { team: true } });
+  // Working Committee console: SuperAdmin and Core only. Checked against the DATABASE (the
+  // middleware reads the login token, which is stale until the next login), so a Core member
+  // changed to Dance Lead or Normal member loses access immediately.
+  if (!caller.isCommittee) redirect(caller.member?.category === "DANCER" ? "/dance" : "/profile");
 
   return (
     <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
-        userName={session.user.name ?? "Admin"}
-        userEmail={session.user.email ?? ""}
-        role={role}
-        showDanceFloor={role === "SUPERADMIN" || !!me?.team}
+        userName={caller.member?.fullName ?? "Admin"}
+        userEmail={caller.member?.email ?? ""}
+        role={caller.role}
+        showDanceFloor={caller.isSuper || caller.inTeam}
       />
       {/* pt-14 on mobile accounts for the fixed top bar */}
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">

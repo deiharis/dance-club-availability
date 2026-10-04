@@ -7,6 +7,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 import Sidebar from "@/components/layout/Sidebar";
+import { getCaller } from "@/lib/dance";
 import MemberShell, { MemberHeading } from "@/components/member/MemberShell";
 
 // ── Member's own editable timetable ──────────────────────
@@ -105,11 +106,13 @@ export default async function TimetablePage() {
 
   const role = session.user.role;
 
+  // Checked against the database, not the (possibly stale) login token.
+  const caller = await getCaller();
   // Dancers and Dance Leads use the dancer-section timetable
-  if (session.user.category === "DANCER") redirect("/dance/timetable");
+  if (caller?.member?.category === "DANCER") redirect("/dance/timetable");
 
-  // Normal members see their own editable timetable
-  if (role === "MEMBER") {
+  // Normal members see their own editable timetable; only the committee sees everyone's
+  if (!caller?.isCommittee) {
     return <MemberTimetableView />;
   }
 
@@ -124,7 +127,7 @@ export default async function TimetablePage() {
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
-        showDanceFloor={role === "SUPERADMIN" || !!members.find((m) => m.userId === session.user.id)?.team}
+        showDanceFloor={caller.isSuper || caller.inTeam}
       />
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
         <div data-section="People" className="c-page-header">
