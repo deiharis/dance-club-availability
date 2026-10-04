@@ -113,7 +113,6 @@ Pushing to `main` triggers a Vercel build. Before pushing, run `npx tsc --noEmit
 
 ## Not built yet / known debt
 
-- Dancer notifications (report approved/rejected) still show on `/profile`, outside the dancer section. A notifications view inside `/dance` is not built.
 - The SuperAdmin cannot see normal dancers' reports in the committee review queue (Leads only). Add a read-only view if wanted.
 - `SaturdayPlanner` model exists, but there is no UI or logic yet (Saturday follows a chosen weekday's timetable).
 - `seed.ts` contains the SuperAdmin password in plaintext and is committed. Move it to an env var.

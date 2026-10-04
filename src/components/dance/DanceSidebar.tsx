@@ -9,6 +9,7 @@ import {
   CalendarDays,
   ClipboardCheck,
   ClipboardList,
+  Bell,
   Star,
   Users,
   FileText,
@@ -24,6 +25,7 @@ interface DanceSidebarProps {
   label: string; // e.g. "Dance Lead", "Dancer", "Super Admin"
   canManage: boolean; // Dance Lead or committee
   isCommittee: boolean; // SuperAdmin or Core: gets a link back to the committee dashboard
+  badges?: Record<string, number>; // count shown next to a nav item, keyed by href
 }
 
 // Only link pages that exist. Add rehearsals, attendance, etc. as they are built.
@@ -36,6 +38,7 @@ const navItems = [
   { href: "/dance/timetable", label: "Timetable", icon: Calendar },
   { href: "/dance/reports", label: "Review reports", icon: ClipboardList, leadOnly: true },
   { href: "/reports/submit", label: "My Reports", icon: FileText },
+  { href: "/dance/notifications", label: "Notifications", icon: Bell },
 ];
 
 export default function DanceSidebar({
@@ -44,6 +47,7 @@ export default function DanceSidebar({
   label,
   canManage,
   isCommittee,
+  badges = {},
 }: DanceSidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -99,6 +103,11 @@ export default function DanceSidebar({
             >
               <Icon size={16} />
               {item.label}
+              {badges[item.href] > 0 && (
+                <span className="ml-auto bg-fuchsia-500 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded-full">
+                  {badges[item.href]}
+                </span>
+              )}
             </Link>
           );
         })}
