@@ -46,7 +46,8 @@ export async function GET(
     if (!r.canManage && !r.isSelf) return forbidden();
 
     const { user, ...member } = r.member;
-    return NextResponse.json(member);
+    // Tells the Edit page whether to show the SuperAdmin's "Reset password" panel.
+    return NextResponse.json({ ...member, canResetPassword: r.caller.isSuper && !r.isSelf });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }

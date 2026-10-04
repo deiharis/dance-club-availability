@@ -105,6 +105,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 **Passwords**
 - Accounts made by the Excel/Google-Form import use the (capitalised) register number as a TEMPORARY password; accounts added through the Add form use the password the admin/Lead typed. Both set `User.mustChangePassword = true`.
 - Middleware sends any user with that flag to `/change-password` until they pick their own (min 8 chars, not their register number). After changing, they are signed out and log in again. Anyone can also change it later from the key icon in either sidebar.
+- Forgotten password: the SuperAdmin uses "Reset password" on the Edit member page (`components/members/ResetPassword.tsx`, `POST api/members/[id]/password`, SuperAdmin only, not on their own account). It sets the password to the capitalised register number with `mustChangePassword = true` and shows it once so it can be sent to the member.
 - Login is case-insensitive on email. Import accepts our template columns AND Google Form columns (`Email Address`, `Core Position`, `Member Position`, `Dance Team`, `Dancer Role`); duplicate email or register number (any case) is skipped.
 
 **Dancer section** (`/dance`, `category = DANCER`)

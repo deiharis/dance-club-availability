@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import MemberForm, { MemberFormState } from "@/components/members/MemberForm";
+import ResetPassword from "@/components/members/ResetPassword";
 
 export default function EditMemberPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function EditMemberPage() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState("");
+  const [canReset, setCanReset] = useState(false);
 
   const [form, setForm] = useState<MemberFormState>({
     fullName: "",
@@ -43,6 +45,7 @@ export default function EditMemberPage() {
           position: data.position ?? "",
           team: data.team ?? "",
         });
+        setCanReset(!!data.canResetPassword);
         setFetching(false);
       })
       .catch(() => {
@@ -96,14 +99,17 @@ export default function EditMemberPage() {
             <p className="text-sm text-zinc-500">Loading member data...</p>
           </div>
         ) : (
-          <MemberForm
-            mode="edit"
-            form={form}
-            setForm={setForm}
-            onSubmit={handleSubmit}
-            loading={loading}
-            error={error}
-          />
+          <>
+            <MemberForm
+              mode="edit"
+              form={form}
+              setForm={setForm}
+              onSubmit={handleSubmit}
+              loading={loading}
+              error={error}
+            />
+            {canReset && <ResetPassword memberId={id} name={form.fullName} />}
+          </>
         )}
       </div>
     </div>
