@@ -8,6 +8,7 @@ import {
   Calendar,
   CalendarDays,
   ClipboardCheck,
+  Star,
   Users,
   FileText,
   LogOut,
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/dance/roster", label: "Roster", icon: Users, manageOnly: true },
   { href: "/dance/rehearsals", label: "Rehearsals", icon: CalendarDays },
   { href: "/dance/attendance", label: "Attendance", icon: ClipboardCheck },
+  { href: "/dance/performances", label: "Performances", icon: Star },
   { href: "/dance/timetable", label: "Timetable", icon: Calendar },
   { href: "/reports/submit", label: "Reports and OD", icon: FileText },
 ];
