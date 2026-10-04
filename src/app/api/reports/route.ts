@@ -141,6 +141,13 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!image.type?.startsWith("image/")) {
+      return NextResponse.json(
+        { error: "The proof must be an image file" },
+        { status: 400 }
+      );
+    }
+
     const fileExt = image.name.split(".").pop();
     const fileName = `${member.id}-${Date.now()}.${fileExt}`;
     const arrayBuffer = await image.arrayBuffer();
