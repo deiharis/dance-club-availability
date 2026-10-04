@@ -13,5 +13,6 @@ declare module "next-auth" {
     id: string;
     role: string;
     category?: string | null;
+    mustChangePassword?: boolean;
   }
 }

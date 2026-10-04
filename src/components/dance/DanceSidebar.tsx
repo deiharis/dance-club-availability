@@ -14,6 +14,7 @@ import {
   Users,
   FileText,
   LogOut,
+  KeyRound,
   ArrowUpRight,
   Menu,
   X,
@@ -158,6 +159,13 @@ export default function DanceSidebar({
             <p className="text-orange-200 text-[11px] truncate">{label}</p>
             <p className="text-orange-100/40 text-[10px] truncate">{userEmail}</p>
           </div>
+          <Link
+            href="/change-password"
+            title="Change password"
+            className="text-orange-100/60 hover:text-white p-1.5"
+          >
+            <KeyRound size={16} />
+          </Link>
           <Link
             href="/api/auth/signout"
             title="Sign out"

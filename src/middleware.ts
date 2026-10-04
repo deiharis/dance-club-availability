@@ -5,6 +5,16 @@ export async function middleware(req: NextRequest) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   const { pathname } = req.nextUrl;
 
+  // Change-password page: login required. Anyone on a temporary password
+  // (imported, or added by a Lead/admin) is sent here from every other page.
+  if (pathname.startsWith("/change-password")) {
+    if (!token) return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.next();
+  }
+  if (token?.mustChangePassword) {
+    return NextResponse.redirect(new URL("/change-password", req.url));
+  }
+
   // Root redirect
   if (pathname === "/") {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
@@ -89,5 +99,6 @@ export const config = {
     "/reports/:path*",
     "/profile/:path*",
     "/dance/:path*",
+    "/change-password",
   ],
 };

@@ -25,8 +25,9 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Email and password are required");
         }
 
-        const user = await db.user.findUnique({
-          where: { email: credentials.email },
+        // Case-insensitive, so "Name@vitstudent.ac.in" finds "name@vitstudent.ac.in".
+        const user = await db.user.findFirst({
+          where: { email: { equals: credentials.email.trim(), mode: "insensitive" } },
           include: { member: true },
         });
 
@@ -49,6 +50,7 @@ export const authOptions: NextAuthOptions = {
           role: user.role,
           name: user.member?.fullName ?? user.email,
           category: user.member?.category ?? null,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
@@ -60,6 +62,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = (user as any).role;
         token.category = (user as any).category;
+        token.mustChangePassword = (user as any).mustChangePassword;
       }
       return token;
     },

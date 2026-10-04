@@ -18,6 +18,7 @@ import {
   CalendarDays,
   Music,
   ArrowUpRight,
+  KeyRound,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -174,6 +175,13 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
               {isSuperAdmin ? "Super admin" : "Admin"} · {userEmail}
             </p>
           </div>
+          <Link
+            href="/change-password"
+            title="Change password"
+            className="text-stone-500 hover:text-white p-1.5"
+          >
+            <KeyRound size={15} />
+          </Link>
           <Link
             href="/api/auth/signout"
             title="Sign out"

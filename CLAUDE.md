@@ -90,6 +90,11 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 - Reviewing creates a Notification for the member.
 - The reviewer's name and position are shown on the report.
 
+**Passwords**
+- Accounts made by the Excel/Google-Form import use the (capitalised) register number as a TEMPORARY password; accounts added through the Add form use the password the admin/Lead typed. Both set `User.mustChangePassword = true`.
+- Middleware sends any user with that flag to `/change-password` until they pick their own (min 8 chars, not their register number). After changing, they are signed out and log in again. Anyone can also change it later from the key icon in either sidebar.
+- Login is case-insensitive on email. Import accepts our template columns AND Google Form columns (`Email Address`, `Core Position`, `Member Position`, `Dance Team`, `Dancer Role`); duplicate email or register number (any case) is skipped.
+
 **Dancer section** (`/dance`, `category = DANCER`)
 - Login sends dancers and Dance Leads to `/dance`; middleware keeps them out of committee pages (`/dashboard`, `/members`, `/search`, `/analytics`, `/reports/review`).
 - "Committee" = SUPERADMIN or an ADMIN whose category is not DANCER (`isCommittee` in `lib/dance.ts`). Dance Leads (`position = "Team Leader"`) are ADMIN but NOT committee. They manage only their own `team` (`canManage(team)`); committee manages all teams.

@@ -21,6 +21,9 @@ model User {
   email     String   @unique
   password  String
   role      Role     @default(MEMBER)
+  // true for accounts created with a temporary password (import or admin/Lead add).
+  // Middleware sends these users to /change-password until they pick their own.
+  mustChangePassword Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

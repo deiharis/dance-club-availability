@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -10,6 +10,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [changed, setChanged] = useState(false);
+
+  // Shown after /change-password signs the user out (?changed=1).
+  useEffect(() => {
+    setChanged(new URLSearchParams(window.location.search).get("changed") === "1");
+  }, []);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -80,6 +86,14 @@ export default function LoginPage() {
                 className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
+
+            {changed && !error && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-4 py-3">
+                <p className="text-green-400 text-sm">
+                  Password updated. Sign in with your new password.
+                </p>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">

@@ -119,6 +119,7 @@ export async function POST(req: Request) {
         email,
         password: hashedPassword,
         role,
+        mustChangePassword: true, // the admin/Lead typed a temporary password
         member: {
           create: {
             fullName,
