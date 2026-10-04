@@ -226,6 +226,8 @@ enum NotificationType {
   REHEARSAL_ADDED
   PERFORMANCE_ADDED
   ATTENDANCE_MARKED
+  REPORT_SUBMITTED
+  OD_REQUESTED
 }
 
 model Notification {

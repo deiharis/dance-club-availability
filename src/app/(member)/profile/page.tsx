@@ -34,7 +34,7 @@ export default async function ProfilePage() {
 
   if (!member) {
     return (
-      <div className="min-h-screen bg-[#0d0705] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#0a0a0c] text-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-400 text-sm mb-4">
             No member profile found.
@@ -80,8 +80,8 @@ export default async function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0705] text-white">
-      <nav className="border-b border-gray-800 bg-[#17120f] px-8 py-4 flex items-center justify-between">
+    <div className="min-h-screen bg-[#0a0a0c] text-white">
+      <nav className="border-b border-gray-800 bg-[#111014] px-8 py-4 flex items-center justify-between">
         <div>
           <span className="text-white font-bold text-lg tracking-tight">
             Dance Club
@@ -155,7 +155,7 @@ export default async function ProfilePage() {
         )}
 
         {/* Profile Card */}
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl p-6">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center flex-shrink-0">
               <span className="text-purple-400 text-lg font-semibold">
@@ -230,7 +230,7 @@ export default async function ProfilePage() {
         </div>
 
         {/* Timetable */}
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold text-sm">My Timetable</h2>
             <Link

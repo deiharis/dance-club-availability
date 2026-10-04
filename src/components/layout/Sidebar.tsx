@@ -43,7 +43,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
 
   // Unread count for the Notifications badge; refreshed on every page change.
   useEffect(() => {
-    fetch("/api/notifications/unread", { cache: "no-store" })
+    fetch("/api/notifications/unread?section=COMMITTEE", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : { count: 0 }))
       .then((d) => setUnread(d.count ?? 0))
       .catch(() => setUnread(0));
@@ -68,8 +68,8 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       label: "Overview",
       items: [
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, show: isAdminOrAbove },
-        // Opens the notifications list (it lives in the Dance Floor section)
-        { href: "/dance/notifications", label: "Notifications", icon: Bell, show: isAdminOrAbove, badge: unread },
+        // Committee feed only; Dance Floor updates have their own page and badge.
+        { href: "/notifications", label: "Notifications", icon: Bell, show: isAdminOrAbove, badge: unread },
       ],
     },
     {
@@ -108,21 +108,21 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Brand */}
-      <div className="h-14 px-4 border-b border-stone-800 flex items-center justify-between">
+      <div className="h-14 px-4 border-b border-zinc-800 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[11px] font-bold flex items-center justify-center">
+          <div className="w-7 h-7 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px] font-bold flex items-center justify-center">
             DC
           </div>
           <div className="leading-tight">
             <p className="text-white text-sm font-semibold">Working Committee</p>
-            <p className="text-stone-500 text-[10px] uppercase tracking-wider">
+            <p className="text-zinc-500 text-[10px] uppercase tracking-wider">
               Management console
             </p>
           </div>
         </div>
         <button
           onClick={() => setOpen(false)}
-          className="lg:hidden text-stone-400 hover:text-white p-1"
+          className="lg:hidden text-zinc-400 hover:text-white p-1"
         >
           <X size={18} />
         </button>
@@ -135,7 +135,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
           if (items.length === 0) return null;
           return (
             <div key={group.label} className="mb-4">
-              <p className="px-4 mb-1 text-[10px] font-semibold uppercase tracking-widest text-stone-600">
+              <p className="px-4 mb-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
                 {group.label}
               </p>
               {items.map((item) => {
@@ -147,14 +147,14 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
                     href={item.href}
                     className={`flex items-center gap-3 pl-4 pr-3 py-2 text-sm border-l-2 transition-colors ${
                       active
-                        ? "border-sky-400 bg-sky-500/10 text-sky-200 font-medium"
-                        : "border-transparent text-stone-400 hover:text-white hover:bg-white/[0.03]"
+                        ? "border-violet-400 bg-violet-500/10 text-violet-200 font-medium"
+                        : "border-transparent text-zinc-400 hover:text-white hover:bg-white/[0.03]"
                     }`}
                   >
                     <Icon size={15} />
                     {item.label}
                     {"badge" in item && (item.badge ?? 0) > 0 && (
-                      <span className="ml-auto rounded bg-sky-500/20 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-sky-300">
+                      <span className="ml-auto rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-violet-300">
                         {item.badge}
                       </span>
                     )}
@@ -170,7 +170,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       {isAdminOrAbove && (
         <Link
           href="/dance"
-          className="mx-3 mb-3 flex items-center justify-between rounded border border-stone-800 px-3 py-2 text-xs text-stone-400 hover:text-white hover:border-stone-600 transition-colors"
+          className="mx-3 mb-3 flex items-center justify-between rounded border border-zinc-800 px-3 py-2 text-xs text-zinc-400 hover:text-white hover:border-zinc-600 transition-colors"
         >
           <span className="flex items-center gap-2">
             <Music size={14} />
@@ -181,28 +181,28 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       )}
 
       {/* User */}
-      <div className="border-t border-stone-800 p-3">
+      <div className="border-t border-zinc-800 p-3">
         <div className="flex items-center gap-3 px-1 py-1">
-          <div className="w-8 h-8 rounded bg-stone-800 text-stone-300 text-xs font-semibold flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center justify-center shrink-0">
             {initials || "?"}
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-white text-sm font-medium truncate">{userName}</p>
-            <p className="text-stone-500 text-[11px] truncate">
+            <p className="text-zinc-500 text-[11px] truncate">
               {isSuperAdmin ? "Super admin" : "Admin"} · {userEmail}
             </p>
           </div>
           <Link
             href="/change-password"
             title="Change password"
-            className="text-stone-500 hover:text-white p-1.5"
+            className="text-zinc-500 hover:text-white p-1.5"
           >
             <KeyRound size={15} />
           </Link>
           <Link
             href="/api/auth/signout"
             title="Sign out"
-            className="text-stone-500 hover:text-white p-1.5"
+            className="text-zinc-500 hover:text-white p-1.5"
           >
             <LogOut size={15} />
           </Link>
@@ -214,16 +214,16 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
   return (
     <>
       {/* Mobile top bar */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-[#110b08] border-b border-stone-800 px-4 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 h-14 bg-[#0d0c10] border-b border-zinc-800 px-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded bg-sky-500/15 border border-sky-500/30 text-sky-300 text-[11px] font-bold flex items-center justify-center">
+          <div className="w-7 h-7 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px] font-bold flex items-center justify-center">
             DC
           </div>
           <span className="text-white font-semibold text-sm">Working Committee</span>
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="text-stone-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors"
+          className="text-zinc-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors"
         >
           <Menu size={20} />
         </button>
@@ -239,7 +239,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
 
       {/* Mobile drawer */}
       <aside
-        className={`lg:hidden fixed top-0 left-0 h-full w-64 bg-[#110b08] border-r border-stone-800 z-50 transform transition-transform duration-300 ${
+        className={`lg:hidden fixed top-0 left-0 h-full w-64 bg-[#0d0c10] border-r border-zinc-800 z-50 transform transition-transform duration-300 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -247,7 +247,7 @@ export default function Sidebar({ userName, userEmail, role }: SidebarProps) {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex lg:flex-col w-60 border-r border-stone-800 bg-[#110b08] fixed h-full z-10">
+      <aside className="hidden lg:flex lg:flex-col w-60 border-r border-zinc-800 bg-[#0d0c10] fixed h-full z-10">
         <SidebarContent />
       </aside>
     </>

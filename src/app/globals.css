@@ -4,7 +4,7 @@
 
 /* One shared base colour for the whole app (Working Committee and Dance Floor). */
 :root {
-  --background: #0d0705;
+  --background: #0a0a0c;
   --foreground: #ededed;
 }
 
@@ -33,9 +33,9 @@ body {
   top: 3.5rem; /* below the fixed mobile top bar */
   z-index: 20;
   padding: 1.7rem 1rem 0.8rem;
-  background: rgba(13, 7, 5, 0.88);
+  background: rgba(10, 10, 12, 0.85);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid #2a211c;
+  border-bottom: 1px solid #27272a;
 }
 .committee-ui .c-page-header::before {
   content: "Working Committee  /  " attr(data-section);
@@ -46,11 +46,11 @@ body {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(56, 189, 248, 0.85);
+  color: rgba(167, 139, 250, 0.9);
 }
 .committee-ui .c-page-header h1 {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.015em;
 }
 .committee-ui .c-page-header p {
@@ -69,14 +69,44 @@ body {
 .committee-ui select:focus,
 .committee-ui textarea:focus {
   outline: none;
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  border-color: #a78bfa;
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.2);
 }
 
 /* Committee: slim, quiet scrollbars. */
 .committee-ui ::-webkit-scrollbar { width: 8px; height: 8px; }
-.committee-ui ::-webkit-scrollbar-thumb { background: #2a211c; border-radius: 4px; }
-.committee-ui ::-webkit-scrollbar-thumb:hover { background: #3a2f28; }
+.committee-ui ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 4px; }
+.committee-ui ::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+
+/* Committee dashboard hero: a glowing violet halo arch. A soft blurred ring plus a
+   thin crisp ring on top, faded out towards the bottom. Decorative only. */
+.console-halo {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: min(120%, 1300px);
+  aspect-ratio: 2 / 1;
+  transform: translateX(-50%);
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+}
+.console-halo::before,
+.console-halo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px 9999px 0 0;
+}
+.console-halo::before {
+  background:
+    radial-gradient(ellipse 50% 100% at 50% 100%, transparent 0 62%, rgba(196, 181, 253, 0.95) 68%, rgba(124, 58, 237, 0.85) 78%, rgba(91, 33, 246, 0.35) 90%, transparent 100%);
+  filter: blur(16px);
+}
+.console-halo::after {
+  background:
+    radial-gradient(ellipse 50% 100% at 50% 100%, transparent 0 67%, rgba(233, 225, 255, 0.9) 68.4%, transparent 70.5%),
+    radial-gradient(ellipse 50% 100% at 50% 100%, rgba(124, 58, 237, 0.16), transparent 66%);
+}
 
 /* Dance Floor motion. All of it is switched off for users who prefer reduced motion. */
 @keyframes stage-fade-up {

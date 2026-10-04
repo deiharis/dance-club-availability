@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth";
-import { plex } from "@/lib/fonts";
+import { consoleFont } from "@/lib/fonts";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Sidebar from "@/components/layout/Sidebar";
@@ -16,7 +16,7 @@ export default async function DashboardLayout({
   if (role === "MEMBER") redirect("/profile");
 
   return (
-    <div className={`${plex.className} committee-ui min-h-screen bg-base text-white flex`}>
+    <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck } from "lucide-react";
+import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import { sectionWhere } from "@/lib/notify";
 import StageHeader from "@/components/dance/StageHeader";
-import MarkReadButton from "@/components/dance/MarkReadButton";
+import MarkAllRead from "@/components/notifications/MarkAllRead";
 
 // Icon and colour per notification type.
 const KIND: Record<string, { icon: React.ElementType; color: string }> = {
@@ -18,23 +19,46 @@ const KIND: Record<string, { icon: React.ElementType; color: string }> = {
 export default async function DanceNotificationsPage() {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
+  const memberId = dance.member.id;
 
-  const notifications = await db.notification.findMany({
-    where: { memberId: dance.member.id },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  const [notifications, committeeUnread] = await Promise.all([
+    db.notification.findMany({
+      where: { memberId, ...sectionWhere("DANCE") },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    // Only committee members have a Working Committee feed to point at.
+    dance.isCommittee
+      ? db.notification.count({ where: { memberId, read: false, ...sectionWhere("COMMITTEE") } })
+      : Promise.resolve(0),
+  ]);
   const unread = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
       <StageHeader
-        eyebrow="Notifications"
+        eyebrow="Dance Floor"
         title="Your"
         accent="updates"
-        subtitle={`Report decisions and team updates. ${unread > 0 ? `${unread} unread.` : "You are all caught up."}`}
+        subtitle={`Rehearsals, performances, attendance and report decisions. ${unread > 0 ? `${unread} unread.` : "You are all caught up."}`}
       >
-        {unread > 0 && <MarkReadButton />}
+        <div className="flex flex-col items-end gap-2">
+          {unread > 0 && <MarkAllRead section="DANCE" tone="stage" />}
+          {dance.isCommittee && (
+            <Link
+              href="/notifications"
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs text-orange-100/70 transition hover:border-violet-400/50 hover:text-white"
+            >
+              Committee notifications
+              {committeeUnread > 0 && (
+                <span className="rounded-full bg-violet-500/30 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-violet-200">
+                  {committeeUnread}
+                </span>
+              )}
+              <ArrowUpRight size={12} />
+            </Link>
+          )}
+        </div>
       </StageHeader>
 
       <div className="space-y-3">
@@ -60,6 +84,7 @@ export default async function DanceNotificationsPage() {
                     day: "numeric",
                     month: "short",
                     year: "numeric",
+                    timeZone: "Asia/Kolkata",
                   })}
                 </p>
               </div>

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sectionWhere, parseSection } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -47,9 +48,11 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Mark all notifications as read
+    // Mark notifications as read. Optional body { section: "COMMITTEE" | "DANCE" }
+    // limits it to one feed; with no section, everything is marked.
+    const body = await req.json().catch(() => ({}));
     await db.notification.updateMany({
-      where: { memberId: member.id, read: false },
+      where: { memberId: member.id, read: false, ...sectionWhere(parseSection(body?.section)) },
       data: { read: true },
     });
 

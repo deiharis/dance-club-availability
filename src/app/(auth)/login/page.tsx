@@ -39,7 +39,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0705] flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
 
         <div className="text-center mb-8">
@@ -52,7 +52,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-8">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl p-8">
           <h2 className="text-white text-base font-semibold mb-6">
             Sign in to your account
           </h2>
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@college.edu"
                 required
-                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
               />
             </div>
 

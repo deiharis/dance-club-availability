@@ -31,7 +31,7 @@ export default function TeamSelector({
         {label}{" "}
         <span className="text-red-400 normal-case font-normal">(required)</span>
       </label>
-      <div className="bg-[#0d0705] border border-gray-700 rounded-lg p-3 space-y-1.5 max-h-56 overflow-y-auto">
+      <div className="bg-[#0a0a0c] border border-gray-700 rounded-lg p-3 space-y-1.5 max-h-56 overflow-y-auto">
         {teams.map((team) => (
           <label
             key={team}

@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase";
 import { getCaller } from "@/lib/dance";
+import { notifySuperAdmins } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 30;
@@ -179,6 +180,18 @@ export async function POST(req: Request) {
         memberId: member.id,
       },
     });
+
+    // A normal dancer's report is reviewed by their Lead, not the committee, so only
+    // every other report (and a Lead's own) pings the SuperAdmin.
+    const reviewedByLead = member.category === "DANCER" && member.position !== "Team Leader";
+    if (!reviewedByLead) {
+      await notifySuperAdmins({
+        actorMemberId: member.id,
+        type: "REPORT_SUBMITTED",
+        message: `${member.fullName} submitted a report for review.`,
+        link: "/reports/review",
+      });
+    }
 
     return NextResponse.json(report, { status: 201 });
   } catch (error) {

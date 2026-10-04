@@ -12,14 +12,13 @@ const config: Config = {
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        // Shared page background for the whole app (both sections).
-        base: "#0d0705",
-        // Warm neutrals instead of Tailwind's blue-tinted gray, so every
-        // existing gray-* class sits properly on the warm base.
-        gray: colors.stone,
-        // The Working Committee accent is steel blue. Existing purple-* classes
-        // on committee/member pages now render as this blue.
-        purple: colors.sky,
+        // Shared page background for the whole app (both sections): neutral near-black.
+        base: "#0a0a0c",
+        // Neutral greys for the console; existing gray-* classes follow.
+        gray: colors.zinc,
+        // The Working Committee accent is violet. Existing purple-* classes on
+        // committee/member pages render as this violet.
+        purple: colors.violet,
       },
     },
   },

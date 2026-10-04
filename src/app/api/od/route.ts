@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { notifySuperAdmins } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -171,6 +172,13 @@ export async function POST(req: Request) {
         slots: Array.isArray(slots) ? slots : [],
         eventId,
       },
+    });
+
+    await notifySuperAdmins({
+      actorMemberId: member.id,
+      type: "OD_REQUESTED",
+      message: `${member.fullName} requested OD for ${event.name}.`,
+      link: "/od",
     });
 
     return NextResponse.json(odRequest, { status: 201 });

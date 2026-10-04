@@ -152,7 +152,7 @@ export default function ReviewReportsPage() {
             <p className="text-gray-500 text-sm">Loading reports...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
             <p className="text-gray-500 text-sm">No reports found.</p>
           </div>
         ) : (
@@ -160,7 +160,7 @@ export default function ReviewReportsPage() {
             {filtered.map((report) => (
               <div
                 key={report.id}
-                className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6"
+                className="bg-[#111014] border border-gray-800 rounded-xl p-4 sm:p-6"
               >
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="flex items-center gap-3">
@@ -188,7 +188,7 @@ export default function ReviewReportsPage() {
                   <StatusBadge status={report.status} />
                 </div>
 
-                <div className="bg-[#0d0705] border border-gray-800 rounded-lg p-4 mb-4">
+                <div className="bg-[#0a0a0c] border border-gray-800 rounded-lg p-4 mb-4">
                   <p className="text-white text-sm">{report.description}</p>
                   <p className="text-gray-500 text-xs mt-2">
                     Work date:{" "}
@@ -284,7 +284,7 @@ export default function ReviewReportsPage() {
                           onChange={(e) => setReviewNotes(e.target.value)}
                           placeholder="Rejection reason (optional)"
                           rows={2}
-                          className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
+                          className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm resize-none"
                         />
                         <div className="flex gap-2">
                           <button

@@ -2,11 +2,13 @@ import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { sectionWhere, parseSection } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
-// How many unread notifications the logged-in member has (used for the sidebar badge).
-export async function GET() {
+// Unread count for the logged-in member, used for sidebar badges.
+// Optional ?section=COMMITTEE or ?section=DANCE counts just that feed.
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
@@ -19,8 +21,9 @@ export async function GET() {
     });
     if (!member) return NextResponse.json({ count: 0 });
 
+    const section = parseSection(new URL(req.url).searchParams.get("section"));
     const count = await db.notification.count({
-      where: { memberId: member.id, read: false },
+      where: { memberId: member.id, read: false, ...sectionWhere(section) },
     });
     return NextResponse.json({ count });
   } catch {

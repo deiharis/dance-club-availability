@@ -94,7 +94,7 @@ export default function AnalyticsPage() {
         {/* Top Stat Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
 
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-5">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <Users size={14} className="text-gray-500" />
               <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">
@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
             <p className="text-2xl font-bold text-white">{data.totalMembers}</p>
           </div>
 
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-5">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <Clock size={14} className="text-purple-400" />
               <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">
@@ -120,7 +120,7 @@ export default function AnalyticsPage() {
             </p>
           </div>
 
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-5">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp size={14} className="text-green-400" />
               <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">
@@ -135,7 +135,7 @@ export default function AnalyticsPage() {
             </p>
           </div>
 
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-5">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-5">
             <div className="flex items-center gap-2 mb-2">
               <TrendingDown size={14} className="text-red-400" />
               <p className="text-gray-400 text-xs font-medium uppercase tracking-wide">
@@ -153,7 +153,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Bar Chart */}
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl p-6">
           <h2 className="text-white font-semibold text-sm mb-4">
             Average Availability by Day
           </h2>
@@ -165,7 +165,7 @@ export default function AnalyticsPage() {
                 <YAxis stroke="#6b7280" fontSize={12} domain={[0, 100]} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#17120f",
+                    backgroundColor: "#111014",
                     border: "1px solid #2a2e3a",
                     borderRadius: "8px",
                     fontSize: "12px",
@@ -179,7 +179,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Heatmap */}
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl p-6">
           <h2 className="text-white font-semibold text-sm mb-4">
             Availability Heatmap
           </h2>
@@ -187,7 +187,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Per-Member Availability */}
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-800">
             <h2 className="text-white font-semibold text-sm">
               Member Availability Percentage

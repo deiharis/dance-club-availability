@@ -182,7 +182,7 @@ export default function GradesPage() {
             <p className="text-gray-500 text-sm">Loading FFCS members...</p>
           </div>
         ) : members.length === 0 ? (
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
             <GraduationCap size={32} className="text-gray-600 mx-auto mb-3" />
             <p className="text-gray-500 text-sm">
               No FFCS-enrolled members found.
@@ -196,7 +196,7 @@ export default function GradesPage() {
             {members.map((member) => (
               <div
                 key={member.id}
-                className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden"
+                className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden"
               >
 
                 {/* Member Header */}
@@ -241,7 +241,7 @@ export default function GradesPage() {
 
                 {/* Add Grade Form */}
                 {addingFor === member.id && (
-                  <div className="px-6 py-4 bg-[#0d0705] border-b border-gray-800">
+                  <div className="px-6 py-4 bg-[#0a0a0c] border-b border-gray-800">
                     <p className="text-gray-400 text-xs font-medium uppercase tracking-wide mb-3">
                       New Grade Entry
                     </p>
@@ -256,7 +256,7 @@ export default function GradesPage() {
                             setNewGrade({ ...newGrade, subject: e.target.value })
                           }
                           placeholder="e.g. Mathematics"
-                          className="w-full bg-[#17120f] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                          className="w-full bg-[#111014] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
                         />
                       </div>
                       <div>
@@ -274,7 +274,7 @@ export default function GradesPage() {
                               className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
                                 newGrade.grade === g
                                   ? gradeColor(g)
-                                  : "bg-[#17120f] border-gray-700 text-gray-500 hover:border-gray-600"
+                                  : "bg-[#111014] border-gray-700 text-gray-500 hover:border-gray-600"
                               }`}
                             >
                               {g}
@@ -292,7 +292,7 @@ export default function GradesPage() {
                             setNewGrade({ ...newGrade, remarks: e.target.value })
                           }
                           placeholder="Optional note"
-                          className="w-full bg-[#17120f] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                          className="w-full bg-[#111014] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
                         />
                       </div>
                     </div>
@@ -336,7 +336,7 @@ export default function GradesPage() {
                                 onChange={(e) =>
                                   setEditForm({ ...editForm, subject: e.target.value })
                                 }
-                                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                               />
                             </div>
                             <div className="flex gap-1.5">
@@ -350,7 +350,7 @@ export default function GradesPage() {
                                   className={`flex-1 py-2 rounded-lg text-xs font-bold border transition-colors ${
                                     editForm.grade === g
                                       ? gradeColor(g)
-                                      : "bg-[#0d0705] border-gray-700 text-gray-500 hover:border-gray-600"
+                                      : "bg-[#0a0a0c] border-gray-700 text-gray-500 hover:border-gray-600"
                                   }`}
                                 >
                                   {g}
@@ -364,7 +364,7 @@ export default function GradesPage() {
                                   setEditForm({ ...editForm, remarks: e.target.value })
                                 }
                                 placeholder="Remarks"
-                                className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                                className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-3 py-2 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
                               />
                             </div>
                             <div className="flex gap-2 md:col-span-3">

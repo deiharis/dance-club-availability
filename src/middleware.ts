@@ -54,6 +54,7 @@ export async function middleware(req: NextRequest) {
     pathname.startsWith("/members") ||
     pathname.startsWith("/search") ||
     pathname.startsWith("/analytics") ||
+    pathname.startsWith("/notifications") ||
     pathname.startsWith("/reports/review")
   ) {
     if (!token) return NextResponse.redirect(new URL("/login", req.url));
@@ -99,6 +100,7 @@ export const config = {
     "/reports/:path*",
     "/profile/:path*",
     "/dance/:path*",
+    "/notifications/:path*",
     "/change-password",
   ],
 };

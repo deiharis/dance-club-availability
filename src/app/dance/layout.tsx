@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { getDanceUser } from "@/lib/dance";
 import { db } from "@/lib/db";
+import { sectionWhere } from "@/lib/notify";
 import DanceSidebar from "@/components/dance/DanceSidebar";
 import WaveBackdrop from "@/components/dance/WaveBackdrop";
 
@@ -31,7 +32,10 @@ export default async function DanceLayout({
 
   // Sidebar badges: unread notifications, and (for Leads) reports waiting on them.
   const [unread, pending] = await Promise.all([
-    db.notification.count({ where: { memberId: dance.member.id, read: false } }),
+    // Dance Floor feed only; committee notifications have their own badge in the console.
+    db.notification.count({
+      where: { memberId: dance.member.id, read: false, ...sectionWhere("DANCE") },
+    }),
     dance.isLead && dance.member.team
       ? db.report.count({
           where: {

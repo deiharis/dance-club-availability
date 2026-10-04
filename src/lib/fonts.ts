@@ -1,7 +1,7 @@
-import { IBM_Plex_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 
-// Working Committee typeface (a plain, "enterprise" sans). Dance Floor uses Sora instead.
-export const plex = IBM_Plex_Sans({
+// Working Committee typeface: a bold geometric sans. Dance Floor uses Sora instead.
+export const consoleFont = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
+  weight: ["400", "500", "600", "700", "800"],
 });

@@ -1,5 +1,5 @@
 import React from "react";
-import { plex } from "@/lib/fonts";
+import { consoleFont } from "@/lib/fonts";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
@@ -37,7 +37,7 @@ export default async function MemberTimetablePage({
   });
 
   return (
-    <div className={`${plex.className} committee-ui min-h-screen bg-base text-white flex`}>
+    <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
@@ -63,7 +63,7 @@ export default async function MemberTimetablePage({
         </div>
 
         <div className="p-4 sm:p-8 min-w-0">
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl px-4 sm:px-6 py-6">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl px-4 sm:px-6 py-6">
             <TimetableGrid
               memberId={member.id}
               initialEntries={entries.map((e) => ({

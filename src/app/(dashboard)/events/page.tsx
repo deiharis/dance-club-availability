@@ -95,7 +95,7 @@ export default function EventsPage() {
 
         {/* Add Event Form */}
         {showForm && (
-          <div className="bg-[#17120f] border border-gray-800 rounded-xl p-6 mb-6">
+          <div className="bg-[#111014] border border-gray-800 rounded-xl p-6 mb-6">
             <h2 className="text-white font-semibold text-sm mb-4">
               New Event
             </h2>
@@ -112,7 +112,7 @@ export default function EventsPage() {
                     }
                     required
                     placeholder="e.g. Inter-College Dance Competition"
-                    className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                    className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-4 py-2.5 text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 transition-colors text-sm"
                   />
                 </div>
                 <div>
@@ -126,7 +126,7 @@ export default function EventsPage() {
                       setForm({ ...form, eventDate: e.target.value })
                     }
                     required
-                    className="w-full bg-[#0d0705] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
+                    className="w-full bg-[#0a0a0c] border border-gray-700 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-purple-500 transition-colors text-sm"
                   />
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default function EventsPage() {
         )}
 
         {/* Events List */}
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-800">
             <h2 className="text-white font-semibold text-sm">
               All Events ({events.length})

@@ -1,5 +1,5 @@
 import React from "react";
-import { plex } from "@/lib/fonts";
+import { consoleFont } from "@/lib/fonts";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
@@ -23,7 +23,7 @@ async function MemberTimetableView() {
   });
 
   return (
-    <div className="min-h-screen bg-[#0d0705] text-white">
+    <div className="min-h-screen bg-[#0a0a0c] text-white">
       <nav data-section="People" className="c-page-header flex items-center justify-between">
         <div>
           <span className="text-white font-bold text-base sm:text-lg tracking-tight">
@@ -50,7 +50,7 @@ async function MemberTimetableView() {
           </p>
         </div>
 
-        <div className="bg-[#17120f] border border-gray-800 rounded-xl p-4 sm:p-6">
+        <div className="bg-[#111014] border border-gray-800 rounded-xl p-4 sm:p-6">
           <TimetableGrid
             memberId={member.id}
             initialEntries={entries.map((e) => ({
@@ -83,7 +83,7 @@ async function MemberTimetableCard({
   });
 
   return (
-    <div className="bg-[#17120f] border border-gray-800 rounded-xl overflow-hidden">
+    <div className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center">
@@ -141,7 +141,7 @@ export default async function TimetablePage() {
   });
 
   return (
-    <div className={`${plex.className} committee-ui min-h-screen bg-base text-white flex`}>
+    <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
       <Sidebar
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
@@ -158,7 +158,7 @@ export default async function TimetablePage() {
         </div>
         <div className="p-4 sm:p-8">
           {members.length === 0 ? (
-            <div className="bg-[#17120f] border border-gray-800 rounded-xl p-12 text-center">
+            <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
               <p className="text-gray-500 text-sm mb-4">
                 No members yet. Add members first.
               </p>
