@@ -10,6 +10,7 @@ export const CORE_TEAMS = [
   "Vice Chairperson",
   "Secretary",
   "Co-Secretary",
+  "Advisory",
 ];
 
 export const MEMBER_TEAMS = [
