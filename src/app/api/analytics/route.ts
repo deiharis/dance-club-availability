@@ -193,7 +193,7 @@ export async function GET() {
       })),
       byDepartment: topDepts,
       byDegree: toRows(degreeCount),
-      byYear: [1, 2, 3, 4].map((y) => ({
+      byYear: [1, 2, 3, 4, 5].map((y) => ({
         year: `Year ${y}`,
         count: members.filter((m) => m.academicYear === y).length,
       })),

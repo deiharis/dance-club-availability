@@ -240,7 +240,7 @@ export default function RosterClient({
           <input placeholder="Phone (optional)" className={input} value={form.phone} onChange={set("phone")} />
           <input required placeholder="Department" className={input} value={form.department} onChange={set("department")} />
           <select className={input} value={form.academicYear} onChange={set("academicYear")}>
-            {[1, 2, 3, 4].map((y) => (
+            {[1, 2, 3, 4, 5].map((y) => (
               <option key={y} value={y}>Year {y}</option>
             ))}
           </select>

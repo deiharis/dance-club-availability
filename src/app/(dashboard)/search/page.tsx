@@ -271,7 +271,7 @@ export default function SearchPage() {
               <div>
                 <label className={label}>Year</label>
                 <div className="flex gap-1.5">
-                  {["", "1", "2", "3", "4"].map((y) => (
+                  {["", "1", "2", "3", "4", "5"].map((y) => (
                     <button
                       key={y}
                       type="button"
