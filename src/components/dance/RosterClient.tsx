@@ -13,6 +13,7 @@ type Dancer = {
   position: string | null;
   category: string; // DANCER = pure dancer; anything else = member who also dances
   skillLevel: "PROFESSIONAL" | "AMATEUR";
+  isFFCS: boolean;
 };
 
 const CATEGORY_BADGE: Record<string, string> = {
@@ -31,6 +32,7 @@ const emptyForm = {
   password: "",
   position: "Normal Dancer",
   skillLevel: "AMATEUR",
+  isFFCS: false,
 };
 
 const input =
@@ -89,12 +91,13 @@ export default function RosterClient({
     router.refresh();
   }
 
-  async function setSkill(id: string, skillLevel: string) {
+  // Skill level and FFCS enrolment share one roster-settings endpoint.
+  async function update(id: string, patch: { skillLevel?: string; isFFCS?: boolean }) {
     setError("");
     const res = await fetch(`/api/dance/members/${id}/skill`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ skillLevel }),
+      body: JSON.stringify(patch),
     });
     if (!res.ok) setError((await res.json()).error ?? "Could not update");
     router.refresh();
@@ -238,6 +241,15 @@ export default function RosterClient({
             <option value="AMATEUR">Amateur</option>
             <option value="PROFESSIONAL">Professional</option>
           </select>
+          <label className="sm:col-span-2 flex cursor-pointer items-center gap-3 rounded-2xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-orange-50/80">
+            <input
+              type="checkbox"
+              checked={form.isFFCS}
+              onChange={(e) => setForm({ ...form, isFFCS: e.target.checked })}
+              className="h-4 w-4 accent-orange-500"
+            />
+            FFCS enrolled
+          </label>
           <input required type="password" minLength={6} placeholder="Temporary password" className={`${input} sm:col-span-2`} value={form.password} onChange={set("password")} />
           <button
             disabled={busy}
@@ -255,6 +267,7 @@ export default function RosterClient({
               <th className="px-4 py-3 font-medium">Name</th>
               <th className="px-4 py-3 font-medium">Role</th>
               <th className="px-4 py-3 font-medium">Skill level</th>
+              <th className="px-4 py-3 font-medium">FFCS</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>
@@ -282,12 +295,25 @@ export default function RosterClient({
                 <td className="px-4 py-3">
                   <select
                     value={d.skillLevel}
-                    onChange={(e) => setSkill(d.id, e.target.value)}
+                    onChange={(e) => update(d.id, { skillLevel: e.target.value })}
                     className="bg-black/30 border border-white/10 rounded-2xl px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-400/70"
                   >
                     <option value="AMATEUR">Amateur</option>
                     <option value="PROFESSIONAL">Professional</option>
                   </select>
+                </td>
+                <td className="px-4 py-3">
+                  {/* FFCS Only members are always enrolled, so their box is locked on */}
+                  <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-orange-100/70">
+                    <input
+                      type="checkbox"
+                      checked={d.isFFCS || d.category === "FFCS_ONLY"}
+                      disabled={d.category === "FFCS_ONLY"}
+                      onChange={(e) => update(d.id, { isFFCS: e.target.checked })}
+                      className="h-4 w-4 accent-orange-500 disabled:opacity-60"
+                    />
+                    {d.isFFCS || d.category === "FFCS_ONLY" ? "Enrolled" : "No"}
+                  </label>
                 </td>
                 <td className="px-4 py-3 text-right">
                   {d.id !== selfId &&
@@ -314,7 +340,7 @@ export default function RosterClient({
             ))}
             {dancers.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-orange-100/50">
+                <td colSpan={5} className="px-4 py-8 text-center text-orange-100/50">
                   No dancers in this team yet.
                 </td>
               </tr>

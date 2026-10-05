@@ -96,7 +96,7 @@ export default async function DanceDashboardPage() {
 
         <p className="anim-fade-up relative mx-auto mt-3 max-w-md text-sm text-amber-50/65" style={delay(240)}>
           {isDancer
-            ? `Welcome back. ${roleLabel}, ${skillLabel.toLowerCase()} level.`
+            ? `Welcome back. ${roleLabel}, ${skillLabel.toLowerCase()} level${member.isFFCS ? ", FFCS enrolled" : ""}.`
             : "Every team, every rehearsal and every performance in one place."}
         </p>
 

@@ -37,7 +37,8 @@ export function readCommon(row: Row) {
     phone: normalizePhone(pick(row, "Phone")),
     department: normalizeDepartment(rawDepartment).label || rawDepartment,
     academicYear: parseInt(pick(row, "Academic Year")) || 1,
-    isFFCS: pick(row, "FFCS Enrolled").toLowerCase() === "yes",
+    // "Yes", "yes", "Y", "TRUE" all count (Google Forms and hand-typed sheets differ).
+    isFFCS: /^(y|true|1)/i.test(pick(row, "FFCS Enrolled", "FFCS")),
   };
 }
 

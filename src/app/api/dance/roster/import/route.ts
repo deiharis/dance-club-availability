@@ -75,7 +75,11 @@ export async function POST(req: Request) {
           skipped++;
           errors.push(`Skipped ${existing.fullName}: already in ${existing.team} (a member can be in one team)`);
         } else {
-          await db.member.update({ where: { id: existing.id }, data: { team } });
+          // Join the team; mark FFCS if the sheet says so (never un-marks an existing enrolment).
+          await db.member.update({
+            where: { id: existing.id },
+            data: { team, ...(c.isFFCS ? { isFFCS: true } : {}) },
+          });
           attached++;
           errors.push(`Added existing member ${existing.fullName} to ${team} (account kept)`);
         }

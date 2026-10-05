@@ -18,6 +18,7 @@ const COLUMNS = [
   "Dance Team",
   "Dancer Role",
   "Skill Level",
+  "FFCS Enrolled", // Yes / No (same column as the Google Form)
 ];
 
 // GET /api/dance/roster/export?team=Laasya            -> the team's dancers with attendance
@@ -47,6 +48,7 @@ export async function GET(req: Request) {
           "Dance Team": team,
           "Dancer Role": "Normal Dancer",
           "Skill Level": "Amateur",
+          "FFCS Enrolled": "No",
         },
       ], { header: COLUMNS });
       sheet["!cols"] = COLUMNS.map((c) => ({ wch: Math.max(14, c.length + 4) }));
@@ -82,6 +84,7 @@ export async function GET(req: Request) {
         "Dancer Role": d.category === "DANCER" ? d.position ?? "Normal Dancer" : "Normal Dancer",
         "Club Role": d.category === "DANCER" ? "Dancer" : `${d.category === "CORE" ? "Core" : d.category === "FFCS_ONLY" ? "FFCS only" : "Normal member"}${d.position ? ` (${d.position})` : ""}`,
         "Skill Level": d.skillLevel === "PROFESSIONAL" ? "Professional" : "Amateur",
+        "FFCS Enrolled": d.isFFCS || d.category === "FFCS_ONLY" ? "Yes" : "No",
         "Attendance %": present + absent === 0 ? "" : Math.round((present / (present + absent)) * 100),
         Present: present,
         Absent: absent,
@@ -92,7 +95,7 @@ export async function GET(req: Request) {
     const sheet = XLSX.utils.json_to_sheet(rows, {
       header: [...COLUMNS, "Club Role", "Attendance %", "Present", "Absent", "Excused"],
     });
-    sheet["!cols"] = [24, 18, 30, 14, 28, 13, 18, 16, 14, 30, 13, 9, 9, 9].map((wch) => ({ wch }));
+    sheet["!cols"] = [24, 18, 30, 14, 28, 13, 18, 16, 14, 14, 30, 13, 9, 9, 9].map((wch) => ({ wch }));
     const book = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(book, sheet, team.slice(0, 31));
 

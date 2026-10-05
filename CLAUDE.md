@@ -42,7 +42,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 ## Member model
 
 - `category`: `CORE` | `MEMBER` | `DANCER` | `FFCS_ONLY` (display: Core Member, Normal Member, Dancer, FFCS Only).
-- `isFFCS`: boolean, independent of category. `FFCS_ONLY` always has `isFFCS = true`.
+- `isFFCS`: boolean, independent of category: Core, Normal members, Dancers and Dance Leads can all be FFCS. `FFCS_ONLY` always has `isFFCS = true`. Set it on the committee Add/Edit member form, on the Dance Floor roster (Add dancer checkbox and the FFCS column, via `PATCH api/dance/members/[id]/skill` with `{ isFFCS }`, SuperAdmin or the team's Lead), or by the "FFCS Enrolled" column (Yes/No) in both Excel imports and the roster export/template.
 - `position` (nullable) and `team` (nullable) come ONLY from `src/lib/teams.ts`, the single source of truth. Don't create a separate positions file.
   - CORE: `position` from `CORE_TEAMS`, `team = null`
   - MEMBER: `position` from `MEMBER_TEAMS`, `team = null`
