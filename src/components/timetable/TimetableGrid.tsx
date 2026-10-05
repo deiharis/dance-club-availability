@@ -23,7 +23,15 @@ interface TimetableGridProps {
   readonly?: boolean;
 }
 
-export default function TimetableGrid({
+// The grid copies initialEntries into state once. Without this key, a page that swaps which
+// members it lists without a full reload (e.g. the "No timetable" / "All members" tabs, or moving
+// between /timetable/[memberId] pages) would reuse a grid and show the PREVIOUS member's timetable.
+// Keying by member makes React start a fresh grid whenever the member changes.
+export default function TimetableGrid(props: TimetableGridProps) {
+  return <Grid key={props.memberId} {...props} />;
+}
+
+function Grid({
   memberId,
   initialEntries,
   readonly = false,
