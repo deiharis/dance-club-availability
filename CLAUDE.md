@@ -91,7 +91,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 
 ## Timetable
 
-`src/lib/timetable.ts`: days MONDAY–FRIDAY (no Saturday), slots T1–T12 plus a non-editable `Lunch` column (01:25–02:00 PM). Status is only `FREE` (green) or `CLASS` (red). One `TimetableEntry` row per member+day+slot, unique on `[memberId, day, slot]`. A missing row means FREE. `components/timetable/TimetableGrid.tsx` is a spreadsheet layout: days are rows, slots are columns, the day column is sticky, and it scrolls horizontally inside its own container only.
+`src/lib/timetable.ts`: days MONDAY–FRIDAY (no Saturday), slots T1–T12 plus a non-editable `Lunch` column (01:25–02:00 PM). Status is only `FREE` (green) or `CLASS` (red). One `TimetableEntry` row per member+day+slot, unique on `[memberId, day, slot]`. A missing row means FREE. **"Has filled in a timetable" = at least one CLASS row** (`HAS_TIMETABLE` / `NO_TIMETABLE` / `hasFilledTimetable` in `lib/timetable.ts`); members with no rows or only FREE rows (cells toggled back, or rows from an older version) count as "No timetable". Use these everywhere (dashboard tile, Timetable tab, committee Analytics, Dance Floor Availability); never `timetableEntries: { none: {} }`. `components/timetable/TimetableGrid.tsx` is a spreadsheet layout: days are rows, slots are columns, the day column is sticky, and it scrolls horizontally inside its own container only.
 
 ## Business rules
 

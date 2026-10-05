@@ -44,3 +44,11 @@ export function getStatusStyle(status: SlotStatus): string {
 export function getStatusLabel(status: SlotStatus): string {
   return status === "CLASS" ? "Class" : "Free";
 }
+// "Has this member filled in their timetable?" One rule, used everywhere (dashboard tile, the
+// Timetable "No timetable" tab, committee Analytics, Dance Floor Availability).
+// A missing row already means FREE, so only a CLASS row proves the timetable was filled in.
+// Members with no rows, or with only FREE rows (e.g. a cell clicked to Class and back, or rows
+// saved by an older version), have NOT filled it in. Reads only; never changes saved rows.
+export const HAS_TIMETABLE = { timetableEntries: { some: { status: "CLASS" as const } } };
+export const NO_TIMETABLE = { timetableEntries: { none: { status: "CLASS" as const } } };
+export const hasFilledTimetable = (entries: { status: string }[]) => entries.some((e) => e.status === "CLASS");

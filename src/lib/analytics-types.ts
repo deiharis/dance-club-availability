@@ -13,7 +13,7 @@ export interface AvailabilityData {
   histogram: { range: string; count: number }[]; // how many members fall in each availability band
   byCategory: { category: string; label: string; avg: number; count: number }[];
   memberAvailability: { id: string; fullName: string; category: string; percentage: number }[];
-  noTimetable: number; // members with no timetable entries at all
+  noTimetable: number; // members with no CLASS slot saved (NO_TIMETABLE in lib/timetable.ts)
   completion: number; // % of members who have at least one entry
 }
 

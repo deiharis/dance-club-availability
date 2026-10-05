@@ -52,12 +52,16 @@ export async function GET() {
         db.oDRequest.findMany({ select: { status: true, event: { select: { name: true } } } }),
       ]);
 
-    // Anyone who has saved a timetable row at all. CLASS rows are fetched above; a member whose
-    // timetable is entirely free has no rows, so "no timetable" is an approximation (see CLAUDE.md).
+    // Members who have filled in their timetable = at least one CLASS slot (same rule as
+    // HAS_TIMETABLE in lib/timetable.ts; Free-only rows do not count).
     const withEntries = new Set(
-      (await db.timetableEntry.findMany({ distinct: ["memberId"], select: { memberId: true } })).map(
-        (e) => e.memberId
-      )
+      (
+        await db.timetableEntry.findMany({
+          where: { status: "CLASS" },
+          distinct: ["memberId"],
+          select: { memberId: true },
+        })
+      ).map((e) => e.memberId)
     );
 
     const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");

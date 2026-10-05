@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 import Sidebar from "@/components/layout/Sidebar";
 import { getCaller } from "@/lib/dance";
+import { NO_TIMETABLE } from "@/lib/timetable";
 import MemberShell, { MemberHeading } from "@/components/member/MemberShell";
 
 // ── Member's own editable timetable ──────────────────────
@@ -121,10 +122,10 @@ export default async function TimetablePage({
   }
 
   // Admins and SuperAdmins see all members, or (?missing=1, from the dashboard tile) only the
-  // members who have not filled in their timetable. No rows at all = never set (a missing row
-  // means Free, so someone who is free all week also shows here).
+  // members who have not filled in their timetable (NO_TIMETABLE in lib/timetable.ts: no Class
+  // slot saved; someone genuinely free all week also shows here).
   const missing = searchParams.missing === "1";
-  const noTimetable = { timetableEntries: { none: {} } };
+  const noTimetable = NO_TIMETABLE;
   const [members, missingCount] = await Promise.all([
     db.member.findMany({
       where: missing ? noTimetable : undefined,

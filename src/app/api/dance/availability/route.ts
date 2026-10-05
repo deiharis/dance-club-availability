@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { DANCER_TEAMS } from "@/lib/teams";
+import { hasFilledTimetable } from "@/lib/timetable";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { computeAvailability, cellKey, type AvailabilityDancer, type AvailabilityResponse } from "@/lib/availability";
 
@@ -41,7 +42,7 @@ export async function GET(req: Request) {
       fullName: m.fullName,
       skillLevel: m.skillLevel,
       isLead: m.category === "DANCER" && m.position === "Team Leader",
-      hasTimetable: m.timetableEntries.length > 0,
+      hasTimetable: hasFilledTimetable(m.timetableEntries), // a Class slot, not just Free rows
       busy: m.timetableEntries.filter((e) => e.status === "CLASS").map((e) => cellKey(e.day, e.slot)),
     }));
 

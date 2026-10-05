@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { leadReviewedWhere } from "@/lib/dance";
+import { NO_TIMETABLE } from "@/lib/timetable";
 import {
   Users,
   Calendar,
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
       // Same queue the committee sees: dance-topic reports go to the team's Lead instead.
       db.report.count({ where: { status: "PENDING", NOT: leadReviewedWhere } }),
       isSuper ? db.oDRequest.count({ where: { status: "PENDING" } }) : Promise.resolve(0),
-      db.member.count({ where: { timetableEntries: { none: {} } } }),
+      db.member.count({ where: NO_TIMETABLE }),
       db.event.findMany({
         where: { eventDate: { gte: today } },
         orderBy: { eventDate: "asc" },
