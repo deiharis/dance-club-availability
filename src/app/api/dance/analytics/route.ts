@@ -1,14 +1,12 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
-import { SLOTS, DAYS } from "@/lib/timetable";
 import { DANCER_TEAMS } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden, leadReviewedWhere } from "@/lib/dance";
 import type { TeamAnalytics, HeatCell } from "@/lib/analytics-types";
+import { computeAvailability, cellKey } from "@/lib/availability";
 
 export const dynamic = "force-dynamic";
 
-const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
-const SLOT_NAMES = new Set(ACTIVE_SLOTS.map((s) => s.slot));
 const pct = (part: number, whole: number) => (whole === 0 ? 0 : Math.round((part / whole) * 100));
 
 // Analytics for ONE dance team. A Lead gets their own team; only the SuperAdmin can pass ?team=.
@@ -48,20 +46,25 @@ export async function GET(req: Request) {
       }),
     ]);
 
-    // Team availability: how many of the team are free in each slot
-    const busy = new Map<string, number>();
-    for (const e of classEntries) {
-      if (!SLOT_NAMES.has(e.slot)) continue;
-      const key = `${e.day}|${e.slot}`;
-      busy.set(key, (busy.get(key) ?? 0) + 1);
-    }
-    const heatmap: HeatCell[] = [];
-    for (const day of DAYS) {
-      for (const s of ACTIVE_SLOTS) {
-        const freeCount = dancers.length - (busy.get(`${day}|${s.slot}`) ?? 0);
-        heatmap.push({ day, slot: s.slot, freeCount, percentage: pct(freeCount, dancers.length) });
-      }
-    }
+    // Team availability: same maths as the Availability page (lib/availability.ts).
+    const busyOf = new Map<string, string[]>();
+    for (const e of classEntries) busyOf.set(e.memberId, [...(busyOf.get(e.memberId) ?? []), cellKey(e.day, e.slot)]);
+    const availability = computeAvailability(
+      dancers.map((d) => ({
+        id: d.id,
+        fullName: d.fullName,
+        skillLevel: d.skillLevel,
+        isLead: d.position === "Team Leader",
+        hasTimetable: true,
+        busy: busyOf.get(d.id) ?? [],
+      }))
+    );
+    const heatmap: HeatCell[] = availability.cells.map((c) => ({
+      day: c.day,
+      slot: c.slot,
+      freeCount: c.free,
+      percentage: Math.round(c.pct),
+    }));
     const bestSlots = [...heatmap]
       .sort((a, b) => b.percentage - a.percentage || b.freeCount - a.freeCount)
       .slice(0, 5);
