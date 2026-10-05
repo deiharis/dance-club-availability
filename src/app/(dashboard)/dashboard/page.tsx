@@ -66,7 +66,7 @@ export default async function DashboardPage() {
     isSuper
       ? { n: "02", value: pendingOD, label: "OD requests to approve", href: "/od" }
       : { n: "02", value: total, label: "Members in the club", href: "/members" },
-    { n: "03", value: noTimetable, label: "Members with no timetable", href: "/timetable" },
+    { n: "03", value: noTimetable, label: "Members with no timetable", href: "/timetable?missing=1" },
     { n: "04", value: events.length, label: events[0] ? `Next: ${events[0].name}` : "Upcoming events", href: isSuper ? "/events" : "/dashboard" },
   ];
 

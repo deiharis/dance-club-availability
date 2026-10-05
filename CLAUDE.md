@@ -60,7 +60,7 @@ Route protection lives in `src/middleware.ts` and is re-checked in each API rout
 | Admin shell (sidebar, mobile drawer) | `app/(dashboard)/layout.tsx`, `components/layout/Sidebar.tsx` | |
 | Dashboard | `(dashboard)/dashboard` | |
 | Members CRUD, Excel import/export | `(dashboard)/members`, `/add`, `/[id]/edit`, `/[id]/delete` | `api/members`, `/[id]`, `/import`, `/export` |
-| Timetable | `app/timetable` (outside route groups so members can reach it; page splits by role and renders Sidebar itself for admins), `app/timetable/[memberId]` | `api/timetable/[memberId]` (members may only edit their own), `api/timetable/export` |
+| Timetable | `app/timetable` (outside route groups so members can reach it; page splits by role and renders Sidebar itself for admins; committee view has "All members" / "No timetable" tabs, `?missing=1` = members with no timetable rows, linked from the dashboard tile), `app/timetable/[memberId]` | `api/timetable/[memberId]` (members may only edit their own), `api/timetable/export` |
 | Search (Search button, not live; category-dependent position/team filters; multi-slot "free on all selected slots") | `(dashboard)/search` | `api/search` |
 | Analytics: four tabs (Availability, Membership, Dance Floor, Activity) with animated Recharts charts, count-up KPIs and an animated heatmap | `(dashboard)/analytics`, `components/analytics/*` (`parts.tsx` has CountUp, Kpi, ChartCard, Gauge, MeterRow, chart colours), `components/timetable/Heatmap.tsx` | `api/analytics` (force-dynamic, no cache; committee only; response type in `lib/analytics-types.ts`) |
 | Reports: submit + OD tab | `app/reports/submit` (all roles) | `api/reports` (POST uploads image), `/mine`, `/approved` |

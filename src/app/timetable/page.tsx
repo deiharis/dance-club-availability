@@ -100,7 +100,11 @@ async function MemberTimetableCard({
 }
 
 // ── Main page — roles split here ─────────────────────────
-export default async function TimetablePage() {
+export default async function TimetablePage({
+  searchParams,
+}: {
+  searchParams: { missing?: string };
+}) {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
 
@@ -116,10 +120,24 @@ export default async function TimetablePage() {
     return <MemberTimetableView />;
   }
 
-  // Admins and SuperAdmins see all members
-  const members = await db.member.findMany({
-    orderBy: { fullName: "asc" },
-  });
+  // Admins and SuperAdmins see all members, or (?missing=1, from the dashboard tile) only the
+  // members who have not filled in their timetable. No rows at all = never set (a missing row
+  // means Free, so someone who is free all week also shows here).
+  const missing = searchParams.missing === "1";
+  const noTimetable = { timetableEntries: { none: {} } };
+  const [members, missingCount] = await Promise.all([
+    db.member.findMany({
+      where: missing ? noTimetable : undefined,
+      orderBy: { fullName: "asc" },
+    }),
+    db.member.count({ where: noTimetable }),
+  ]);
+  const tab = (on: boolean) =>
+    `rounded-md border px-3 py-1.5 text-xs font-semibold transition-colors ${
+      on
+        ? "border-violet-400/50 bg-violet-500/15 text-violet-200"
+        : "border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-white"
+    }`;
 
   return (
     <div className={`${consoleFont.className} committee-ui min-h-screen bg-base text-white flex`}>
@@ -135,11 +153,25 @@ export default async function TimetablePage() {
             Timetable
           </h1>
           <p className="text-gray-500 text-xs mt-0.5">
-            Click any cell to toggle between Free and Class
+            {missing
+              ? "Members who have not set their timetable yet. Fill it in here, or ask them to."
+              : "Click any cell to toggle between Free and Class"}
           </p>
         </div>
         <div className="p-4 sm:p-8">
-          {members.length === 0 ? (
+          <div className="mb-6 flex flex-wrap gap-2">
+            <Link href="/timetable" className={tab(!missing)}>
+              All members
+            </Link>
+            <Link href="/timetable?missing=1" className={tab(missing)}>
+              No timetable ({missingCount})
+            </Link>
+          </div>
+          {missing && members.length === 0 ? (
+            <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
+              <p className="text-gray-400 text-sm">Everyone has set their timetable.</p>
+            </div>
+          ) : members.length === 0 ? (
             <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
               <p className="text-gray-500 text-sm mb-4">
                 No members yet. Add members first.
