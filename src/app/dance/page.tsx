@@ -26,9 +26,9 @@ export default async function DanceDashboardPage() {
   const team = member.team;
   const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
 
-  // Everyone sees their own team; only the SuperAdmin also sees every team's size.
+  // Everyone sees their own team; the SuperAdmin and Advisory also see every team's size.
   const teamCounts =
-    !dance.isSuper
+    !dance.seesAllTeams
       ? []
       : await db.member.groupBy({
           by: ["team"],

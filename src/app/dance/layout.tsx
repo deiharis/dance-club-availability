@@ -25,11 +25,18 @@ export default async function DanceLayout({
   // Dance Floor is for anyone in a dance team, plus the SuperAdmin (who manages every team).
   // Core members without a team have no team to see. Checked against the database, so a
   // member added to a team gets in without re-logging.
-  if (!dance.isSuper && !dance.member.team) {
+  // The Advisory (Core) may look at every team, read-only.
+  if (!dance.seesAllTeams && !dance.member.team) {
     redirect(dance.isCommittee ? "/dashboard" : "/profile");
   }
 
-  const label = dance.isSuper ? "Super Admin" : dance.isLead ? "Dance Lead" : "Dancer";
+  const label = dance.isSuper
+    ? "Super Admin"
+    : dance.isAdvisory
+    ? "Advisory (view only)"
+    : dance.isLead
+    ? "Dance Lead"
+    : "Dancer";
 
   // Sidebar badges: unread notifications, and (for Leads) reports waiting on them.
   const [unread, pending] = await Promise.all([
@@ -60,7 +67,7 @@ export default async function DanceLayout({
         userName={session.user.name ?? "Dancer"}
         userEmail={session.user.email ?? ""}
         label={label}
-        canManage={dance.isLead || dance.isSuper}
+        canManage={dance.isLead || dance.seesAllTeams} // shows Roster + Team insights (read-only for Advisory)
         isCommittee={dance.isCommittee}
         badges={{ "/dance/notifications": unread, "/dance/reports": pending }}
       />

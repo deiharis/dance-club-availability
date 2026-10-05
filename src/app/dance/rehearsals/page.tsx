@@ -52,7 +52,7 @@ export default async function RehearsalsPage({
         subtitle="When and where the team practises."
       />
 
-      {dance.isSuper && (
+      {dance.seesAllTeams && (
         <div className="mt-4 flex flex-wrap gap-2">
           {DANCER_TEAMS.map((t) => (
             <Link

@@ -366,7 +366,7 @@ export async function GET() {
       generatedAt: new Date().toISOString(),
       availability,
       membership,
-      dance: caller.isSuper ? dance : null, // every team's dance data: SuperAdmin only
+      dance: caller.seesAllTeams ? dance : null, // every team's dance data: SuperAdmin and Advisory only
       activity,
     };
     return NextResponse.json(body);

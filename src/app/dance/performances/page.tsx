@@ -58,7 +58,7 @@ export default async function PerformancesPage({
         subtitle="Performances and who is dancing in them."
       />
 
-      {dance.isSuper && (
+      {dance.seesAllTeams && (
         <div className="mt-4 flex flex-wrap gap-2">
           {DANCER_TEAMS.map((t) => (
             <Link

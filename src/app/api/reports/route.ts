@@ -36,9 +36,9 @@ export async function GET(req: Request) {
 
     // ?scope=dancers: the SuperAdmin can LOOK at the reports Team Leaders decide (view only;
     // the PATCH route still lets only that team's Lead decide). No proof images are signed.
-    // Core members cannot: those are other dance teams' data.
+    // The Advisory may too (read-only). Other Core members cannot: those are other teams' data.
     const dancerView =
-      !!caller?.isSuper && new URL(req.url).searchParams.get("scope") === "dancers";
+      !!caller?.seesAllTeams && new URL(req.url).searchParams.get("scope") === "dancers";
 
     // Routing (see leadReviewedWhere in lib/dance.ts): dance-topic reports from anyone in a
     // team go to that team's Lead; every other report goes to the committee.

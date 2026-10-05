@@ -27,7 +27,7 @@ const COLUMNS = [
 export async function GET(req: Request) {
   const caller = await getCaller();
   if (!caller) return unauthorized();
-  if (!caller.isSuper) return forbidden();
+  if (!caller.seesAllTeams) return forbidden(); // SuperAdmin, or Advisory (read-only: export only)
 
   const params = new URL(req.url).searchParams;
   const team = params.get("team") ?? "";

@@ -56,8 +56,10 @@ export default async function AttendancePage({
   });
 
   const manager = dance.canManage(team);
+  // SuperAdmin / Advisory see the whole team's record even when they cannot mark it.
+  const overview = manager || dance.seesAllTeams;
 
-  const dancers = manager
+  const dancers = overview
     ? await db.member.findMany({
         where: { team },
         orderBy: { fullName: "asc" },
@@ -83,7 +85,7 @@ export default async function AttendancePage({
         subtitle="Percentage is present out of present plus absent; excused is not counted."
       />
 
-      {dance.isSuper && (
+      {dance.seesAllTeams && (
         <div className="mt-4 flex flex-wrap gap-2">
           {DANCER_TEAMS.map((t) => (
             <Link
@@ -102,7 +104,7 @@ export default async function AttendancePage({
       )}
 
       {/* Lead / committee: per-dancer percentages */}
-      {manager && dancers.length > 0 && (
+      {overview && dancers.length > 0 && (
         <div className="mt-6 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -134,7 +136,7 @@ export default async function AttendancePage({
       )}
 
       {/* Dancers: own percentage */}
-      {!manager && (
+      {!overview && (
         <div className="mt-6 inline-block bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl px-5 py-4">
           <p className="text-orange-100/50 text-xs">Your attendance</p>
           <p className="text-white text-2xl font-semibold mt-1">
@@ -144,7 +146,7 @@ export default async function AttendancePage({
       )}
 
       <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-orange-100/50 mt-8 mb-3">
-        {manager ? "Rehearsals (tap one to mark attendance)" : "Your record"}
+        {manager ? "Rehearsals (tap one to mark attendance)" : overview ? "Rehearsals" : "Your record"}
       </h2>
 
       {rehearsals.length === 0 ? (
@@ -163,7 +165,7 @@ export default async function AttendancePage({
                     {fmt(r.date)} · {r.startTime} - {r.endTime}
                   </p>
                 </div>
-                {manager ? (
+                {overview ? (
                   <span className="text-xs text-orange-100/60">
                     {r.attendance.length}/{dancers.length} marked
                   </span>

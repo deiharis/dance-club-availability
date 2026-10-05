@@ -22,7 +22,7 @@ export default async function DashboardLayout({
         userName={caller.member?.fullName ?? "Admin"}
         userEmail={caller.member?.email ?? ""}
         role={caller.role}
-        showDanceFloor={caller.isSuper || caller.inTeam}
+        showDanceFloor={caller.seesAllTeams || caller.inTeam}
       />
       {/* pt-14 on mobile accounts for the fixed top bar */}
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">

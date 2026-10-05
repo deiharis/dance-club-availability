@@ -17,11 +17,12 @@ export async function GET(req: Request) {
   if (!caller) return unauthorized();
 
   const asked = new URL(req.url).searchParams.get("team");
-  const team = caller.isSuper ? asked ?? DANCER_TEAMS[0] : caller.member?.team ?? "";
+  const team = caller.seesAllTeams ? asked ?? DANCER_TEAMS[0] : caller.member?.team ?? "";
   if (!DANCER_TEAMS.includes(team)) {
     return NextResponse.json({ error: "Unknown team" }, { status: 400 });
   }
-  if (!caller.canManage(team)) return forbidden();
+  // Reading only: the team's Lead, the SuperAdmin, or the Advisory.
+  if (!caller.seesAllTeams && !caller.canManage(team)) return forbidden();
 
   try {
     const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");

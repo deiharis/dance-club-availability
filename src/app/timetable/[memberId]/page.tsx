@@ -39,7 +39,7 @@ export default async function MemberTimetablePage({
         userName={session.user.name ?? "Admin"}
         userEmail={session.user.email ?? ""}
         role={role}
-        showDanceFloor={caller.isSuper || caller.inTeam}
+        showDanceFloor={caller.seesAllTeams || caller.inTeam}
       />
       <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
         <div data-section="People" className="c-page-header flex items-center justify-between">

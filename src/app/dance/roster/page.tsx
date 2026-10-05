@@ -13,7 +13,7 @@ export default async function RosterPage({
 }) {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
-  if (!dance.isLead && !dance.isSuper) redirect("/dance");
+  if (!dance.isLead && !dance.seesAllTeams) redirect("/dance");
 
   // Committee picks any team; a Lead is fixed to their own.
   // Committee: the chosen tab, else their own team if they dance. Others: their own team.
@@ -51,7 +51,7 @@ export default async function RosterPage({
         subtitle="Add dancers, set their skill level, and remove them from the team."
       />
 
-      {dance.isSuper && (
+      {dance.seesAllTeams && (
         <div className="mt-4 flex flex-wrap gap-2">
           {DANCER_TEAMS.map((t) => (
             <Link
@@ -75,6 +75,8 @@ export default async function RosterPage({
           dancers={dancers}
           selfId={dance.member.id}
           canTransfer={dance.isSuper}
+          canExport={dance.seesAllTeams}
+          readOnly={!dance.canManage(team)}
         />
       </div>
     </div>

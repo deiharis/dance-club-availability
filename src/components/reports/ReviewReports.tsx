@@ -84,7 +84,7 @@ export default function ReviewReports({
   canViewDancers = false,
 }: {
   variant: "console" | "stage";
-  // SuperAdmin only: adds a view-only list of normal dancers' reports (their Lead decides them).
+  // SuperAdmin and Advisory: adds a view-only list of normal dancers' reports (their Lead decides them).
   canViewDancers?: boolean;
 }) {
   const s = SKIN[variant];

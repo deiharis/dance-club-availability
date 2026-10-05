@@ -43,12 +43,18 @@ export default function RosterClient({
   dancers,
   selfId,
   canTransfer = false,
+  canExport = false,
+  readOnly = false,
 }: {
   team: string;
   dancers: Dancer[];
   selfId: string | null;
-  // SuperAdmin only: Excel import / export / template for this team.
+  // SuperAdmin only: Excel import and the blank template for this team.
   canTransfer?: boolean;
+  // SuperAdmin and Advisory: download this team as Excel.
+  canExport?: boolean;
+  // Advisory: sees the roster but cannot add, remove or change anyone (the APIs refuse too).
+  readOnly?: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState(emptyForm);
@@ -159,14 +165,6 @@ export default function RosterClient({
             {importing ? "Importing..." : "Import"}
           </button>
           <a
-            href={`/api/dance/roster/export?${q}`}
-            title="Download this team's dancers and attendance as Excel"
-            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-orange-50/80 transition-colors hover:border-orange-400/40 hover:text-white"
-          >
-            <Download size={15} />
-            Export
-          </a>
-          <a
             href={`/api/dance/roster/export?${q}&template=1`}
             title="Download an empty Excel file with the right columns"
             className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-orange-50/80 transition-colors hover:border-orange-400/40 hover:text-white"
@@ -176,13 +174,27 @@ export default function RosterClient({
           </a>
           </>
           )}
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
-          >
-            <UserPlus size={16} />
-            Add dancer
-          </button>
+          {(canTransfer || canExport) && (
+            <a
+              href={`/api/dance/roster/export?${q}`}
+              title="Download this team's dancers and attendance as Excel"
+              className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-2 text-sm text-orange-50/80 transition-colors hover:border-orange-400/40 hover:text-white"
+            >
+              <Download size={15} />
+              Export
+            </a>
+          )}
+          {readOnly ? (
+            <span className="rounded-full border border-white/10 px-3 py-2 text-xs text-orange-100/60">View only</span>
+          ) : (
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="flex items-center gap-2 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 text-white text-sm font-medium px-3 py-2 rounded-full transition-colors"
+            >
+              <UserPlus size={16} />
+              Add dancer
+            </button>
+          )}
         </div>
       </div>
 
@@ -217,7 +229,7 @@ export default function RosterClient({
         </p>
       )}
 
-      {showForm && (
+      {showForm && !readOnly && (
         <form
           onSubmit={add}
           className="mt-4 grid sm:grid-cols-2 gap-3 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4"
@@ -293,6 +305,9 @@ export default function RosterClient({
                   )}
                 </td>
                 <td className="px-4 py-3">
+                  {readOnly ? (
+                    <span className="text-orange-100/80">{d.skillLevel === "PROFESSIONAL" ? "Professional" : "Amateur"}</span>
+                  ) : (
                   <select
                     value={d.skillLevel}
                     onChange={(e) => update(d.id, { skillLevel: e.target.value })}
@@ -301,6 +316,7 @@ export default function RosterClient({
                     <option value="AMATEUR">Amateur</option>
                     <option value="PROFESSIONAL">Professional</option>
                   </select>
+                  )}
                 </td>
                 <td className="px-4 py-3">
                   {/* FFCS Only members are always enrolled, so their box is locked on */}
@@ -308,7 +324,7 @@ export default function RosterClient({
                     <input
                       type="checkbox"
                       checked={d.isFFCS || d.category === "FFCS_ONLY"}
-                      disabled={d.category === "FFCS_ONLY"}
+                      disabled={readOnly || d.category === "FFCS_ONLY"}
                       onChange={(e) => update(d.id, { isFFCS: e.target.checked })}
                       className="h-4 w-4 accent-orange-500 disabled:opacity-60"
                     />
@@ -316,7 +332,7 @@ export default function RosterClient({
                   </label>
                 </td>
                 <td className="px-4 py-3 text-right">
-                  {d.id !== selfId &&
+                  {!readOnly && d.id !== selfId &&
                     (d.category === "DANCER" ? (
                       <button
                         onClick={() => remove(d)}
