@@ -17,12 +17,15 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [changed, setChanged] = useState(false);
+  const [idle, setIdle] = useState(false);
   // The form rises in as the intro splash dissolves (or straight away if the intro was already seen).
   const [ready, setReady] = useState(false);
 
-  // Shown after /change-password signs the user out (?changed=1).
+  // Shown after /change-password signs the user out (?changed=1), or after 10 idle minutes (?idle=1).
   useEffect(() => {
-    setChanged(new URLSearchParams(window.location.search).get("changed") === "1");
+    const params = new URLSearchParams(window.location.search);
+    setChanged(params.get("changed") === "1");
+    setIdle(params.get("idle") === "1");
   }, []);
 
   async function handleLogin(e: React.FormEvent) {
@@ -97,6 +100,12 @@ export default function LoginPage() {
             {changed && !error && (
               <div className="rounded-xl border border-green-500/20 bg-green-500/10 px-4 py-3">
                 <p className="text-sm text-green-400">Password updated. Sign in with your new password.</p>
+              </div>
+            )}
+
+            {idle && !changed && !error && (
+              <div className="rounded-xl border border-amber-400/20 bg-amber-400/10 px-4 py-3">
+                <p className="text-sm text-amber-200">You were signed out after 10 minutes of inactivity. Sign in again to continue.</p>
               </div>
             )}
 

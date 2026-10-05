@@ -6,6 +6,10 @@ import bcrypt from "bcryptjs";
 export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
+    // Login expires 10 minutes after it was last renewed. components/IdleLogout.tsx renews it
+    // while the user is active and signs them out after 10 idle minutes; this catches a closed
+    // browser or sleeping laptop. Keep in step with IDLE_MS there.
+    maxAge: 10 * 60,
   },
 
   pages: {
