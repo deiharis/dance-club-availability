@@ -39,6 +39,9 @@ export default async function RosterPage({
       category: true,
       skillLevel: true,
       isFFCS: true,
+      phone: true,
+      department: true,
+      academicYear: true,
     },
   });
 

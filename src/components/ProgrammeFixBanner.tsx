@@ -8,7 +8,7 @@ export default function ProgrammeFixBanner({ department }: { department: string 
   if (!needsProgrammeFix(department)) return null;
   return (
     <Link
-      href="/programme"
+      href="/account"
       className="mx-4 mt-4 flex items-center gap-3 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-100 transition-colors hover:bg-amber-400/15 sm:mx-8"
     >
       <GraduationCap size={18} className="shrink-0 text-amber-300" />

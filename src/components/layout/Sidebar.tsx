@@ -19,6 +19,7 @@ import {
   Music,
   ArrowUpRight,
   KeyRound,
+  UserCog,
   Bell,
 } from "lucide-react";
 import { LogoMark } from "@/components/brand/Logo";
@@ -192,6 +193,9 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
               {isSuperAdmin ? "Super admin" : "Admin"} · {userEmail}
             </p>
           </div>
+          <Link href="/account" title="My details" className="text-zinc-500 hover:text-white p-1.5">
+            <UserCog size={15} />
+          </Link>
           <Link
             href="/change-password"
             title="Change password"

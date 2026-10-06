@@ -7,7 +7,7 @@ import { normalizeDepartment } from "@/lib/departments";
 // (their own Programme page, or an admin editing them) clears it immediately.
 // Safely standardised spellings ("Btech cse" -> "B.Tech CSE (Core)") never count.
 
-export const PROGRAMME_FIX_LINK = "/programme";
+export const PROGRAMME_FIX_LINK = "/account"; // My details (/programme also redirects there)
 const MESSAGE =
   "Your academic programme information needs to be updated. The course currently saved on your profile could not be matched to a valid VIT Chennai programme. Please open this and select the correct programme.";
 

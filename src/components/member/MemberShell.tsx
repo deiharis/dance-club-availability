@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Calendar, FileText, KeyRound, LogOut, Music } from "lucide-react";
+import { User, Calendar, FileText, KeyRound, LogOut, Music, UserCog } from "lucide-react";
 import { LogoMark, LogoLockup } from "@/components/brand/Logo";
 import { consoleFont, brandFont } from "@/lib/fonts";
 
@@ -73,6 +73,9 @@ export default function MemberShell({
             >
               {initials || "?"}
             </div>
+            <Link href="/account" title="My details" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
+              <UserCog size={16} />
+            </Link>
             <Link href="/change-password" title="Change password" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
               <KeyRound size={16} />
             </Link>

@@ -128,7 +128,7 @@ export default async function ProfilePage() {
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm ${n.read ? "text-zinc-300" : "font-medium text-white"}`}>{n.message}</p>
                       {fix && (
-                        <Link href="/programme" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-300 hover:text-amber-200">
+                        <Link href="/account" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-300 hover:text-amber-200">
                           Choose programme <ArrowUpRight size={12} />
                         </Link>
                       )}

@@ -2,9 +2,10 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trash2, UserPlus, UserMinus, Upload, Download, FileSpreadsheet, X } from "lucide-react";
+import { Trash2, UserPlus, UserMinus, Upload, Download, FileSpreadsheet, X, Pencil } from "lucide-react";
 import { DANCER_ROLES } from "@/lib/teams";
 import ProgrammeSelect from "@/components/ui/ProgrammeSelect";
+import EditDancerPanel from "@/components/dance/EditDancerPanel";
 
 type Dancer = {
   id: string;
@@ -15,6 +16,9 @@ type Dancer = {
   category: string; // DANCER = pure dancer; anything else = member who also dances
   skillLevel: "PROFESSIONAL" | "AMATEUR";
   isFFCS: boolean;
+  phone: string | null;
+  department: string;
+  academicYear: number;
 };
 
 const CATEGORY_BADGE: Record<string, string> = {
@@ -62,6 +66,9 @@ export default function RosterClient({
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  // The dancer being edited (Team Leader / SuperAdmin). Pure dancers only: a Core or Normal
+  // member who also dances keeps their details with the committee; here only skill and FFCS.
+  const [editing, setEditing] = useState<Dancer | null>(null);
 
   const set = (k: keyof typeof emptyForm) => (e: any) =>
     setForm({ ...form, [k]: e.target.value });
@@ -230,6 +237,21 @@ export default function RosterClient({
         </p>
       )}
 
+      {editing && !readOnly && (
+        <EditDancerPanel
+          key={editing.id}
+          dancer={editing}
+          team={team}
+          isSelf={editing.id === selfId}
+          input={input}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            router.refresh();
+          }}
+        />
+      )}
+
       {showForm && !readOnly && (
         <form
           onSubmit={add}
@@ -332,7 +354,19 @@ export default function RosterClient({
                     {d.isFFCS || d.category === "FFCS_ONLY" ? "Enrolled" : "No"}
                   </label>
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  {!readOnly && d.category === "DANCER" && (
+                    <button
+                      onClick={() => {
+                        setShowForm(false);
+                        setEditing(d);
+                      }}
+                      title={`Edit ${d.fullName}`}
+                      className="p-1 text-orange-100/50 hover:text-orange-200"
+                    >
+                      <Pencil size={15} />
+                    </button>
+                  )}
                   {!readOnly && d.id !== selfId &&
                     (d.category === "DANCER" ? (
                       <button

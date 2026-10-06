@@ -17,6 +17,7 @@ import {
   FileText,
   LogOut,
   KeyRound,
+  UserCog,
   ArrowUpRight,
   Menu,
   X,
@@ -166,6 +167,9 @@ export default function DanceSidebar({
             <p className="text-orange-200 text-[11px] truncate">{label}</p>
             <p className="text-orange-100/40 text-[10px] truncate">{userEmail}</p>
           </div>
+          <Link href="/account" title="My details" className="text-orange-100/60 hover:text-white p-1.5">
+            <UserCog size={16} />
+          </Link>
           <Link
             href="/change-password"
             title="Change password"

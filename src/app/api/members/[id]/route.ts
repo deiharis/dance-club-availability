@@ -124,12 +124,35 @@ export async function PATCH(
       });
     }
 
+    // Login email and member email change together (before, only the member copy changed, so the
+    // person could no longer log in with the new address). Lower-case, like everywhere else.
+    const cleanEmail = String(email ?? "").trim().toLowerCase();
+    const cleanReg = String(registerNumber ?? "").trim().toUpperCase();
+    if (!cleanEmail || !cleanReg || !String(fullName ?? "").trim()) {
+      return NextResponse.json({ error: "Name, register number and email are required" }, { status: 400 });
+    }
+    const [emailTaken, regTaken] = await Promise.all([
+      db.user.findFirst({
+        where: { email: { equals: cleanEmail, mode: "insensitive" }, id: { not: r.member.userId } },
+        select: { id: true },
+      }),
+      db.member.findFirst({
+        where: { registerNumber: { equals: cleanReg, mode: "insensitive" }, id: { not: params.id } },
+        select: { id: true },
+      }),
+    ]);
+    if (emailTaken) return NextResponse.json({ error: "Another account already uses that email" }, { status: 409 });
+    if (regTaken) return NextResponse.json({ error: "Another member already has that register number" }, { status: 409 });
+    if (cleanEmail !== r.member.email.toLowerCase()) {
+      await db.user.update({ where: { id: r.member.userId }, data: { email: cleanEmail } });
+    }
+
     const updated = await db.member.update({
       where: { id: params.id },
       data: {
-        fullName,
-        registerNumber,
-        email,
+        fullName: String(fullName).trim(),
+        registerNumber: cleanReg,
+        email: cleanEmail,
         phone: normalizePhone(phone),
         department: normalizeDepartment(department).label || department,
         academicYear: parseInt(academicYear),
