@@ -47,7 +47,10 @@ async function MemberTimetableView() {
 }
 
 // ── Admin timetable card per member ──────────────────────
-async function MemberTimetableCard({
+// Gets its entries from the page (loaded for everyone in ONE query). It used to query the database
+// itself, once per member: with ~300 members that was ~300 queries at once, which ran out of
+// database connections on Vercel and crashed the page.
+function MemberTimetableCard({
   member,
 }: {
   member: {
@@ -56,11 +59,10 @@ async function MemberTimetableCard({
     registerNumber: string;
     department: string;
     position: string | null;
+    timetableEntries: { day: string; slot: string; status: string }[];
   };
 }) {
-  const entries = await db.timetableEntry.findMany({
-    where: { memberId: member.id },
-  });
+  const entries = member.timetableEntries;
 
   return (
     <div className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden">
@@ -130,6 +132,8 @@ export default async function TimetablePage({
     db.member.findMany({
       where: missing ? noTimetable : undefined,
       orderBy: { fullName: "asc" },
+      // Everyone's timetable in the same trip (2 queries total, not one per member).
+      include: { timetableEntries: { select: { day: true, slot: true, status: true } } },
     }),
     db.member.count({ where: noTimetable }),
   ]);
