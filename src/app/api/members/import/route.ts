@@ -2,7 +2,18 @@ import { NextResponse } from "next/server";
 import { CORE_TEAMS, MEMBER_TEAMS, DANCER_TEAMS, DANCER_ROLES } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { notifySuperAdmins } from "@/lib/notify";
-import { readRows, pick, readCommon, readDancer, alreadyExists, createMemberAccount } from "@/lib/member-import";
+import {
+  readRows,
+  pick,
+  readCommon,
+  readDancer,
+  existingAccounts,
+  inBatches,
+  createMemberAccount,
+} from "@/lib/member-import";
+
+// A big sheet takes a while; ask Vercel for up to 60 s so it is never cut off part-way.
+export const maxDuration = 60;
 
 function mapCategory(value: string): "CORE" | "MEMBER" | "DANCER" | "FFCS_ONLY" {
   const v = value.trim().toLowerCase();
@@ -37,6 +48,17 @@ export async function POST(req: Request) {
     let skipped = 0;
     const errors: string[] = [];
 
+    // Who already has an account: one lookup for the whole file instead of two per row.
+    const all = rows.map((r) => readCommon(r));
+    const existing = await existingAccounts(
+      all.map((c) => c.email).filter(Boolean),
+      all.map((c) => c.registerNumber).filter(Boolean)
+    );
+    // Someone listed twice in the same sheet is only added once.
+    const seenEmails = new Set<string>();
+    const seenRegs = new Set<string>();
+    const toCreate: Parameters<typeof createMemberAccount>[0][] = [];
+
     for (const row of rows) {
       const c = readCommon(row);
       const category = mapCategory(pick(row, "Category") || "Normal Members");
@@ -58,21 +80,39 @@ export async function POST(req: Request) {
       if (category === "DANCER" && team && !DANCER_TEAMS.includes(team)) {
         errors.push(`Warning: "${team}" is not a valid dance team, imported anyway`);
       }
-      if (await alreadyExists(c.email, c.registerNumber)) {
+      if (existing.emails.has(c.email) || existing.registerNumbers.has(c.registerNumber)) {
         skipped++;
         errors.push(`Skipped ${c.fullName}: already exists`);
         continue;
       }
+      if (seenEmails.has(c.email) || seenRegs.has(c.registerNumber)) {
+        skipped++;
+        errors.push(`Skipped ${c.fullName}: listed twice in this file`);
+        continue;
+      }
+      seenEmails.add(c.email);
+      seenRegs.add(c.registerNumber);
 
-      await createMemberAccount({
+      toCreate.push({
         ...c,
         category,
         position,
         team,
         skillLevel: category === "DANCER" ? readDancer(row).skillLevel : undefined,
       });
-      created++;
     }
+
+    // Create the accounts 4 at a time. One bad row is reported and does not stop the rest.
+    await inBatches(toCreate, 4, async (m) => {
+      try {
+        await createMemberAccount(m);
+        created++;
+      } catch (error) {
+        console.error(error);
+        skipped++;
+        errors.push(`Could not add ${m.fullName} (${m.email}): check this row and import it again`);
+      }
+    });
 
     if (created > 0) {
       await notifySuperAdmins({

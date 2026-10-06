@@ -75,6 +75,36 @@ export async function alreadyExists(email: string, registerNumber: string) {
   return !!(user || member);
 }
 
+// Everyone in the file who already has an account, found in two queries (not two per row).
+// Emails come back lower-cased and register numbers upper-cased, matching readCommon().
+export async function existingAccounts(emails: string[], registerNumbers: string[]) {
+  const [users, members] = await Promise.all([
+    db.user.findMany({ where: { email: { in: emails, mode: "insensitive" } }, select: { email: true } }),
+    db.member.findMany({
+      where: { registerNumber: { in: registerNumbers, mode: "insensitive" } },
+      select: { registerNumber: true },
+    }),
+  ]);
+  return {
+    emails: new Set(users.map((u) => u.email.toLowerCase())),
+    registerNumbers: new Set(members.map((m) => m.registerNumber.toUpperCase())),
+  };
+}
+
+// Runs fn over items a few at a time (one batch after another), so an import is several times
+// faster without opening more database connections than the Supabase pooler likes.
+export async function inBatches<T>(items: T[], size: number, fn: (item: T) => Promise<void>) {
+  for (let i = 0; i < items.length; i += size) {
+    await Promise.all(items.slice(i, i + size).map(fn));
+  }
+}
+
+// bcrypt strength for TEMPORARY passwords only. 10 instead of the usual 12 makes an import about
+// 4x faster (~70 ms vs ~280 ms per member). Safe: the temporary password is the register number
+// (guessable anyway) and mustChangePassword forces a new one at first login, which
+// api/account/password hashes at full strength (12).
+const TEMP_PASSWORD_COST = 10;
+
 // Creates the login and member. The temporary password is the register number, and the
 // member must choose their own at first login.
 export async function createMemberAccount(m: {
@@ -97,7 +127,7 @@ export async function createMemberAccount(m: {
   await db.user.create({
     data: {
       email: m.email,
-      password: await bcrypt.hash(m.registerNumber, 12),
+      password: await bcrypt.hash(m.registerNumber, TEMP_PASSWORD_COST),
       role,
       mustChangePassword: true,
       member: {

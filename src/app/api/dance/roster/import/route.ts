@@ -14,6 +14,8 @@ import {
 } from "@/lib/member-import";
 
 export const dynamic = "force-dynamic";
+// Large team sheets: ask Vercel for up to 60 s so an import is never cut off part-way.
+export const maxDuration = 60;
 
 // POST /api/dance/roster/import  (form fields: file, team)
 // SuperAdmin only, one team at a time: the team picked on the Roster page. Rows the sheet lists
