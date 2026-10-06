@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { Plus, Download, Upload, FileSpreadsheet, Search, Pencil, Trash2, Sparkles, X } from "lucide-react";
+import { Plus, Download, Upload, FileSpreadsheet, Search, Pencil, Trash2, Sparkles, X, ListChecks } from "lucide-react";
 
 interface Member {
   id: string;
@@ -57,6 +57,7 @@ export default function MembersPage() {
 
   // Multi-select delete. The selection is cleared whenever the search or filter changes, so you
   // only ever delete people you can see.
+  const [selectMode, setSelectMode] = useState(false); // checkboxes only show after "Select"
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
   const [bulkResult, setBulkResult] = useState<string | null>(null);
@@ -175,8 +176,14 @@ export default function MembersPage() {
       }`
     );
     setSelected(new Set());
+    setSelectMode(false);
     loadMembers();
   }
+
+  const toggleSelectMode = () => {
+    setSelected(new Set());
+    setSelectMode((s) => !s);
+  };
 
   return (
     <div>
@@ -303,6 +310,18 @@ export default function MembersPage() {
               </button>
             ))}
           </div>
+          <button
+            onClick={toggleSelectMode}
+            aria-pressed={selectMode}
+            className={`lg:ml-auto flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+              selectMode
+                ? "border-violet-500/50 bg-violet-500/10 text-violet-200"
+                : "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-white"
+            }`}
+          >
+            <ListChecks size={14} />
+            {selectMode ? "Done" : "Select"}
+          </button>
         </div>
 
         {bulkResult && (
@@ -312,20 +331,24 @@ export default function MembersPage() {
           </div>
         )}
 
-        {selected.size > 0 && (
+        {selectMode && (
           <div className="sticky top-14 z-20 mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-red-500/30 bg-[#1a1014]/95 px-4 py-2.5 backdrop-blur">
-            <p className="text-sm font-medium text-white">{selected.size} selected</p>
+            <p className="text-sm font-medium text-white">
+              {selected.size === 0 ? "Tick the members you want to delete" : `${selected.size} selected`}
+            </p>
             {!allShownSelected && (
               <button onClick={toggleAllShown} className="text-xs text-violet-300 hover:text-violet-200">
                 Select all {filtered.length} shown
               </button>
             )}
-            <button onClick={() => setSelected(new Set())} className="text-xs text-zinc-400 hover:text-white">
-              Clear
-            </button>
+            {selected.size > 0 && (
+              <button onClick={() => setSelected(new Set())} className="text-xs text-zinc-400 hover:text-white">
+                Clear
+              </button>
+            )}
             <button
               onClick={deleteSelected}
-              disabled={deleting}
+              disabled={deleting || selected.size === 0}
               className="ml-auto flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-50"
             >
               <Trash2 size={13} />
@@ -352,7 +375,7 @@ export default function MembersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/40 text-left text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
-                    <th className="w-10 pl-5 py-2.5">
+                    {selectMode && <th className="w-10 pl-5 py-2.5">
                       <input
                         type="checkbox"
                         aria-label="Select all shown members"
@@ -363,7 +386,7 @@ export default function MembersPage() {
                         onChange={toggleAllShown}
                         className="h-4 w-4 cursor-pointer accent-violet-500"
                       />
-                    </th>
+                    </th>}
                     <th className="px-5 py-2.5">Member</th>
                     <th className="px-4 py-2.5">Reg no.</th>
                     <th className="px-4 py-2.5">Category</th>
@@ -376,7 +399,7 @@ export default function MembersPage() {
                 <tbody className="divide-y divide-zinc-800/70">
                   {filtered.map((member) => (
                     <tr key={member.id} className={`transition-colors ${selected.has(member.id) ? "bg-red-500/[0.06]" : "hover:bg-white/[0.02]"}`}>
-                      <td className="w-10 pl-5 py-2.5">
+                      {selectMode && <td className="w-10 pl-5 py-2.5">
                         <input
                           type="checkbox"
                           aria-label={`Select ${member.fullName}`}
@@ -384,7 +407,7 @@ export default function MembersPage() {
                           onChange={() => toggleOne(member.id)}
                           className="h-4 w-4 cursor-pointer accent-violet-500"
                         />
-                      </td>
+                      </td>}
                       <td className="px-5 py-2.5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center justify-center shrink-0">
@@ -433,13 +456,15 @@ export default function MembersPage() {
                 <div key={member.id} className={`bg-[#111014] border rounded-lg p-4 ${selected.has(member.id) ? "border-red-500/40" : "border-zinc-800"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
-                      <input
-                        type="checkbox"
-                        aria-label={`Select ${member.fullName}`}
-                        checked={selected.has(member.id)}
-                        onChange={() => toggleOne(member.id)}
-                        className="h-4 w-4 shrink-0 cursor-pointer accent-violet-500"
-                      />
+                      {selectMode && (
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${member.fullName}`}
+                          checked={selected.has(member.id)}
+                          onChange={() => toggleOne(member.id)}
+                          className="h-4 w-4 shrink-0 cursor-pointer accent-violet-500"
+                        />
+                      )}
                       <div className="w-9 h-9 rounded bg-zinc-800 text-zinc-300 text-sm font-semibold flex items-center justify-center shrink-0">
                         {member.fullName.charAt(0).toUpperCase()}
                       </div>

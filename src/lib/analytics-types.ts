@@ -20,7 +20,7 @@ export interface AvailabilityData {
 export interface MembershipData {
   total: number;
   byCategory: { key: string; label: string; count: number }[];
-  byDepartment: { name: string; count: number }[]; // canonical programme, e.g. "B.Tech CSE (Core)"
+  byDepartment: { name: string; count: number }[]; // EVERY canonical programme, largest first
   byDegree: { name: string; count: number }[]; // degree level, e.g. "B.Tech", "BBA"
   byYear: { year: string; count: number }[];
   ffcs: { enrolled: number; notEnrolled: number };

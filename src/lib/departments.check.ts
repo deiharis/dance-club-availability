@@ -59,6 +59,27 @@ const cases: [string, string][] = [
   ["Bsc.visual communication", "B.Sc Visual Communication"],
   ["B.Sc Animation and Multimedia", "B.Sc Animation & Multimedia"],
   ["M.Sc.data science", "M.Sc Data Science"],
+  // No degree written, but the branch only exists as B.Tech
+  ["Mechanical", "B.Tech Mechanical"],
+  ["ECE", "B.Tech ECE"],
+  ["CSE (AI & Robotics)", "B.Tech CSE (AI & Robotics)"],
+  ["CSE (Cyber Security)", "B.Tech CSE (Cyber Security)"],
+  ["Mechatronics & Automation", "B.Tech Mechatronics & Automation"],
+  ["Csc Core", "B.Tech CSE (Core)"],
+  ["Biotechnology", "B.Tech Biotechnology"],
+  // Ambiguous without a degree: left as written
+  ["Computer Science", "Computer Science"],
+  ["Data Science", "Data Science"],
+  // Not a programme (a committee team or a school): no label, so the original text is kept
+  ["Outreach", ""],
+  ["Events", ""],
+  ["Management", ""],
+  ["Manegement", ""],
+  ["Finance", ""],
+  ["Creative Department", ""],
+  ["Vitbs", ""],
+  ["Business School", ""],
+  ["Vfit", ""],
   // Existing labels must stay exactly as they are
   ["B.Tech CSE (Core)", "B.Tech CSE (Core)"],
   ["BBA (Hons)", "BBA (Hons)"],
@@ -72,4 +93,6 @@ for (const [input, expected] of cases) {
 }
 assert.equal(normalizeDepartment("BBA Honours").degree, "BBA");
 assert.equal(normalizeDepartment("btech cse core").degree, "B.Tech");
+assert.equal(normalizeDepartment("Outreach").degree, "Not specified");
+assert.equal(normalizeDepartment("Mechanical").degree, "B.Tech");
 console.log(`OK: ${cases.length} department spellings normalise as expected`);

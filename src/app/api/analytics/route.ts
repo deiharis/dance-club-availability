@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { SLOTS, DAYS } from "@/lib/timetable";
 import { DANCER_TEAMS } from "@/lib/teams";
 import { normalizeDepartment } from "@/lib/departments";
+
+// Bar for members whose department is not a programme ("Outreach", "VITBS", blank): fix them on
+// the Members page (search for the text shown there).
+const NEEDS_FIXING = "Department needs fixing";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import type {
   AnalyticsData,
@@ -154,18 +158,18 @@ export async function GET() {
     const degreeCount = new Map<string, number>();
     for (const m of members) {
       const dept = normalizeDepartment(m.department);
-      const label = dept.label || "Unknown";
+      // No label = a committee team or bare school typed instead of a programme (or blank).
+      const label = dept.label || NEEDS_FIXING;
       programmeCount.set(label, (programmeCount.get(label) ?? 0) + 1);
-      degreeCount.set(dept.degree, (degreeCount.get(dept.degree) ?? 0) + 1);
+      const degree = dept.label ? dept.degree : NEEDS_FIXING;
+      degreeCount.set(degree, (degreeCount.get(degree) ?? 0) + 1);
     }
     const toRows = (map: Map<string, number>) =>
       Array.from(map.entries())
         .map(([name, count]) => ({ name, count }))
         .sort((a, b) => b.count - a.count);
+    // Every programme, largest first; the chart shows the top few and can expand to all.
     const programmes = toRows(programmeCount);
-    const topDepts = programmes.slice(0, 9);
-    const otherDepts = programmes.slice(9).reduce((s, p) => s + p.count, 0);
-    if (otherDepts > 0) topDepts.push({ name: "Other", count: otherDepts });
 
     const monthCount = new Map<string, number>();
     for (const m of members) {
@@ -195,7 +199,7 @@ export async function GET() {
         label: CATEGORY_LABEL[key],
         count: members.filter((m) => m.category === key).length,
       })),
-      byDepartment: topDepts,
+      byDepartment: programmes,
       byDegree: toRows(degreeCount),
       byYear: [1, 2, 3, 4, 5].map((y) => ({
         year: `Year ${y}`,

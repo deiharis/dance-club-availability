@@ -64,6 +64,12 @@ const DEGREES: { degree: string; test: (c: string) => boolean; strip: RegExp }[]
 
 const ENGINEERING = new Set(["B.Tech", "M.Tech", "M.Tech Integrated"]);
 
+// Branch labels that are only offered as a B.Tech at VIT Chennai.
+const BTECH_ONLY = /^(CSE \(|ECM$|ECE$|EEE$|ECSE$|Mechanical|Mechatronics|Civil$|Electronics \(VLSI|Biotechnology$)/;
+// Not a programme: committee teams and bare school names.
+const NOT_A_PROGRAMME =
+  /^(outreach|events?|event management|management|manegement|finance|creative|creative department|design|editorial|marketing|media|mid|vitbs|vit bs|business school|vfit|vsmart|school)$/;
+
 // First matching rule wins, so specialisations come before plain CSE.
 function branchOf(rest: string, degree: string): string {
   const eng = ENGINEERING.has(degree);
@@ -91,6 +97,7 @@ function branchOf(rest: string, degree: string): string {
   if (/fashion design/.test(rest)) return "Fashion Design";
   if (/economics/.test(rest)) return "Economics";
   if (/applied psychology/.test(rest)) return "Applied Psychology";
+  if (/\bcs[ce]\b.*\bcore\b|\bcore\b.*\bcs[ce]\b/.test(rest)) return "CSE (Core)"; // incl. the "csc" typo
   if (/\bcse\b|computer science/.test(rest)) return eng ? "CSE (Core)" : "Computer Science";
   return titleCase(rest); // unknown branch: tidy case and spacing at least
 }
@@ -130,6 +137,12 @@ export function normalizeDepartment(raw: string): Dept {
 
   // No degree recognised: still fix case and spacing so "cse" and "CSE " match.
   const branch = branchOf(c, "");
-  if (branch === "ECM") return { degree: "B.Tech", branch, label: "B.Tech ECM" }; // only offered as B.Tech
+  // Branches that only exist as B.Tech: "Mechanical", "ECE", "CSE (AI & Robotics)" with no degree
+  // written still mean B.Tech.
+  if (BTECH_ONLY.test(branch)) return { degree: "B.Tech", branch, label: `B.Tech ${branch}` };
+  // A committee team or just a school typed instead of a programme ("Outreach", "Events",
+  // "VITBS"). No label, so imports and "Tidy data" keep the original text for someone to fix;
+  // Analytics shows these as "Department needs fixing".
+  if (NOT_A_PROGRAMME.test(c)) return { degree: "Not specified", branch: "", label: "" };
   return { degree: "Other", branch, label: branch };
 }

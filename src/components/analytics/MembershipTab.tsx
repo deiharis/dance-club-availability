@@ -42,9 +42,20 @@ function YTick(props: { x?: number; y?: number; payload?: { value: string } }) {
 
 export default function MembershipTab({ d }: { d: MembershipData }) {
   const [view, setView] = useState<"programme" | "degree">("programme");
+  const [showAll, setShowAll] = useState(false);
   if (d.total === 0) return <Empty>No members yet.</Empty>;
 
-  const rows = view === "degree" ? d.byDegree : d.byDepartment;
+  // Programmes: the top 12, then the rest in one clearly named bar (or all of them).
+  const TOP = 12;
+  const rest = d.byDepartment.slice(TOP);
+  const programmeRows =
+    showAll || rest.length === 0
+      ? d.byDepartment
+      : [
+          ...d.byDepartment.slice(0, TOP),
+          { name: `${rest.length} other programmes`, count: rest.reduce((s, r) => s + r.count, 0) },
+        ];
+  const rows = view === "degree" ? d.byDegree : programmeRows;
   const chartHeight = Math.max(220, rows.length * 38 + 40); // one comfortable row per bar
   const yWidth = view === "degree" ? 120 : 210;
 
@@ -98,7 +109,8 @@ export default function MembershipTab({ d }: { d: MembershipData }) {
           className="lg:col-span-2"
           delay={160}
         >
-          <div className="mb-3 inline-flex rounded-lg border border-zinc-800 bg-black/30 p-1">
+          <div className="mb-3 flex flex-wrap items-center gap-3">
+          <div className="inline-flex rounded-lg border border-zinc-800 bg-black/30 p-1">
             {(["programme", "degree"] as const).map((v) => (
               <button
                 key={v}
@@ -111,7 +123,16 @@ export default function MembershipTab({ d }: { d: MembershipData }) {
               </button>
             ))}
           </div>
-          <div key={view} style={{ width: "100%", height: chartHeight }}>
+          {view === "programme" && rest.length > 0 && (
+            <button
+              onClick={() => setShowAll((s) => !s)}
+              className="rounded-md border border-zinc-800 px-3 py-1 text-xs font-semibold text-zinc-300 transition-colors hover:border-zinc-600 hover:text-white"
+            >
+              {showAll ? `Show top ${TOP}` : `Show all ${d.byDepartment.length}`}
+            </button>
+          )}
+          </div>
+          <div key={`${view}-${showAll}`} style={{ width: "100%", height: chartHeight }}>
             <ResponsiveContainer>
               <BarChart data={rows} layout="vertical" margin={{ top: 0, right: 30, left: 0, bottom: 0 }}>
                 <defs>
