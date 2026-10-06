@@ -24,6 +24,9 @@ export const DEPARTMENT_SUGGESTIONS = [
   "B.Tech Civil",
   "B.Tech IT",
   "BBA (Hons)",
+  "BBA LLB (Hons)",
+  "BA LLB (Hons)",
+  "B.Com (Hons)",
   "B.Sc Computer Science",
   "B.Sc Economics",
   "B.Sc Fashion Design",
@@ -32,7 +35,7 @@ export const DEPARTMENT_SUGGESTIONS = [
   "Integrated M.Sc Applied Psychology",
 ];
 
-const ACRONYMS = new Set(["cse", "ece", "eee", "it", "ai", "ml", "bba", "mba", "bca", "mca", "ecse"]);
+const ACRONYMS = new Set(["cse", "ece", "eee", "it", "ai", "ml", "bba", "mba", "bca", "mca", "ecse", "ecm", "vlsi", "llb"]);
 
 // lowercase, "&" -> "and", punctuation -> single spaces
 const clean = (s: string) =>
@@ -65,6 +68,15 @@ const ENGINEERING = new Set(["B.Tech", "M.Tech", "M.Tech Integrated"]);
 function branchOf(rest: string, degree: string): string {
   const eng = ENGINEERING.has(degree);
   if (/cyber ?security|information security/.test(rest)) return "CSE (Cyber Security)";
+  if (/quantum/.test(rest)) return "CSE (Quantum Computing)";
+  if (/cyber physical/.test(rest)) return "CSE (Cyber Physical Systems)";
+  if (/business analytics/.test(rest)) return eng ? "CSE (Business Analytics)" : "Business Analytics";
+  if (/\becm\b|electronics and computer/.test(rest)) return "ECM";
+  if (/\bvlsi\b/.test(rest)) return "Electronics (VLSI Design & Technology)";
+  if (/electric vehicle/.test(rest)) return "Mechanical (Electric Vehicles)";
+  if (/fashion tech/.test(rest)) return "Fashion Technology";
+  if (/visual communication/.test(rest)) return "Visual Communication";
+  if (/animation/.test(rest)) return "Animation & Multimedia";
   if (/data ?science/.test(rest)) return eng ? "CSE (Data Science)" : "Data Science";
   if (/\bai\b.*\brobotics\b/.test(rest)) return "CSE (AI & Robotics)";
   if (/\bai\b.*\bml\b|machine learning/.test(rest)) return "CSE (AI & ML)";
@@ -83,9 +95,27 @@ function branchOf(rest: string, degree: string): string {
   return titleCase(rest); // unknown branch: tidy case and spacing at least
 }
 
+// Law (VIT School of Law). "BBA LLB", "BBALLB", "Law (BBA.LLB)", "BA LLB (hons)", "Ba.llb ( law)",
+// "VITSOL" ... Hons is kept when written.
+function lawDegree(c: string): Dept | null {
+  if (!/llb|\blaw\b|\bvitsol\b/.test(c)) return null;
+  const hons = /\bhons\b|\bhonou?rs\b/.test(c) ? " (Hons)" : "";
+  if (/\bbba ?llb\b|\bbballb\b|\bbba\b/.test(c)) return { degree: "BBA LLB", branch: "", label: `BBA LLB${hons}` };
+  if (/\bb ?a ?llb\b|\bballb\b|\bb ?a\b/.test(c)) return { degree: "BA LLB", branch: "", label: `BA LLB${hons}` };
+  if (/llb/.test(c)) return { degree: "LLB", branch: "", label: `LLB${hons}` };
+  return { degree: "Law", branch: "", label: "Law" }; // just "Law" / "VITSOL": programme not given
+}
+
 export function normalizeDepartment(raw: string): Dept {
   const c = clean(raw ?? "");
   if (!c) return { degree: "Other", branch: "", label: "" };
+
+  const law = lawDegree(c);
+  if (law) return law;
+  if (/\bb ?com\b/.test(c)) {
+    const hons = /\bhons\b|\bhonou?rs\b/.test(c);
+    return { degree: "B.Com", branch: "", label: hons ? "B.Com (Hons)" : "B.Com" };
+  }
 
   for (const d of DEGREES) {
     if (!d.test(c)) continue;
@@ -100,5 +130,6 @@ export function normalizeDepartment(raw: string): Dept {
 
   // No degree recognised: still fix case and spacing so "cse" and "CSE " match.
   const branch = branchOf(c, "");
+  if (branch === "ECM") return { degree: "B.Tech", branch, label: "B.Tech ECM" }; // only offered as B.Tech
   return { degree: "Other", branch, label: branch };
 }

@@ -42,3 +42,5 @@ next-env.d.ts
 
 # Prisma generated client (only if generated here)
 /src/generated/prisma
+# Spreadsheets with members' personal data: never commit or publish (keep them outside public/)
+public/files/

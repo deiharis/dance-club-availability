@@ -48,11 +48,19 @@ export default function MembersPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{
     created: number;
+    attached?: number;
     skipped: number;
     errors: string[];
   } | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]["key"]>("ALL");
+
+  // Multi-select delete. The selection is cleared whenever the search or filter changes, so you
+  // only ever delete people you can see.
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [deleting, setDeleting] = useState(false);
+  const [bulkResult, setBulkResult] = useState<string | null>(null);
+  useEffect(() => setSelected(new Set()), [query, filter]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,6 +136,47 @@ export default function MembersPage() {
         .includes(q);
     });
   }, [members, query, filter]);
+
+  const allShownSelected = filtered.length > 0 && filtered.every((m) => selected.has(m.id));
+  const someShownSelected = filtered.some((m) => selected.has(m.id));
+  const toggleOne = (id: string) =>
+    setSelected((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
+  const toggleAllShown = () => setSelected(allShownSelected ? new Set() : new Set(filtered.map((m) => m.id)));
+
+  async function deleteSelected() {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    // Typed confirmation: this deletes accounts and everything linked to them, and cannot be undone.
+    const typed = window.prompt(
+      `Delete ${ids.length} member${ids.length === 1 ? "" : "s"} and their accounts, timetables, reports and attendance? This cannot be undone.\n\nType DELETE to confirm.`
+    );
+    if (typed?.trim().toUpperCase() !== "DELETE") return;
+    setDeleting(true);
+    setBulkResult(null);
+    const res = await fetch("/api/members/bulk-delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setDeleting(false);
+    if (!res.ok) {
+      setBulkResult(data.error || "Something went wrong. Nothing was deleted.");
+      return;
+    }
+    setBulkResult(
+      `Deleted ${data.deleted} member${data.deleted === 1 ? "" : "s"}.${
+        data.protected ? ` ${data.protected} kept (the Super Admin and your own account are never deleted).` : ""
+      }`
+    );
+    setSelected(new Set());
+    loadMembers();
+  }
 
   return (
     <div>
@@ -214,11 +263,15 @@ export default function MembersPage() {
         {importResult && (
           <div className="bg-[#111014] border border-zinc-800 rounded-lg p-4 mb-4">
             <p className="text-white text-sm font-medium mb-1">
-              Import complete: {importResult.created} added, {importResult.skipped} skipped
+              Import complete: {importResult.created} added
+              {importResult.attached ? `, ${importResult.attached} existing member${importResult.attached === 1 ? "" : "s"} added to their dance team` : ""},{" "}
+              {importResult.skipped} skipped
             </p>
-            {importResult.errors.slice(0, 5).map((err, i) => (
-              <p key={i} className="text-zinc-500 text-xs">{err}</p>
-            ))}
+            <div className="max-h-40 overflow-y-auto">
+              {importResult.errors.map((err, i) => (
+                <p key={i} className="text-zinc-500 text-xs">{err}</p>
+              ))}
+            </div>
             <button onClick={() => setImportResult(null)} className="text-violet-400 hover:text-violet-300 text-xs mt-2 transition-colors">Dismiss</button>
           </div>
         )}
@@ -252,6 +305,35 @@ export default function MembersPage() {
           </div>
         </div>
 
+        {bulkResult && (
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-[#111014] px-4 py-3">
+            <p className="text-sm text-zinc-200">{bulkResult}</p>
+            <button onClick={() => setBulkResult(null)} className="text-xs text-violet-400 hover:text-violet-300">Dismiss</button>
+          </div>
+        )}
+
+        {selected.size > 0 && (
+          <div className="sticky top-14 z-20 mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-red-500/30 bg-[#1a1014]/95 px-4 py-2.5 backdrop-blur">
+            <p className="text-sm font-medium text-white">{selected.size} selected</p>
+            {!allShownSelected && (
+              <button onClick={toggleAllShown} className="text-xs text-violet-300 hover:text-violet-200">
+                Select all {filtered.length} shown
+              </button>
+            )}
+            <button onClick={() => setSelected(new Set())} className="text-xs text-zinc-400 hover:text-white">
+              Clear
+            </button>
+            <button
+              onClick={deleteSelected}
+              disabled={deleting}
+              className="ml-auto flex items-center gap-1.5 rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-50"
+            >
+              <Trash2 size={13} />
+              {deleting ? "Deleting..." : `Delete ${selected.size} selected`}
+            </button>
+          </div>
+        )}
+
         {loading ? (
           <div className="p-12 text-center"><p className="text-zinc-500 text-sm">Loading...</p></div>
         ) : members.length === 0 ? (
@@ -270,6 +352,18 @@ export default function MembersPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/40 text-left text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                    <th className="w-10 pl-5 py-2.5">
+                      <input
+                        type="checkbox"
+                        aria-label="Select all shown members"
+                        checked={allShownSelected}
+                        ref={(el) => {
+                          if (el) el.indeterminate = someShownSelected && !allShownSelected;
+                        }}
+                        onChange={toggleAllShown}
+                        className="h-4 w-4 cursor-pointer accent-violet-500"
+                      />
+                    </th>
                     <th className="px-5 py-2.5">Member</th>
                     <th className="px-4 py-2.5">Reg no.</th>
                     <th className="px-4 py-2.5">Category</th>
@@ -281,7 +375,16 @@ export default function MembersPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800/70">
                   {filtered.map((member) => (
-                    <tr key={member.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr key={member.id} className={`transition-colors ${selected.has(member.id) ? "bg-red-500/[0.06]" : "hover:bg-white/[0.02]"}`}>
+                      <td className="w-10 pl-5 py-2.5">
+                        <input
+                          type="checkbox"
+                          aria-label={`Select ${member.fullName}`}
+                          checked={selected.has(member.id)}
+                          onChange={() => toggleOne(member.id)}
+                          className="h-4 w-4 cursor-pointer accent-violet-500"
+                        />
+                      </td>
                       <td className="px-5 py-2.5">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center justify-center shrink-0">
@@ -327,9 +430,16 @@ export default function MembersPage() {
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
               {filtered.map((member) => (
-                <div key={member.id} className="bg-[#111014] border border-zinc-800 rounded-lg p-4">
+                <div key={member.id} className={`bg-[#111014] border rounded-lg p-4 ${selected.has(member.id) ? "border-red-500/40" : "border-zinc-800"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select ${member.fullName}`}
+                        checked={selected.has(member.id)}
+                        onChange={() => toggleOne(member.id)}
+                        className="h-4 w-4 shrink-0 cursor-pointer accent-violet-500"
+                      />
                       <div className="w-9 h-9 rounded bg-zinc-800 text-zinc-300 text-sm font-semibold flex items-center justify-center shrink-0">
                         {member.fullName.charAt(0).toUpperCase()}
                       </div>

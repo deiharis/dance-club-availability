@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { CORE_TEAMS, MEMBER_TEAMS, DANCER_TEAMS, DANCER_ROLES } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { notifySuperAdmins } from "@/lib/notify";
+import { db } from "@/lib/db";
 import {
   readRows,
   pick,
@@ -45,6 +46,7 @@ export async function POST(req: Request) {
 
     const rows = await readRows(file);
     let created = 0;
+    let attached = 0; // existing accounts (e.g. Core members) added to their dance team
     let skipped = 0;
     const errors: string[] = [];
 
@@ -58,13 +60,22 @@ export async function POST(req: Request) {
     const seenEmails = new Set<string>();
     const seenRegs = new Set<string>();
     const toCreate: Parameters<typeof createMemberAccount>[0][] = [];
+    // Rows for people who already have an account but are listed with a dance team.
+    const toAttach: { name: string; email: string; reg: string; team: string; isFFCS: boolean }[] = [];
 
     for (const row of rows) {
       const c = readCommon(row);
-      const category = mapCategory(pick(row, "Category") || "Normal Members");
-      // Form columns: Core Position / Member Position / Dancer Role / Dance Team
-      const position = pick(row, "Position", "Core Position", "Member Position", "Dancer Role") || null;
+      // A sheet with a "Dance Team" column but no "Category" column is a dancer sheet. (Before
+      // this, those rows silently became Normal Members.)
+      const rawCategory = pick(row, "Category");
       const team = pick(row, "Team", "Dance Team") || null;
+      const category = rawCategory ? mapCategory(rawCategory) : team ? "DANCER" : "MEMBER";
+      // Form columns: Core Position / Member Position / Dancer Role / Dance Team. Dancers get
+      // "Team Leader" or "Normal Dancer" (readDancer accepts "Lead", "Team Leader", etc.).
+      const position =
+        category === "DANCER"
+          ? readDancer(row).position
+          : pick(row, "Position", "Core Position", "Member Position", "Dancer Role") || null;
 
       if (!c.fullName || !c.registerNumber || !c.email || !c.department) {
         skipped++;
@@ -81,8 +92,14 @@ export async function POST(req: Request) {
         errors.push(`Warning: "${team}" is not a valid dance team, imported anyway`);
       }
       if (existing.emails.has(c.email) || existing.registerNumbers.has(c.registerNumber)) {
-        skipped++;
-        errors.push(`Skipped ${c.fullName}: already exists`);
+        // Already has an account (e.g. a Core member who also dances): keep the account and its
+        // role exactly as they are; just put them in their dance team (handled after the loop).
+        if (team && DANCER_TEAMS.includes(team)) {
+          toAttach.push({ name: c.fullName, email: c.email, reg: c.registerNumber, team, isFFCS: c.isFFCS });
+        } else {
+          skipped++;
+          errors.push(`Skipped ${c.fullName}: already exists`);
+        }
         continue;
       }
       if (seenEmails.has(c.email) || seenRegs.has(c.registerNumber)) {
@@ -102,6 +119,41 @@ export async function POST(req: Request) {
       });
     }
 
+    // Existing accounts listed with a dance team: one lookup, then set the team only if they have
+    // none. Category, position and login are never changed (a Core member stays Core).
+    if (toAttach.length > 0) {
+      const found = await db.member.findMany({
+        where: {
+          OR: [
+            { email: { in: toAttach.map((a) => a.email), mode: "insensitive" } },
+            { registerNumber: { in: toAttach.map((a) => a.reg), mode: "insensitive" } },
+          ],
+        },
+        select: { id: true, email: true, registerNumber: true, team: true },
+      });
+      for (const a of toAttach) {
+        const m = found.find((x) => x.email.toLowerCase() === a.email || x.registerNumber.toUpperCase() === a.reg);
+        if (!m) {
+          skipped++;
+          errors.push(`Skipped ${a.name}: already exists`);
+        } else if (m.team === a.team) {
+          skipped++;
+          errors.push(`Skipped ${a.name}: already in ${a.team}`);
+        } else if (m.team) {
+          skipped++;
+          errors.push(`Skipped ${a.name}: already in ${m.team} (a member can be in one team)`);
+        } else {
+          await db.member.update({
+            where: { id: m.id },
+            // Mark FFCS if the sheet says so; never un-mark an existing enrolment.
+            data: { team: a.team, ...(a.isFFCS ? { isFFCS: true } : {}) },
+          });
+          attached++;
+          errors.push(`Added existing member ${a.name} to ${a.team} (account and role kept)`);
+        }
+      }
+    }
+
     // Create the accounts 4 at a time. One bad row is reported and does not stop the rest.
     await inBatches(toCreate, 4, async (m) => {
       try {
@@ -114,16 +166,16 @@ export async function POST(req: Request) {
       }
     });
 
-    if (created > 0) {
+    if (created + attached > 0) {
       await notifySuperAdmins({
         actorMemberId: caller.member?.id,
         type: "MEMBERS_ADDED",
-        message: `${caller.member?.fullName ?? "A committee member"} imported ${created} member${created === 1 ? "" : "s"}${skipped ? ` (${skipped} skipped)` : ""}.`,
+        message: `${caller.member?.fullName ?? "A committee member"} imported ${created} member${created === 1 ? "" : "s"}${attached ? `, added ${attached} existing member${attached === 1 ? "" : "s"} to their dance team` : ""}${skipped ? ` (${skipped} skipped)` : ""}.`,
         link: "/members",
       });
     }
 
-    return NextResponse.json({ created, skipped, errors });
+    return NextResponse.json({ created, attached, skipped, errors });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
