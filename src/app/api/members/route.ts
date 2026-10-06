@@ -6,6 +6,7 @@ import { normalizeDepartment } from "@/lib/departments";
 import { danceTeamFor } from "@/lib/teams";
 import { normalizePhone } from "@/lib/phone";
 import { notifySuperAdmins } from "@/lib/notify";
+import { needsProgrammeFix, notifyProgrammeIssues } from "@/lib/programme-issues";
 
 export const dynamic = "force-dynamic";
 
@@ -153,6 +154,8 @@ export async function POST(req: Request) {
         link: "/members",
       });
     }
+
+    if (needsProgrammeFix(user.member?.department)) await notifyProgrammeIssues();
 
     return NextResponse.json(user.member, { status: 201 });
   } catch (error) {

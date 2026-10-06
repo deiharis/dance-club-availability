@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { DANCER_TEAMS } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { notifySuperAdmins } from "@/lib/notify";
+import { notifyProgrammeIssues } from "@/lib/programme-issues";
 import { db } from "@/lib/db";
 import {
   readRows,
@@ -106,6 +107,8 @@ export async function POST(req: Request) {
         link: "/members",
       });
     }
+
+    if (created > 0) await notifyProgrammeIssues(); // unrecognised courses: ask them to fix it
 
     return NextResponse.json({ created, attached, skipped, errors });
   } catch (error) {

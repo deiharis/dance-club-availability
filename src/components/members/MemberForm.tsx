@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ShieldCheck, User, KeyRound } from "lucide-react";
 import TeamSelector from "@/components/ui/TeamSelector";
 import { getTeamsForCategory, DANCER_ROLES } from "@/lib/teams";
-import { normalizeDepartment, DEPARTMENT_SUGGESTIONS } from "@/lib/departments";
+import { normalizeDepartment } from "@/lib/departments";
+import ProgrammeSelect from "@/components/ui/ProgrammeSelect";
 import { normalizePhone } from "@/lib/phone";
 
 export type MemberFormState = {
@@ -128,27 +129,16 @@ export default function MemberForm({
               />
             </div>
             <div>
-              <label className={label}>Department</label>
-              <input
-                name="department"
-                list="dept-suggestions"
+              <label className={label} htmlFor="department">Programme / course</label>
+              {/* Official VIT Chennai programmes. On Edit, an old value that is not a recognised
+                  programme can be left as it is (it stays flagged "needs fixing"), never guessed. */}
+              <ProgrammeSelect
+                id="department"
                 value={form.department}
-                onChange={text("department")}
-                // On leaving the field, rewrite any spelling into the standard one.
-                onBlur={() => {
-                  const n = normalizeDepartment(form.department).label;
-                  if (n && n !== form.department) set({ department: n });
-                }}
-                required
-                placeholder="e.g. B.Tech CSE (Core)"
+                onChange={(department) => set({ department })}
+                required={mode === "add" || normalizeDepartment(form.department).ok}
                 className={control}
               />
-              <datalist id="dept-suggestions">
-                {DEPARTMENT_SUGGESTIONS.map((s) => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-              <p className="mt-1 text-[11px] text-zinc-600">Any spelling works; it is saved in one standard form.</p>
             </div>
           </div>
         </section>

@@ -238,6 +238,7 @@ enum NotificationType {
   REPORT_SUBMITTED
   OD_REQUESTED
   MEMBERS_ADDED
+  PROGRAMME_FIX // "your academic programme needs updating" (lib/programme-issues.ts)
 }
 
 model Notification {

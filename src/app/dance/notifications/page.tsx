@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight } from "lucide-react";
+import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight, GraduationCap } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
 import { sectionWhere } from "@/lib/notify";
@@ -10,6 +10,7 @@ import MarkAllRead from "@/components/notifications/MarkAllRead";
 // Icon and colour per notification type.
 const KIND: Record<string, { icon: React.ElementType; color: string }> = {
   REPORT_APPROVED: { icon: CheckCircle, color: "text-green-400" },
+  PROGRAMME_FIX: { icon: GraduationCap, color: "text-amber-300" },
   REPORT_REJECTED: { icon: XCircle, color: "text-red-400" },
   REHEARSAL_ADDED: { icon: CalendarDays, color: "text-amber-300" },
   PERFORMANCE_ADDED: { icon: Star, color: "text-amber-300" },

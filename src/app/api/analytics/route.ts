@@ -3,10 +3,7 @@ import { NextResponse } from "next/server";
 import { SLOTS, DAYS } from "@/lib/timetable";
 import { DANCER_TEAMS } from "@/lib/teams";
 import { normalizeDepartment } from "@/lib/departments";
-
-// Bar for members whose department is not a programme ("Outreach", "VITBS", blank): fix them on
-// the Members page (search for the text shown there).
-const NEEDS_FIXING = "Department needs fixing";
+import { NEEDS_FIXING } from "@/lib/programmes";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import type {
   AnalyticsData,
@@ -152,17 +149,16 @@ export async function GET() {
     };
 
     // ── Membership ───────────────────────────────────────────────────────────
-    // Group by canonical programme and by degree, so "BBA Hons", "BBA HONS" and "BBA Honours"
-    // (or any spelling of B.Tech CSE Core) count as one. See lib/departments.ts.
+    // Group by OFFICIAL programme (lib/programmes.ts) and by programme group (B.Tech, Law, ...).
+    // Members whose course needs fixing (ambiguous, a club team, not offered here) are kept apart
+    // as "Needs fixing" until they choose their programme; they then move automatically.
     const programmeCount = new Map<string, number>();
-    const degreeCount = new Map<string, number>();
+    const groupCount = new Map<string, number>();
     for (const m of members) {
       const dept = normalizeDepartment(m.department);
-      // No label = a committee team or bare school typed instead of a programme (or blank).
-      const label = dept.label || NEEDS_FIXING;
+      const label = dept.ok ? dept.label : NEEDS_FIXING;
       programmeCount.set(label, (programmeCount.get(label) ?? 0) + 1);
-      const degree = dept.label ? dept.degree : NEEDS_FIXING;
-      degreeCount.set(degree, (degreeCount.get(degree) ?? 0) + 1);
+      groupCount.set(dept.group, (groupCount.get(dept.group) ?? 0) + 1);
     }
     const toRows = (map: Map<string, number>) =>
       Array.from(map.entries())
@@ -200,7 +196,7 @@ export async function GET() {
         count: members.filter((m) => m.category === key).length,
       })),
       byDepartment: programmes,
-      byDegree: toRows(degreeCount),
+      byGroup: toRows(groupCount),
       byYear: [1, 2, 3, 4, 5].map((y) => ({
         year: `Year ${y}`,
         count: members.filter((m) => m.academicYear === y).length,

@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { sectionWhere } from "@/lib/notify";
 import DanceSidebar from "@/components/dance/DanceSidebar";
 import WaveBackdrop from "@/components/dance/WaveBackdrop";
+import ProgrammeFixBanner from "@/components/ProgrammeFixBanner";
 
 // Dance Floor has its own display typeface; the committee keeps Inter.
 const stage = Sora({ subsets: ["latin"], weight: ["300", "400", "600"] });
@@ -72,7 +73,10 @@ export default async function DanceLayout({
         badges={{ "/dance/notifications": unread, "/dance/reports": pending }}
       />
       {/* Offset for the floating sidebar (desktop) and the floating top bar (mobile) */}
-      <main className="relative min-w-0 pt-20 lg:pt-4 lg:pl-[18rem]">{children}</main>
+      <main className="relative min-w-0 pt-20 lg:pt-4 lg:pl-[18rem]">
+        <ProgrammeFixBanner department={dance.member.department} />
+        {children}
+      </main>
     </div>
   );
 }

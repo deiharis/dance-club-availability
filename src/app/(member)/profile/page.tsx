@@ -4,9 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { CheckCircle, XCircle, Bell, ArrowUpRight } from "lucide-react";
+import { CheckCircle, XCircle, Bell, ArrowUpRight, GraduationCap } from "lucide-react";
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 import MemberShell, { MemberHeading } from "@/components/member/MemberShell";
+import ProgrammeFixBanner from "@/components/ProgrammeFixBanner";
 
 const CATEGORY: Record<string, { label: string; chip: string }> = {
   CORE: { label: "Core member", chip: "bg-violet-500/15 text-violet-300" },
@@ -69,6 +70,7 @@ export default async function ProfilePage() {
 
   return (
     <MemberShell name={member.fullName} inTeam={!!member.team}>
+      <div className="-mx-4 -mt-4 mb-4 sm:-mx-8"><ProgrammeFixBanner department={member.department} /></div>
       <MemberHeading label="Member portal" title={`Welcome, ${firstName}`} subtitle="Your details, updates and weekly timetable." />
 
       <div className="space-y-6">
@@ -117,13 +119,19 @@ export default async function ProfilePage() {
             <ul className="divide-y divide-white/5">
               {notifications.map((n) => {
                 const approved = n.type === "REPORT_APPROVED";
-                const Icon = approved ? CheckCircle : n.type === "REPORT_REJECTED" ? XCircle : Bell;
+                const fix = n.type === "PROGRAMME_FIX";
+                const Icon = fix ? GraduationCap : approved ? CheckCircle : n.type === "REPORT_REJECTED" ? XCircle : Bell;
                 const color = approved ? "text-emerald-400" : n.type === "REPORT_REJECTED" ? "text-red-400" : "text-violet-300";
                 return (
                   <li key={n.id} className={`flex items-start gap-3 px-5 py-3 ${n.read ? "" : "bg-violet-500/[0.06]"}`}>
                     <Icon size={16} className={`mt-0.5 shrink-0 ${color}`} />
                     <div className="min-w-0 flex-1">
                       <p className={`text-sm ${n.read ? "text-zinc-300" : "font-medium text-white"}`}>{n.message}</p>
+                      {fix && (
+                        <Link href="/programme" className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-amber-300 hover:text-amber-200">
+                          Choose programme <ArrowUpRight size={12} />
+                        </Link>
+                      )}
                       <p className="mt-0.5 text-[11px] text-zinc-500">
                         {new Date(n.createdAt).toLocaleDateString("en-IN", {
                           day: "numeric",

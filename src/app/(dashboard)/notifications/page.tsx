@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, FileText, FileBadge, ArrowUpRight, Music, UserPlus } from "lucide-react";
+import { CheckCircle, XCircle, FileText, FileBadge, ArrowUpRight, Music, UserPlus, GraduationCap } from "lucide-react";
 import { db } from "@/lib/db";
 import { getCaller } from "@/lib/dance";
 import { sectionWhere } from "@/lib/notify";
@@ -13,6 +13,7 @@ const KIND: Record<string, { icon: React.ElementType; color: string }> = {
   MEMBERS_ADDED: { icon: UserPlus, color: "text-sky-300 bg-sky-500/15" },
   REPORT_APPROVED: { icon: CheckCircle, color: "text-emerald-300 bg-emerald-500/15" },
   REPORT_REJECTED: { icon: XCircle, color: "text-red-300 bg-red-500/15" },
+  PROGRAMME_FIX: { icon: GraduationCap, color: "text-amber-300 bg-amber-400/15" },
 };
 
 export default async function CommitteeNotificationsPage() {

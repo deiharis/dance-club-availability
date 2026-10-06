@@ -4,6 +4,7 @@ import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { normalizeDepartment } from "@/lib/departments";
 import { danceTeamFor } from "@/lib/teams";
 import { normalizePhone } from "@/lib/phone";
+import { needsProgrammeFix, notifyProgrammeIssues, resolveProgrammeIssue } from "@/lib/programme-issues";
 
 export const dynamic = "force-dynamic";
 
@@ -138,6 +139,9 @@ export async function PATCH(
         team: danceTeamFor(category, team), // any category may also dance in a team
       },
     });
+
+    if (needsProgrammeFix(updated.department)) await notifyProgrammeIssues();
+    else await resolveProgrammeIssue(updated.id, updated.department);
 
     return NextResponse.json(updated);
   } catch {

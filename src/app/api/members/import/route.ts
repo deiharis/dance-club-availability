@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { CORE_TEAMS, MEMBER_TEAMS, DANCER_TEAMS, DANCER_ROLES } from "@/lib/teams";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
 import { notifySuperAdmins } from "@/lib/notify";
+import { notifyProgrammeIssues } from "@/lib/programme-issues";
 import { db } from "@/lib/db";
 import {
   readRows,
@@ -174,6 +175,10 @@ export async function POST(req: Request) {
         link: "/members",
       });
     }
+
+    // Anyone whose course could not be matched to an official programme is asked to fix it.
+    const needFixing = created > 0 ? await notifyProgrammeIssues() : 0;
+    if (needFixing) errors.push(`${needFixing} member${needFixing === 1 ? "" : "s"} must choose their programme (course not recognised); they have been notified`);
 
     return NextResponse.json({ created, attached, skipped, errors });
   } catch (error) {

@@ -21,7 +21,7 @@ export interface MembershipData {
   total: number;
   byCategory: { key: string; label: string; count: number }[];
   byDepartment: { name: string; count: number }[]; // EVERY canonical programme, largest first
-  byDegree: { name: string; count: number }[]; // degree level, e.g. "B.Tech", "BBA"
+  byGroup: { name: string; count: number }[]; // programme group: "B.Tech", "Law", ..., "Needs fixing"
   byYear: { year: string; count: number }[];
   ffcs: { enrolled: number; notEnrolled: number };
   growth: { month: string; joined: number; total: number }[];

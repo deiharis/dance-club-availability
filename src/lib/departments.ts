@@ -1,39 +1,24 @@
 // Department names are typed by hand (forms, Excel, Google Form), so the same programme
-// shows up spelled many ways: "BBA Hons", "BBA HONS", "BBA Honours". normalizeDepartment()
-// turns any of them into ONE canonical label plus a degree level, so charts, filters and
-// searches treat them as the same thing. Used when saving, when searching, and in analytics.
+// shows up spelled many ways: "BBA Hons", "Btech cse", "CSE Core". normalizeDepartment() maps
+// a spelling onto ONE official VIT Chennai programme (lib/programmes.ts) when that is SAFE.
+// Anything ambiguous ("Computer Science": B.Tech CSE or B.Sc CS?), incomplete ("Law", "B.Sc"),
+// not a programme at all ("Outreach", "VITBS"), or not offered at VIT Chennai comes back with
+// ok = false and NO label: it is never guessed. Callers keep the original text, and the member
+// is asked to pick their programme (lib/programme-issues.ts).
+
+import { OFFICIAL_PROGRAMMES, NEEDS_FIXING, OTHER_GROUP, groupOf, otherText, asOther } from "@/lib/programmes";
 
 export interface Dept {
-  degree: string; // "B.Tech", "BBA", "B.Sc", ... or "Other"
-  branch: string; // "CSE (Core)", "Fashion Design", ... or ""
-  label: string; // degree + branch, e.g. "B.Tech CSE (Core)"
+  ok: boolean; // false = needs a person to fix it
+  label: string; // official programme, "Other: <text>", or "" when not ok
+  group: string; // "B.Tech", "Law", ... "Other (not listed)", or "Needs fixing"
+  degree: string; // rough degree level, e.g. "B.Tech"
+  branch: string; // e.g. "CSE (Core)"
+  issue?: "empty" | "not-a-programme" | "ambiguous"; // why it needs fixing
 }
 
-// Suggestions for the Add/Edit form and the Google Form. Free text is still allowed.
-export const DEPARTMENT_SUGGESTIONS = [
-  "B.Tech CSE (Core)",
-  "B.Tech CSE (AI & ML)",
-  "B.Tech CSE (AI & Robotics)",
-  "B.Tech CSE (Cyber Security)",
-  "B.Tech CSE (Data Science)",
-  "B.Tech ECSE",
-  "B.Tech ECE",
-  "B.Tech EEE",
-  "B.Tech Mechanical",
-  "B.Tech Mechatronics & Automation",
-  "B.Tech Civil",
-  "B.Tech IT",
-  "BBA (Hons)",
-  "BBA LLB (Hons)",
-  "BA LLB (Hons)",
-  "B.Com (Hons)",
-  "B.Sc Computer Science",
-  "B.Sc Economics",
-  "B.Sc Fashion Design",
-  "M.Tech Integrated Software Engineering",
-  "M.Tech Integrated CSE (Data Science)",
-  "Integrated M.Sc Applied Psychology",
-];
+// Every official programme name (for datalists, Google Form copy, etc.).
+export const DEPARTMENT_SUGGESTIONS = Array.from(OFFICIAL_PROGRAMMES);
 
 const ACRONYMS = new Set(["cse", "ece", "eee", "it", "ai", "ml", "bba", "mba", "bca", "mca", "ecse", "ecm", "vlsi", "llb"]);
 
@@ -73,6 +58,7 @@ const NOT_A_PROGRAMME =
 // First matching rule wins, so specialisations come before plain CSE.
 function branchOf(rest: string, degree: string): string {
   const eng = ENGINEERING.has(degree);
+  if (/deakin/.test(rest)) return "CSE (Cyber Security, Deakin 2+2)";
   if (/cyber ?security|information security/.test(rest)) return "CSE (Cyber Security)";
   if (/quantum/.test(rest)) return "CSE (Quantum Computing)";
   if (/cyber physical/.test(rest)) return "CSE (Cyber Physical Systems)";
@@ -80,7 +66,10 @@ function branchOf(rest: string, degree: string): string {
   if (/\becm\b|electronics and computer/.test(rest)) return "ECM";
   if (/\bvlsi\b/.test(rest)) return "Electronics (VLSI Design & Technology)";
   if (/electric vehicle/.test(rest)) return "Mechanical (Electric Vehicles)";
-  if (/fashion tech/.test(rest)) return "Fashion Technology";
+  if (/fashion tech|\bft\b/.test(rest)) return "Fashion Technology";
+  if (/construction/.test(rest)) return "Construction Technology & Management";
+  if (/big data/.test(rest)) return "CSE (Big Data Analytics)";
+  if (/\bai\b.*data science/.test(rest)) return "AI & Data Science";
   if (/visual communication/.test(rest)) return "Visual Communication";
   if (/animation/.test(rest)) return "Animation & Multimedia";
   if (/data ?science/.test(rest)) return eng ? "CSE (Data Science)" : "Data Science";
@@ -92,6 +81,7 @@ function branchOf(rest: string, degree: string): string {
   if (/\bece\b|electronics and communication/.test(rest)) return "ECE";
   if (/\beee\b|electrical and electronics/.test(rest)) return "EEE";
   if (/mechanical|\bmech\b/.test(rest)) return "Mechanical";
+  if (/\bcivil\b/.test(rest) && /\bl and t\b|\blnt\b/.test(rest)) return "Civil (L&T)";
   if (/\bcivil\b/.test(rest)) return "Civil";
   if (/\bit\b|information technology/.test(rest)) return "IT";
   if (/fashion design/.test(rest)) return "Fashion Design";
@@ -105,23 +95,34 @@ function branchOf(rest: string, degree: string): string {
 // Law (VIT School of Law). "BBA LLB", "BBALLB", "Law (BBA.LLB)", "BA LLB (hons)", "Ba.llb ( law)",
 // "VITSOL" ... Hons is kept when written.
 function lawDegree(c: string): Dept | null {
-  if (!/llb|\blaw\b|\bvitsol\b/.test(c)) return null;
+  if (!/llb|\bll ?m\b|\blaw\b|\bvitsol\b/.test(c)) return null;
+  if (/\bll ?m\b/.test(c)) {
+    const spec = /corporate/.test(c)
+      ? "LL.M Corporate Law"
+      : /intellectual|\bipr?\b/.test(c)
+      ? "LL.M Intellectual Property Law"
+      : /international/.test(c)
+      ? "LL.M International Law & Development"
+      : "LL.M";
+    return { ok: true, degree: "LL.M", branch: "", label: spec, group: "" };
+  }
   const hons = /\bhons\b|\bhonou?rs\b/.test(c) ? " (Hons)" : "";
-  if (/\bbba ?llb\b|\bbballb\b|\bbba\b/.test(c)) return { degree: "BBA LLB", branch: "", label: `BBA LLB${hons}` };
-  if (/\bb ?a ?llb\b|\bballb\b|\bb ?a\b/.test(c)) return { degree: "BA LLB", branch: "", label: `BA LLB${hons}` };
-  if (/llb/.test(c)) return { degree: "LLB", branch: "", label: `LLB${hons}` };
-  return { degree: "Law", branch: "", label: "Law" }; // just "Law" / "VITSOL": programme not given
+  if (/\bbba ?llb\b|\bbballb\b|\bbba\b/.test(c)) return { ok: true, degree: "BBA LLB", branch: "", label: `BBA LLB${hons}`, group: "" };
+  if (/\bb ?a ?llb\b|\bballb\b|\bb ?a\b/.test(c)) return { ok: true, degree: "BA LLB", branch: "", label: `BA LLB${hons}`, group: "" };
+  if (/llb/.test(c)) return { ok: true, degree: "LLB", branch: "", label: `LLB${hons}`, group: "" };
+  return { ok: true, degree: "Law", branch: "", label: "Law", group: "" }; // "Law" / "VITSOL": programme not given
 }
 
-export function normalizeDepartment(raw: string): Dept {
+// First pass: read degree + branch from free text (may produce names that are not official).
+function parseDepartment(raw: string): Dept {
   const c = clean(raw ?? "");
-  if (!c) return { degree: "Other", branch: "", label: "" };
+  if (!c) return { ok: false, degree: "Other", branch: "", label: "", group: "", issue: "empty" };
 
   const law = lawDegree(c);
   if (law) return law;
   if (/\bb ?com\b/.test(c)) {
     const hons = /\bhons\b|\bhonou?rs\b/.test(c);
-    return { degree: "B.Com", branch: "", label: hons ? "B.Com (Hons)" : "B.Com" };
+    return { ok: true, degree: "B.Com", branch: "", label: hons ? "B.Com (Hons)" : "B.Com", group: "" };
   }
 
   for (const d of DEGREES) {
@@ -132,17 +133,60 @@ export function normalizeDepartment(raw: string): Dept {
       d.degree === "BBA"
         ? /\bhons\b|\bhonou?rs\b/.test(c) ? "BBA (Hons)" : "BBA"
         : branch ? `${d.degree} ${branch}` : d.degree;
-    return { degree: d.degree, branch, label };
+    return { ok: true, degree: d.degree, branch, label, group: "" };
   }
 
   // No degree recognised: still fix case and spacing so "cse" and "CSE " match.
   const branch = branchOf(c, "");
   // Branches that only exist as B.Tech: "Mechanical", "ECE", "CSE (AI & Robotics)" with no degree
   // written still mean B.Tech.
-  if (BTECH_ONLY.test(branch)) return { degree: "B.Tech", branch, label: `B.Tech ${branch}` };
+  if (BTECH_ONLY.test(branch)) return { ok: true, degree: "B.Tech", branch, label: `B.Tech ${branch}`, group: "" };
   // A committee team or just a school typed instead of a programme ("Outreach", "Events",
   // "VITBS"). No label, so imports and "Tidy data" keep the original text for someone to fix;
   // Analytics shows these as "Department needs fixing".
-  if (NOT_A_PROGRAMME.test(c)) return { degree: "Not specified", branch: "", label: "" };
-  return { degree: "Other", branch, label: branch };
+  if (NOT_A_PROGRAMME.test(c))
+    return { ok: false, degree: "Not specified", branch: "", label: "", group: "", issue: "not-a-programme" };
+  return { ok: true, degree: "Other", branch, label: branch, group: "" };
+}
+
+// Safe renames from the first pass onto the official names (VIT Chennai only offers the Hons
+// versions of these, so "BBA" really is "BBA (Hons)").
+// NOT "BBA": until 2026-10-06 the old rules saved "BBA LLB" as plain "BBA", so a stored "BBA" may be a
+// law student. It is ambiguous; the member chooses (BBA (Hons) or BBA LLB (Hons)).
+const ALIASES: Record<string, string> = {
+  "BBA LLB": "BBA LLB (Hons)",
+  "BA LLB": "BA LLB (Hons)",
+  "B.Com": "B.Com (Hons)",
+  "B.Sc Economics": "B.Sc Economics (Hons)",
+  "B.Sc Animation & Multimedia": "B.Sc Multimedia & Animation",
+  "M.Tech CSE (Core)": "M.Tech CSE",
+  "M.Tech Cad Cam": "M.Tech CAD/CAM",
+  "M.Tech Electronics (VLSI Design & Technology)": "M.Tech VLSI Design",
+};
+
+const needsFixing = (degree: string, issue: Dept["issue"]): Dept => ({
+  ok: false,
+  label: "",
+  group: NEEDS_FIXING,
+  degree,
+  branch: "",
+  issue,
+});
+
+export function normalizeDepartment(raw: string): Dept {
+  // A member who chose "Other" and typed their course: a confirmed answer, kept as they wrote it.
+  const typed = otherText(raw ?? "");
+  if (typed !== null) {
+    return typed.length >= 2
+      ? { ok: true, label: asOther(typed), group: OTHER_GROUP, degree: "Other", branch: typed }
+      : needsFixing("Other", "empty");
+  }
+
+  const p = parseDepartment(raw);
+  if (!p.ok) return needsFixing(p.degree, p.issue);
+  const official = ALIASES[p.label] ?? p.label;
+  // Anything that is not exactly an official programme is ambiguous ("Computer Science", "Law",
+  // "B.Sc", "M.Tech Integrated CSE") or not offered here, so the member must choose.
+  if (!OFFICIAL_PROGRAMMES.has(official)) return needsFixing(p.degree, "ambiguous");
+  return { ok: true, label: official, group: groupOf(official), degree: p.degree, branch: p.branch };
 }

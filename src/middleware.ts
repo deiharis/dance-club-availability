@@ -76,6 +76,7 @@ export async function middleware(req: NextRequest) {
   // All logged-in users
   if (
     pathname.startsWith("/profile") ||
+    pathname.startsWith("/programme") ||
     pathname.startsWith("/reports/submit") ||
     pathname.startsWith("/reports/mine")
   ) {
@@ -98,6 +99,7 @@ export const config = {
     "/events/:path*",
     "/reports/:path*",
     "/profile/:path*",
+    "/programme",
     "/dance/:path*",
     "/notifications/:path*",
     "/change-password",

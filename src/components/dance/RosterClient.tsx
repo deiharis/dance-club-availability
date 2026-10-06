@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, UserPlus, UserMinus, Upload, Download, FileSpreadsheet, X } from "lucide-react";
 import { DANCER_ROLES } from "@/lib/teams";
+import ProgrammeSelect from "@/components/ui/ProgrammeSelect";
 
 type Dancer = {
   id: string;
@@ -238,7 +239,7 @@ export default function RosterClient({
           <input required placeholder="Register number" className={input} value={form.registerNumber} onChange={set("registerNumber")} />
           <input required type="email" placeholder="Email" className={input} value={form.email} onChange={set("email")} />
           <input placeholder="Phone (optional)" className={input} value={form.phone} onChange={set("phone")} />
-          <input required placeholder="Department" className={input} value={form.department} onChange={set("department")} />
+          <ProgrammeSelect value={form.department} onChange={(department) => setForm({ ...form, department })} className={input} />
           <select className={input} value={form.academicYear} onChange={set("academicYear")}>
             {[1, 2, 3, 4, 5].map((y) => (
               <option key={y} value={y}>Year {y}</option>

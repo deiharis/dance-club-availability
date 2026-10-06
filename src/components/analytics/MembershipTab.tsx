@@ -41,7 +41,7 @@ function YTick(props: { x?: number; y?: number; payload?: { value: string } }) {
 }
 
 export default function MembershipTab({ d }: { d: MembershipData }) {
-  const [view, setView] = useState<"programme" | "degree">("programme");
+  const [view, setView] = useState<"programme" | "group">("group");
   const [showAll, setShowAll] = useState(false);
   if (d.total === 0) return <Empty>No members yet.</Empty>;
 
@@ -55,9 +55,9 @@ export default function MembershipTab({ d }: { d: MembershipData }) {
           ...d.byDepartment.slice(0, TOP),
           { name: `${rest.length} other programmes`, count: rest.reduce((s, r) => s + r.count, 0) },
         ];
-  const rows = view === "degree" ? d.byDegree : programmeRows;
+  const rows = view === "group" ? d.byGroup : programmeRows;
   const chartHeight = Math.max(220, rows.length * 38 + 40); // one comfortable row per bar
-  const yWidth = view === "degree" ? 120 : 210;
+  const yWidth = view === "group" ? 140 : 230;
 
   const count = (key: string) => d.byCategory.find((c) => c.key === key)?.count ?? 0;
   const pie = d.byCategory.filter((c) => c.count > 0);
@@ -104,14 +104,14 @@ export default function MembershipTab({ d }: { d: MembershipData }) {
         </ChartCard>
 
         <ChartCard
-          title={view === "degree" ? "By degree" : "By programme"}
-          subtitle="Different spellings of the same programme are counted together"
+          title={view === "group" ? "By programme group" : "By programme"}
+          subtitle="Official VIT Chennai programmes. Members whose course could not be matched are kept under Needs fixing until they choose it."
           className="lg:col-span-2"
           delay={160}
         >
           <div className="mb-3 flex flex-wrap items-center gap-3">
           <div className="inline-flex rounded-lg border border-zinc-800 bg-black/30 p-1">
-            {(["programme", "degree"] as const).map((v) => (
+            {(["group", "programme"] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
@@ -119,7 +119,7 @@ export default function MembershipTab({ d }: { d: MembershipData }) {
                   view === v ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
                 }`}
               >
-                {v === "programme" ? "Programme" : "Degree"}
+                {v === "programme" ? "Programme" : "Group"}
               </button>
             ))}
           </div>

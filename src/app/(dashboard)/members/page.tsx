@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
+import ProgrammeIssuesCard from "@/components/members/ProgrammeIssuesCard";
 import { Plus, Download, Upload, FileSpreadsheet, Search, Pencil, Trash2, Sparkles, X, ListChecks } from "lucide-react";
 
 interface Member {
@@ -91,8 +92,12 @@ export default function MembersPage() {
     }
   }
 
+  // Bumped on every reload so the SuperAdmin's "Department data issues" card refreshes too.
+  const [reloads, setReloads] = useState(0);
+
   function loadMembers() {
     setLoading(true);
+    setReloads((n) => n + 1);
     fetch("/api/members")
       .then((res) => res.json())
       .then((data) => {
@@ -266,6 +271,8 @@ export default function MembersPage() {
             )}
           </div>
         )}
+
+        <ProgrammeIssuesCard refreshKey={reloads} />
 
         {importResult && (
           <div className="bg-[#111014] border border-zinc-800 rounded-lg p-4 mb-4">
