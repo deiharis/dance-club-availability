@@ -12,7 +12,8 @@ export interface AvailabilityData {
   slotCurve: Record<string, number | string>[];
   histogram: { range: string; count: number }[]; // how many members fall in each availability band
   byCategory: { category: string; label: string; avg: number; count: number }[];
-  memberAvailability: { id: string; fullName: string; category: string; percentage: number }[];
+  // hasTimetable false = never filled in (counted as free everywhere); these are listed last.
+  memberAvailability: { id: string; fullName: string; category: string; percentage: number; hasTimetable: boolean }[];
   noTimetable: number; // members with no CLASS slot saved (NO_TIMETABLE in lib/timetable.ts)
   completion: number; // % of members who have at least one entry
 }
@@ -91,7 +92,8 @@ export interface TeamAnalytics {
 
 export interface AnalyticsData {
   generatedAt: string;
-  availability: AvailabilityData;
+  availability: AvailabilityData; // everyone; no timetable = free everywhere (the app-wide rule)
+  availabilityFilled: AvailabilityData; // only members who have filled in a timetable
   membership: MembershipData;
   dance: DanceData | null; // null unless SuperAdmin (other dance teams' data)
   activity: ActivityData;

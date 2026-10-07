@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search as SearchIcon, X, SlidersHorizontal, ArrowUpRight, Copy, UserX } from "lucide-react";
 import { useToast } from "@/components/ui/feedback";
@@ -80,6 +80,18 @@ export default function SearchPage() {
   const [searched, setSearched] = useState(false);
   // Mobile only: the filter rail collapses after a search so results are visible.
   const [railOpen, setRailOpen] = useState(true);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    const day = p.get("day") ?? "";
+    const slots = (p.get("slots") ?? "").split(",").filter((s) => ACTIVE_SLOTS.some((a) => a.slot === s));
+    if (DAYS.includes(day as (typeof DAYS)[number]) && slots.length > 0) {
+      const start = { ...EMPTY_FILTERS, day, selectedSlots: slots };
+      setDraft(start);
+      runSearch(start);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const set = (patch: Partial<typeof EMPTY_FILTERS>) =>
     setDraft((prev) => ({ ...prev, ...patch }));

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { DAY_LABELS } from "@/lib/timetable";
 
 interface HeatCell {
@@ -17,11 +18,13 @@ export default function Heatmap({
   days,
   slots,
   highlight,
+  cellHref,
 }: {
   data: HeatCell[];
   days: readonly string[];
   slots: { slot: string; time: string }[];
   highlight?: { day: string; slot: string } | null;
+  cellHref?: (day: string, slot: string) => string; // makes each cell a link (e.g. "who is free then")
 }) {
   function getCell(day: string, slot: string) {
     return data.find((d) => d.day === day && d.slot === slot);
@@ -65,17 +68,23 @@ export default function Heatmap({
                 const cell = getCell(day, slotInfo.slot);
                 const percentage = cell?.percentage ?? 0;
                 const best = highlight?.day === day && highlight?.slot === slotInfo.slot;
+                const label = `${DAY_LABELS[day]} ${slotInfo.slot} (${slotInfo.time}): ${percentage}% free, ${cell?.freeCount ?? 0} members`;
+                const cls = `heat-pop flex h-8 items-center justify-center rounded transition-transform hover:scale-110 ${getColor(
+                  percentage
+                )} ${best ? "ring-2 ring-violet-300 ring-offset-1 ring-offset-[#0a0a0c]" : ""}`;
+                const style = { animationDelay: `${di * 60 + si * 28}ms` };
+                const body = <span className="text-xs font-semibold text-white">{percentage}%</span>;
                 return (
                   <td key={day} className="px-1 py-1">
-                    <div
-                      title={`${DAY_LABELS[day]} ${slotInfo.slot} (${slotInfo.time}): ${percentage}% free, ${cell?.freeCount ?? 0} members`}
-                      className={`heat-pop flex h-8 cursor-default items-center justify-center rounded transition-transform hover:scale-110 ${getColor(
-                        percentage
-                      )} ${best ? "ring-2 ring-violet-300 ring-offset-1 ring-offset-[#0a0a0c]" : ""}`}
-                      style={{ animationDelay: `${di * 60 + si * 28}ms` }}
-                    >
-                      <span className="text-xs font-semibold text-white">{percentage}%</span>
-                    </div>
+                    {cellHref ? (
+                      <Link href={cellHref(day, slotInfo.slot)} title={`${label}. Click to see who is free.`} aria-label={`${label}. See who is free`} className={`${cls} cursor-pointer`} style={style}>
+                        {body}
+                      </Link>
+                    ) : (
+                      <div title={label} className={`${cls} cursor-default`} style={style}>
+                        {body}
+                      </div>
+                    )}
                   </td>
                 );
               })}

@@ -5,6 +5,7 @@ import { DANCER_TEAMS } from "@/lib/teams";
 import { normalizeDepartment } from "@/lib/departments";
 import { NEEDS_FIXING } from "@/lib/programmes";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
+import { todayIST } from "@/lib/notify";
 import type {
   AnalyticsData,
   HeatCell,
@@ -65,88 +66,25 @@ export async function GET() {
       ).map((e) => e.memberId)
     );
 
-    const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+    const today = todayIST();
 
     // ── Availability ─────────────────────────────────────────────────────────
-    const totalMembers = members.length;
-    const classByCell = new Map<string, number>();
+    // Worked out twice: for everyone (a member with no timetable counts as free everywhere, the
+    // rule used across the app) and for only the members who have filled one in, so the page can
+    // show the real picture when many timetables are still missing.
     const classByMember = new Map<string, number>();
     for (const e of entries) {
       if (!SLOT_NAMES.has(e.slot)) continue;
-      const key = `${e.day}|${e.slot}`;
-      classByCell.set(key, (classByCell.get(key) ?? 0) + 1);
       classByMember.set(e.memberId, (classByMember.get(e.memberId) ?? 0) + 1);
     }
-
-    const heatmap: HeatCell[] = [];
-    for (const day of DAYS) {
-      for (const s of ACTIVE_SLOTS) {
-        const freeCount = totalMembers - (classByCell.get(`${day}|${s.slot}`) ?? 0);
-        heatmap.push({ day, slot: s.slot, freeCount, percentage: pct(freeCount, totalMembers) });
-      }
-    }
-
-    const bestSlots = [...heatmap]
-      .sort((a, b) => b.percentage - a.percentage || b.freeCount - a.freeCount)
-      .slice(0, 5);
-
-    const dayAverages = DAYS.map((day) => {
-      const cells = heatmap.filter((h) => h.day === day);
-      return { day, avg: Math.round(cells.reduce((s, c) => s + c.percentage, 0) / (cells.length || 1)) };
-    });
-
-    const slotCurve = ACTIVE_SLOTS.map((s) => {
-      const row: Record<string, number | string> = { slot: s.slot };
-      for (const day of DAYS) {
-        row[day] = heatmap.find((h) => h.day === day && h.slot === s.slot)?.percentage ?? 0;
-      }
-      return row;
-    });
-
-    const memberAvailability = members
-      .map((m) => ({
-        id: m.id,
-        fullName: m.fullName,
-        category: m.category,
-        percentage: pct(SLOTS_PER_MEMBER - (classByMember.get(m.id) ?? 0), SLOTS_PER_MEMBER),
-      }))
-      .sort((a, b) => b.percentage - a.percentage);
-
-    const bands = [
-      { range: "0-19%", min: 0, max: 19 },
-      { range: "20-39%", min: 20, max: 39 },
-      { range: "40-59%", min: 40, max: 59 },
-      { range: "60-79%", min: 60, max: 79 },
-      { range: "80-100%", min: 80, max: 100 },
-    ];
-    const histogram = bands.map((b) => ({
-      range: b.range,
-      count: memberAvailability.filter((m) => m.percentage >= b.min && m.percentage <= b.max).length,
-    }));
-
-    const byCategory = Object.keys(CATEGORY_LABEL).map((category) => {
-      const list = memberAvailability.filter((m) => m.category === category);
-      return {
-        category,
-        label: CATEGORY_LABEL[category],
-        count: list.length,
-        avg: list.length ? Math.round(list.reduce((s, m) => s + m.percentage, 0) / list.length) : 0,
-      };
-    });
-
-    const availability: AvailabilityData = {
-      totalMembers,
-      overall: Math.round(heatmap.reduce((s, h) => s + h.percentage, 0) / (heatmap.length || 1)),
-      heatmap,
-      bestSlots,
-      dayAverages,
-      slotCurve,
-      histogram,
-      byCategory,
-      memberAvailability,
-      noTimetable: members.filter((m) => !withEntries.has(m.id)).length,
-      completion: pct(members.filter((m) => withEntries.has(m.id)).length, totalMembers),
-    };
+    const availability = buildAvailability(members, entries, classByMember, withEntries);
+    const availabilityFilled = buildAvailability(
+      members.filter((m) => withEntries.has(m.id)),
+      entries,
+      classByMember,
+      withEntries
+    );
+    const totalMembers = members.length;
 
     // ── Membership ───────────────────────────────────────────────────────────
     // Group by OFFICIAL programme (lib/programmes.ts) and by programme group (B.Tech, Law, ...).
@@ -369,6 +307,7 @@ export async function GET() {
     const body: AnalyticsData = {
       generatedAt: new Date().toISOString(),
       availability,
+      availabilityFilled,
       membership,
       dance: caller.seesAllTeams ? dance : null, // every team's dance data: SuperAdmin and Advisory only
       activity,
@@ -378,4 +317,95 @@ export async function GET() {
     console.error(error);
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }
+}
+
+type MemberRow = { id: string; fullName: string; category: string };
+
+// Availability of a list of members. entries = every CLASS row; classByMember = CLASS slots per member.
+function buildAvailability(
+  members: MemberRow[],
+  entries: { memberId: string; day: string; slot: string }[],
+  classByMember: Map<string, number>,
+  withEntries: Set<string>
+): AvailabilityData {
+  const totalMembers = members.length;
+  const ids = new Set(members.map((m) => m.id));
+  const classByCell = new Map<string, number>();
+  for (const e of entries) {
+    if (!ids.has(e.memberId) || !SLOT_NAMES.has(e.slot)) continue;
+    const key = `${e.day}|${e.slot}`;
+    classByCell.set(key, (classByCell.get(key) ?? 0) + 1);
+  }
+
+  const heatmap: HeatCell[] = [];
+  for (const day of DAYS) {
+    for (const s of ACTIVE_SLOTS) {
+      const freeCount = totalMembers - (classByCell.get(`${day}|${s.slot}`) ?? 0);
+      heatmap.push({ day, slot: s.slot, freeCount, percentage: pct(freeCount, totalMembers) });
+    }
+  }
+
+  const bestSlots = [...heatmap]
+    .sort((a, b) => b.percentage - a.percentage || b.freeCount - a.freeCount)
+    .slice(0, 5);
+
+  const dayAverages = DAYS.map((day) => {
+    const cells = heatmap.filter((h) => h.day === day);
+    return { day, avg: Math.round(cells.reduce((s, c) => s + c.percentage, 0) / (cells.length || 1)) };
+  });
+
+  const slotCurve = ACTIVE_SLOTS.map((s) => {
+    const row: Record<string, number | string> = { slot: s.slot };
+    for (const day of DAYS) {
+      row[day] = heatmap.find((h) => h.day === day && h.slot === s.slot)?.percentage ?? 0;
+    }
+    return row;
+  });
+
+  const memberAvailability = members
+    .map((m) => ({
+      id: m.id,
+      fullName: m.fullName,
+      category: m.category,
+      percentage: pct(SLOTS_PER_MEMBER - (classByMember.get(m.id) ?? 0), SLOTS_PER_MEMBER),
+      hasTimetable: withEntries.has(m.id),
+    }))
+    // A member who never set a timetable looks 100% free, which says nothing: list them last.
+    .sort((a, b) => Number(b.hasTimetable) - Number(a.hasTimetable) || b.percentage - a.percentage);
+
+  const bands = [
+    { range: "0-19%", min: 0, max: 19 },
+    { range: "20-39%", min: 20, max: 39 },
+    { range: "40-59%", min: 40, max: 59 },
+    { range: "60-79%", min: 60, max: 79 },
+    { range: "80-100%", min: 80, max: 100 },
+  ];
+  const histogram = bands.map((b) => ({
+    range: b.range,
+    count: memberAvailability.filter((m) => m.percentage >= b.min && m.percentage <= b.max).length,
+  }));
+
+  const byCategory = Object.keys(CATEGORY_LABEL).map((category) => {
+    const list = memberAvailability.filter((m) => m.category === category);
+    return {
+      category,
+      label: CATEGORY_LABEL[category],
+      count: list.length,
+      avg: list.length ? Math.round(list.reduce((s, m) => s + m.percentage, 0) / list.length) : 0,
+    };
+  });
+
+  return {
+    totalMembers,
+    overall: Math.round(heatmap.reduce((s, h) => s + h.percentage, 0) / (heatmap.length || 1)),
+    heatmap,
+    bestSlots,
+    dayAverages,
+    slotCurve,
+    histogram,
+    byCategory,
+    memberAvailability,
+    noTimetable: members.filter((m) => !withEntries.has(m.id)).length,
+    completion: pct(members.filter((m) => withEntries.has(m.id)).length, totalMembers),
+  };
 }

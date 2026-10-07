@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, WifiOff } from "lucide-react";
+import { Skeleton, EmptyState } from "@/components/ui/states";
 import type { AnalyticsData } from "@/lib/analytics-types";
 import { Tabs } from "@/components/console/ui";
 import AvailabilityTab from "@/components/analytics/AvailabilityTab";
@@ -10,6 +11,7 @@ import DanceTab from "@/components/analytics/DanceTab";
 import ActivityTab from "@/components/analytics/ActivityTab";
 
 type Tab = "availability" | "membership" | "dance" | "activity";
+const TABS: Tab[] = ["availability", "membership", "dance", "activity"];
 
 export default function AnalyticsPage() {
   const [data, setData] = useState<AnalyticsData | null>(null);
@@ -31,8 +33,21 @@ export default function AnalyticsPage() {
   }
 
   useEffect(() => {
+    // The open tab lives in the address (?tab=membership), so a refresh or Back keeps it.
+    const t = new URLSearchParams(window.location.search).get("tab") as Tab | null;
+    if (t && TABS.includes(t)) setTab(t);
     loadAnalytics();
   }, []);
+
+  function changeTab(t: Tab) {
+    setTab(t);
+    const url = new URL(window.location.href);
+    url.searchParams.set("tab", t);
+    window.history.replaceState(null, "", url);
+  }
+
+  // The Dance Floor tab only exists for the SuperAdmin / Advisory; anyone else sent ?tab=dance sees Availability.
+  const shown: Tab = tab === "dance" && data && !data.dance ? "availability" : tab;
 
   return (
     <div>
@@ -58,8 +73,8 @@ export default function AnalyticsPage() {
       <div className="p-4 sm:p-8">
         <div className="mb-6 overflow-x-auto">
           <Tabs
-            value={tab}
-            onChange={setTab}
+            value={shown}
+            onChange={changeTab}
             options={[
               { key: "availability" as Tab, label: "Availability" },
               { key: "membership" as Tab, label: "Membership" },
@@ -70,21 +85,31 @@ export default function AnalyticsPage() {
           />
         </div>
 
-        {error && (
-          <div className="rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3">
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
+        {error && !data && (
+          <EmptyState icon={WifiOff} title="Analytics did not load" body="This is usually a brief connection problem. Nothing is lost." action={{ label: "Try again", onClick: loadAnalytics }} />
         )}
 
         {!data ? (
-          !error && <p className="py-20 text-center text-sm text-zinc-500">Loading analytics...</p>
+          !error && (
+            <div className="space-y-6" aria-busy="true" aria-label="Loading analytics">
+              <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+                {[0, 1, 2, 3].map((i) => (
+                  <Skeleton key={i} className="h-24" />
+                ))}
+              </div>
+              <div className="grid gap-6 lg:grid-cols-3">
+                <Skeleton className="h-80 lg:col-span-2" />
+                <Skeleton className="h-80" />
+              </div>
+            </div>
+          )
         ) : (
           // key remounts the tab on every switch, so its charts animate in again
-          <div key={`${tab}-${data.generatedAt}`}>
-            {tab === "availability" && <AvailabilityTab d={data.availability} />}
-            {tab === "membership" && <MembershipTab d={data.membership} />}
-            {tab === "dance" && data.dance && <DanceTab d={data.dance} />}
-            {tab === "activity" && <ActivityTab d={data.activity} />}
+          <div key={`${shown}-${data.generatedAt}`}>
+            {shown === "availability" && <AvailabilityTab all={data.availability} filled={data.availabilityFilled} />}
+            {shown === "membership" && <MembershipTab d={data.membership} />}
+            {shown === "dance" && data.dance && <DanceTab d={data.dance} />}
+            {shown === "activity" && <ActivityTab d={data.activity} />}
           </div>
         )}
       </div>
