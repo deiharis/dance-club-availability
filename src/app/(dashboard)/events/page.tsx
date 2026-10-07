@@ -3,7 +3,8 @@
 import { useToast, useConfirm } from "@/components/ui/feedback";
 
 import React, { useState, useEffect } from "react";
-import { CalendarDays, Plus, Trash2 } from "lucide-react";
+import { CalendarDays, Plus, Trash2, FileBadge } from "lucide-react";
+import { Skeleton, EmptyState } from "@/components/ui/states";
 import { panel, control, controlLabel, sectionTitle, dateIN } from "@/components/console/ui";
 
 interface Event {
@@ -11,6 +12,7 @@ interface Event {
   name: string;
   eventDate: string;
   createdAt: string;
+  _count?: { odRequests: number };
 }
 
 export default function EventsPage() {
@@ -26,11 +28,9 @@ export default function EventsPage() {
     setLoading(true);
     fetch("/api/events", { cache: "no-store" })
       .then((r) => r.json())
-      .then((data) => {
-        setEvents(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then((data) => setEvents(Array.isArray(data) ? data : []))
+      .catch(() => toast.error("Could not load events", "Check your connection and refresh the page."))
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -56,14 +56,18 @@ export default function EventsPage() {
       return;
     }
 
+    toast.success("Event added", `Members can now pick "${form.name.trim()}" when requesting OD.`);
     setForm({ name: "", eventDate: "" });
     loadEvents();
   }
 
-  async function handleDelete(id: string, name: string) {
+  async function handleDelete(id: string, name: string, ods: number) {
     const ok = await confirm({
       title: `Delete "${name}"?`,
-      body: "Members will no longer be able to choose this event for OD requests. This cannot be undone.",
+      body:
+        (ods > 0
+          ? `${ods} OD request${ods === 1 ? " is" : "s are"} linked to it. They are kept, but will show "event not set". `
+          : "") + "Members will no longer be able to choose this event for OD requests. This cannot be undone.",
       confirmLabel: "Delete event",
       tone: "danger",
     });
@@ -74,8 +78,8 @@ export default function EventsPage() {
     loadEvents();
   }
 
-  // Dates are stored as UTC midnight; compare on the date part only.
-  const today = new Date().toISOString().slice(0, 10);
+  // Dates are stored as UTC midnight of the Indian calendar day; compare with today's Indian date.
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
   const upcoming = events.filter((e) => e.eventDate.slice(0, 10) >= today).reverse();
   const past = events.filter((e) => e.eventDate.slice(0, 10) < today);
 
@@ -95,8 +99,15 @@ export default function EventsPage() {
           <p className="truncate text-sm font-semibold text-white">{event.name}</p>
           <p className="text-xs text-zinc-500">{dateIN(event.eventDate, { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}</p>
         </div>
+        {(event._count?.odRequests ?? 0) > 0 && (
+          <span className="flex shrink-0 items-center gap-1 rounded bg-violet-500/15 px-2 py-1 text-[11px] font-medium text-violet-200" title="OD requests for this event">
+            <FileBadge size={12} aria-hidden="true" />
+            {event._count!.odRequests} OD
+          </span>
+        )}
         <button
-          onClick={() => handleDelete(event.id, event.name)}
+          onClick={() => handleDelete(event.id, event.name, event._count?.odRequests ?? 0)}
+          aria-label={`Delete ${event.name}`}
           className="rounded p-2 text-zinc-600 transition-colors hover:bg-white/5 hover:text-red-400"
           title="Delete event"
         >
@@ -117,13 +128,13 @@ export default function EventsPage() {
         {/* List */}
         <div className="space-y-6">
           {loading ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Loading events...</p>
-          ) : events.length === 0 ? (
-            <div className={`${panel} p-14 text-center`}>
-              <CalendarDays size={30} className="mx-auto mb-3 text-zinc-700" />
-              <p className="text-sm text-zinc-400">No events added yet.</p>
-              <p className="mt-1 text-xs text-zinc-600">Add one on the right so members can pick it for OD.</p>
+            <div className="space-y-2" aria-busy="true" aria-label="Loading events">
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-16 w-full" />
+              ))}
             </div>
+          ) : events.length === 0 ? (
+            <EmptyState icon={CalendarDays} title="No events yet" body="Add one with the form so members can pick it when they request OD." />
           ) : (
             <>
               <section className={panel}>

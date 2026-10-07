@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { CheckCircle, Clock, FileText } from "lucide-react";
-import { panel, Tabs, StatusChip, Field, Avatar, stripe, dateIN } from "@/components/console/ui";
+import React, { useState, useEffect, useMemo } from "react";
+import { CheckCircle, Clock, FileBadge, Copy } from "lucide-react";
+import { panel, Tabs, StatusChip, Field, Avatar, stripe, dateIN, control } from "@/components/console/ui";
+import { useToast } from "@/components/ui/feedback";
+import { Skeleton, EmptyState } from "@/components/ui/states";
 
 interface ODRequest {
   id: string;
@@ -31,51 +33,72 @@ interface ODRequest {
 }
 
 export default function ODManagementPage() {
+  const toast = useToast();
   const [requests, setRequests] = useState<ODRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"ALL" | "PENDING" | "APPROVED">("PENDING");
+  const [eventId, setEventId] = useState(""); // "" = every event
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [error, setError] = useState("");
 
-  function loadRequests() {
-    setLoading(true);
+  function loadRequests(silent = false) {
+    if (!silent) setLoading(true);
     fetch("/api/od", { cache: "no-store" })
       .then((r) => r.json())
-      .then((data) => {
-        setRequests(Array.isArray(data) ? data : []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+      .then((data) => setRequests(Array.isArray(data) ? data : []))
+      .catch(() => toast.error("Could not load OD requests", "Check your connection and refresh the page."))
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
     loadRequests();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function handleApprove(id: string) {
-    setActionLoading(id);
-    setError("");
-
-    const res = await fetch(`/api/od/${id}`, {
+  async function handleApprove(req: ODRequest) {
+    setActionLoading(req.id);
+    const res = await fetch(`/api/od/${req.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "APPROVE" }),
-    });
-
-    const data = await res.json();
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setActionLoading(null);
 
-    if (!res.ok) {
-      setError(data.error || "Failed to approve OD request");
+    if (!res?.ok) {
+      toast.error("OD not approved", data.error || "Check your connection and try again.");
       return;
     }
-
-    loadRequests();
+    toast.success("OD marked as approved", `It now shows as approved on ${req.member.fullName.split(" ")[0]}'s OD tab.`);
+    setRequests((list) => list.map((r) => (r.id === req.id ? { ...r, status: "APPROVED", approvedAt: new Date().toISOString() } : r)));
+    loadRequests(true);
   }
 
-  const filtered = requests.filter((r) => (filter === "ALL" ? true : r.status === filter));
-  const pendingCount = requests.filter((r) => r.status === "PENDING").length;
-  const approvedCount = requests.length - pendingCount;
+  const events = useMemo(() => {
+    const byId = new Map<string, NonNullable<ODRequest["event"]>>();
+    requests.forEach((r) => r.event && byId.set(r.event.id, r.event));
+    return Array.from(byId.values()).sort((a, b) => b.eventDate.localeCompare(a.eventDate));
+  }, [requests]);
+
+  const forEvent = requests.filter((r) => !eventId || r.event?.id === eventId);
+  const filtered = forEvent.filter((r) => (filter === "ALL" ? true : r.status === filter));
+  const pendingCount = forEvent.filter((r) => r.status === "PENDING").length;
+  const approvedCount = forEvent.length - pendingCount;
+
+  // A plain list to paste into an email or message for the college.
+  async function copyList() {
+    const lines = filtered.map(
+      (r, i) =>
+        `${i + 1}. ${r.member.fullName} (${r.member.registerNumber}) - ${dateIN(r.activityDate)}${r.slots?.length ? ` - ${r.slots.join(", ")}` : ""}`
+    );
+    const event = events.find((e) => e.id === eventId);
+    const text = (event ? `${event.name} (${dateIN(event.eventDate)})\n` : "") + lines.join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${filtered.length} request${filtered.length === 1 ? "" : "s"}`, "Paste them into an email or message for the college.");
+    } catch {
+      toast.error("Could not copy", "Your browser blocked the clipboard.");
+    }
+  }
 
   return (
     <div>
@@ -85,33 +108,53 @@ export default function ODManagementPage() {
       </div>
 
       <div className="p-4 sm:p-8 max-w-4xl">
-        <div className="mb-6">
+        <div className="mb-6 flex flex-wrap items-center gap-3">
           <Tabs
             value={filter}
             onChange={setFilter}
             options={[
               { key: "PENDING", label: "Pending", count: pendingCount },
               { key: "APPROVED", label: "Approved", count: approvedCount },
-              { key: "ALL", label: "All", count: requests.length },
+              { key: "ALL", label: "All", count: forEvent.length },
             ]}
           />
+          {events.length > 0 && (
+            <select value={eventId} onChange={(e) => setEventId(e.target.value)} aria-label="Filter by event" className={`${control} !w-auto !py-1.5`}>
+              <option value="">Every event</option>
+              {events.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name} · {dateIN(e.eventDate)}
+                </option>
+              ))}
+            </select>
+          )}
+          {filtered.length > 0 && (
+            <button
+              onClick={copyList}
+              className="press ml-auto flex items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-200 hover:border-zinc-500 hover:bg-white/5"
+            >
+              <Copy size={13} aria-hidden="true" />
+              Copy list ({filtered.length})
+            </button>
+          )}
         </div>
 
-        {error && (
-          <div className="mb-4 rounded-md border border-red-500/20 bg-red-500/10 px-4 py-3">
-            <p className="text-sm text-red-400">{error}</p>
-          </div>
-        )}
-
         {loading ? (
-          <p className="py-12 text-center text-sm text-zinc-500">Loading OD requests...</p>
-        ) : filtered.length === 0 ? (
-          <div className={`${panel} p-14 text-center`}>
-            <FileText size={28} className="mx-auto mb-3 text-zinc-700" />
-            <p className="text-sm text-zinc-400">
-              {filter === "PENDING" ? "Nothing waiting for approval." : "No OD requests found."}
-            </p>
+          <div className="space-y-4" aria-busy="true" aria-label="Loading OD requests">
+            {[0, 1].map((i) => (
+              <Skeleton key={i} className="h-56 w-full" />
+            ))}
           </div>
+        ) : filtered.length === 0 ? (
+          <EmptyState
+            icon={filter === "PENDING" ? CheckCircle : FileBadge}
+            title={filter === "PENDING" ? "Nothing waiting for approval" : "No OD requests here"}
+            body={
+              filter === "PENDING"
+                ? "Members request OD from an approved report. New requests appear here."
+                : "Requests with this status will appear here."
+            }
+          />
         ) : (
           <div className="space-y-4">
             {filtered.map((req) => {
@@ -145,18 +188,15 @@ export default function ODManagementPage() {
                           <span className="text-zinc-500"> · {dateIN(req.event.eventDate)}</span>
                         </>
                       ) : (
-                        <span className="text-zinc-500">Not set</span>
+                        <span className="text-zinc-500">Not set (the event was deleted)</span>
                       )}
                     </Field>
                     <Field label="Reason" className="sm:col-span-2">{req.reason}</Field>
                     {req.slots && req.slots.length > 0 && (
-                      <Field label="Requested time slots" className="sm:col-span-2">
+                      <Field label={`Requested time slots (${req.slots.length})`} className="sm:col-span-2">
                         <div className="flex flex-wrap gap-1.5">
                           {req.slots.map((slot) => (
-                            <span
-                              key={slot}
-                              className="rounded bg-violet-500/15 px-2 py-1 text-xs font-medium text-violet-200"
-                            >
+                            <span key={slot} className="rounded bg-violet-500/15 px-2 py-1 text-xs font-medium text-violet-200">
                               {slot}
                             </span>
                           ))}
@@ -168,18 +208,18 @@ export default function ODManagementPage() {
                     </Field>
                   </div>
 
-                  <footer className="flex items-center justify-between gap-3 border-t border-white/10 bg-white/[0.02] px-5 py-3">
+                  <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 bg-white/[0.02] px-5 py-3">
                     <p className="text-[11px] text-zinc-500">
                       Requested {dateIN(req.createdAt)}
                       {req.approvedAt && ` · Approved ${dateIN(req.approvedAt)}`}
                     </p>
                     {pending && (
                       <button
-                        onClick={() => handleApprove(req.id)}
+                        onClick={() => handleApprove(req)}
                         disabled={actionLoading === req.id}
-                        className="flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
+                        className="press flex items-center gap-2 rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50"
                       >
-                        <CheckCircle size={14} />
+                        <CheckCircle size={14} aria-hidden="true" />
                         {actionLoading === req.id ? "Approving..." : "Mark as approved"}
                       </button>
                     )}

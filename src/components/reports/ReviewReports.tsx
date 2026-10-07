@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Inbox, Maximize2, ImageOff } from "lucide-react";
 import { StatusChip } from "@/components/console/ui";
+import { useToast } from "@/components/ui/feedback";
+import { Skeleton, EmptyState } from "@/components/ui/states";
 
 interface Report {
   id: string;
@@ -88,6 +90,9 @@ export default function ReviewReports({
   canViewDancers?: boolean;
 }) {
   const s = SKIN[variant];
+  const stage = variant === "stage";
+  const toast = useToast();
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   const [scope, setScope] = useState<"queue" | "dancers">("queue");
   const viewOnly = scope === "dancers";
   const [reports, setReports] = useState<Report[]>([]);
@@ -95,17 +100,16 @@ export default function ReviewReports({
   const [filter, setFilter] = useState<Filter>("PENDING");
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [reviewNotes, setReviewNotes] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  function loadReports() {
-    setLoading(true);
+  // silent: refresh after a decision without blanking the list (keeps your scroll position).
+  function loadReports(silent = false) {
+    if (!silent) setLoading(true);
     fetch(`/api/reports${viewOnly ? "?scope=dancers" : ""}`, { cache: "no-store" })
       .then((r) => r.json())
-      .then((data) => {
-        setReports(Array.isArray(data) ? data : []);
-        setLoading(false);
-      });
+      .then((data) => setReports(Array.isArray(data) ? data : []))
+      .catch(() => toast.error("Could not load reports", "Check your connection and refresh the page."))
+      .finally(() => setLoading(false));
   }
 
   useEffect(() => {
@@ -115,27 +119,27 @@ export default function ReviewReports({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scope]);
 
-  async function handleAction(id: string, action: "APPROVE" | "REJECT") {
-    setActionLoading(true);
-    setError("");
-
-    const res = await fetch(`/api/reports/${id}`, {
+  async function handleAction(report: Report, action: "APPROVE" | "REJECT") {
+    setActionLoading(report.id);
+    const res = await fetch(`/api/reports/${report.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, reviewNotes }),
-    });
+      body: JSON.stringify({ action, reviewNotes: action === "REJECT" ? reviewNotes : "" }),
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
+    setActionLoading(null);
 
-    const data = await res.json();
-    setActionLoading(false);
-
-    if (!res.ok) {
-      setError(data.error || "Something went wrong");
+    if (!res?.ok) {
+      toast.error("Decision not saved", data.error || "Check your connection and try again.");
       return;
     }
-
+    const first = report.member.fullName.split(" ")[0];
+    toast.success(action === "APPROVE" ? "Report approved" : "Report rejected", `${first} has been notified.`);
+    // Show the new status straight away; the silent reload then fills in the reviewer.
+    setReports((list) => list.map((r) => (r.id === report.id ? { ...r, status: action === "APPROVE" ? "APPROVED" : "REJECTED" } : r)));
     setReviewingId(null);
     setReviewNotes("");
-    loadReports();
+    loadReports(true);
   }
 
   const count = (st: string) => reports.filter((r) => r.status === st).length;
@@ -194,20 +198,25 @@ export default function ReviewReports({
         ))}
       </div>
 
-      {error && (
-        <div className="mb-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
-          <p className="text-sm text-red-400">{error}</p>
-        </div>
-      )}
-
       {loading ? (
-        <p className={`py-12 text-center text-sm ${s.muted}`}>Loading reports...</p>
-      ) : filtered.length === 0 ? (
-        <div className={`${s.card} p-14 text-center`}>
-          <p className={`text-sm ${s.muted}`}>
-            {filter === "PENDING" ? "Nothing waiting for review." : "No reports found."}
-          </p>
+        <div className="space-y-4" aria-busy="true" aria-label="Loading reports">
+          {[0, 1].map((i) => (
+            <Skeleton key={i} stage={stage} className="h-48 w-full" />
+          ))}
         </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          stage={stage}
+          icon={filter === "PENDING" ? CheckCircle : Inbox}
+          title={filter === "PENDING" ? "All caught up" : "No reports here"}
+          body={
+            filter === "PENDING"
+              ? viewOnly
+                ? "No dancer reports are waiting for their Team Leaders."
+                : "Nothing is waiting for a decision. New reports appear here as soon as they are submitted."
+              : "Reports with this status will appear here."
+          }
+        />
       ) : (
         <div className="space-y-4">
           {filtered.map((report) => {
@@ -268,25 +277,29 @@ export default function ReviewReports({
                       <p className={`mb-2 text-[10px] font-semibold uppercase tracking-widest ${s.label}`}>
                         Proof image
                       </p>
-                      {report.imageUrl ? (
-                        <img
-                          src={report.imageUrl}
-                          alt="Report proof"
-                          className="max-h-64 rounded-xl border border-white/10 object-contain"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = "none";
-                            const parent = target.parentElement;
-                            if (parent) {
-                              const msg = document.createElement("p");
-                              msg.className = "text-red-400 text-xs";
-                              msg.textContent = "Image could not be loaded. It may have expired.";
-                              parent.appendChild(msg);
-                            }
-                          }}
-                        />
+                      {report.imageUrl && !brokenImages.has(report.id) ? (
+                        <a
+                          href={report.imageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative inline-block"
+                          aria-label={`Open ${report.member.fullName}'s proof image full size`}
+                        >
+                          <img
+                            src={report.imageUrl}
+                            alt={`Proof for ${report.member.fullName}'s report`}
+                            className="max-h-64 rounded-xl border border-white/10 object-contain"
+                            onError={() => setBrokenImages((b) => new Set(b).add(report.id))}
+                          />
+                          <span className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-black/70 px-2 py-1 text-[11px] text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100">
+                            <Maximize2 size={11} aria-hidden="true" /> Full size
+                          </span>
+                        </a>
                       ) : (
-                        <p className={`text-xs ${s.muted}`}>Image not available</p>
+                        <p className={`flex items-center gap-1.5 text-xs ${s.muted}`}>
+                          <ImageOff size={13} aria-hidden="true" />
+                          {report.imageUrl ? "The image link has expired. Refresh the page to load it again." : "Image not available"}
+                        </p>
                       )}
                     </div>
                   )}
@@ -310,49 +323,61 @@ export default function ReviewReports({
                   {pending && !viewOnly ? (
                     reviewingId === report.id ? (
                       <div className="space-y-3">
+                        <label className={`block text-xs ${s.muted}`} htmlFor={`reason-${report.id}`}>
+                          Why is it rejected? {report.member.fullName.split(" ")[0]} will see this.
+                        </label>
                         <textarea
+                          id={`reason-${report.id}`}
+                          autoFocus
                           value={reviewNotes}
                           onChange={(e) => setReviewNotes(e.target.value)}
-                          placeholder="Rejection reason (needed to reject)"
+                          placeholder="e.g. The photo does not show the work described"
                           rows={2}
                           className={`w-full resize-none px-3 py-2 text-sm text-white placeholder-zinc-600 ${s.input}`}
                         />
                         <div className="flex flex-wrap gap-2">
                           <button
-                            onClick={() => handleAction(report.id, "APPROVE")}
-                            disabled={actionLoading}
-                            className={`flex items-center gap-2 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 ${s.btn}`}
+                            onClick={() => handleAction(report, "REJECT")}
+                            disabled={actionLoading === report.id || reviewNotes.trim() === ""}
+                            className={`press flex items-center gap-2 bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-50 ${s.btn}`}
                           >
-                            <CheckCircle size={14} />
-                            Approve
-                          </button>
-                          <button
-                            onClick={() => handleAction(report.id, "REJECT")}
-                            disabled={actionLoading || reviewNotes.trim() === ""}
-                            className={`flex items-center gap-2 bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-500 disabled:opacity-50 ${s.btn}`}
-                          >
-                            <XCircle size={14} />
-                            Reject
+                            <XCircle size={14} aria-hidden="true" />
+                            {actionLoading === report.id ? "Rejecting..." : "Reject report"}
                           </button>
                           <button
                             onClick={() => {
                               setReviewingId(null);
                               setReviewNotes("");
-                              setError("");
                             }}
                             className={`px-4 py-2 text-sm transition-colors ${s.ghost}`}
                           >
-                            Cancel
+                            Back
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <button
-                        onClick={() => setReviewingId(report.id)}
-                        className={`text-sm font-semibold transition-colors ${s.link}`}
-                      >
-                        Review this report
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => handleAction(report, "APPROVE")}
+                          disabled={actionLoading === report.id}
+                          className={`press flex items-center gap-2 bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-500 disabled:opacity-50 ${s.btn}`}
+                        >
+                          <CheckCircle size={14} aria-hidden="true" />
+                          {actionLoading === report.id ? "Approving..." : "Approve"}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setReviewingId(report.id);
+                            setReviewNotes("");
+                          }}
+                          disabled={actionLoading === report.id}
+                          className={`press flex items-center gap-2 border border-red-500/40 px-4 py-2 text-sm font-semibold text-red-300 transition-colors hover:bg-red-500/10 disabled:opacity-50 ${s.btn}`}
+                        >
+                          <XCircle size={14} aria-hidden="true" />
+                          Reject...
+                        </button>
+                        <span className={`ml-auto text-[11px] ${s.label}`}>Submitted {fmt(report.submittedAt)}</span>
+                      </div>
                     )
                   ) : (
                     <p className={`text-[11px] ${s.label}`}>Submitted {fmt(report.submittedAt)}</p>

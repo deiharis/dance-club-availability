@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Upload, FileText, CheckCircle, XCircle, Clock, FileBadge } from "lucide-react";
+import { Upload, FileText, CheckCircle, XCircle, Clock, FileBadge, X } from "lucide-react";
 import { StatusChip } from "@/components/console/ui";
+import { useToast } from "@/components/ui/feedback";
+import { Skeleton, EmptyState } from "@/components/ui/states";
+import { compressImage, MAX_UPLOAD_BYTES } from "@/lib/compress-image";
 
 interface Report {
   id: string;
@@ -122,6 +125,8 @@ export default function MyReports({
   area?: "ask" | "DANCE" | "COMMITTEE";
 }) {
   const s = SKIN[variant];
+  const stage = variant === "stage";
+  const toast = useToast();
   const [topic, setTopic] = useState<"" | "DANCE" | "COMMITTEE">(area === "ask" ? "" : area);
   const [activeTab, setActiveTab] = useState<Tab>("submit");
   const [reports, setReports] = useState<Report[]>([]);
@@ -131,10 +136,10 @@ export default function MyReports({
   const [submitting, setSubmitting] = useState(false);
   const [odSubmitting, setODSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [odError, setODError] = useState("");
-  const [odSuccess, setODSuccess] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [dragging, setDragging] = useState(false);
   const [canRequestOD, setCanRequestOD] = useState(false);
   const [events, setEvents] = useState<Event[]>([]);
 
@@ -158,31 +163,43 @@ export default function MyReports({
       fetch("/api/reports/approved", { cache: "no-store" }).then((r) => r.json()),
       showOd ? fetch("/api/od", { cache: "no-store" }).then((r) => r.json()) : Promise.resolve([]),
       showOd ? fetch("/api/events", { cache: "no-store" }).then((r) => r.json()) : Promise.resolve([]),
-    ]).then(([myReports, approved, myODs, eventList]) => {
+    ])
+      .then(([myReports, approved, myODs, eventList]) => {
       setReports(Array.isArray(myReports) ? myReports : []);
       const approvedList = Array.isArray(approved) ? approved : [];
       setApprovedReports(approvedList);
       setCanRequestOD(approvedList.some((r: ApprovedReport) => !r.odRequest));
       setODRequests(Array.isArray(myODs) ? myODs : []);
       setEvents(Array.isArray(eventList) ? eventList : []);
-      setLoading(false);
-    });
+      })
+      .catch(() => toast.error("Could not load your reports", "Check your connection and refresh the page."))
+      .finally(() => setLoading(false));
   }
 
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
+  function pickImage(file: File | undefined) {
     if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setError("The proof must be an image (a photo or a screenshot).");
+      return;
+    }
+    setError("");
+    setImageFile(file);
     const reader = new FileReader();
     reader.onload = () => setImagePreview(reader.result as string);
     reader.readAsDataURL(file);
   }
 
+  function clearImage() {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
   async function handleSubmitReport(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
-    const file = fileRef.current?.files?.[0];
+    const file = imageFile;
     if (!file) {
       setError("Please attach an image as proof.");
       return;
@@ -193,39 +210,48 @@ export default function MyReports({
     }
 
     setSubmitting(true);
-    const formData = new FormData();
-    formData.append("description", form.description);
-    formData.append("workDate", form.workDate);
-    formData.append("image", file);
-    formData.append("area", topic);
+    try {
+      const upload = await compressImage(file);
+      if (upload.size > MAX_UPLOAD_BYTES) {
+        setError("This image is too large to upload (over 4 MB). Take a screenshot of it, or pick a smaller photo.");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("description", form.description);
+      formData.append("workDate", form.workDate);
+      formData.append("image", upload);
+      formData.append("area", topic);
 
-    const res = await fetch("/api/reports", { method: "POST", body: formData });
-    const data = await res.json();
-    setSubmitting(false);
-
-    if (!res.ok) {
-      setError(data.error || "Failed to submit report");
+      const res = await fetch("/api/reports", { method: "POST", body: formData });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data.error || (res.status === 413 ? "The image is too large to upload." : "The report could not be submitted. Please try again."));
+        return;
+      }
+    } catch {
+      setError("The report could not be sent. Check your connection and try again.");
       return;
+    } finally {
+      setSubmitting(false);
     }
 
-    setSuccess(
+    toast.success(
+      "Report submitted",
       topic === "DANCE"
-        ? "Report submitted. Your Team Leader will review it."
+        ? "Your Team Leader will review it."
         : showOd
-        ? "Report submitted. Once approved, you can request an OD for it."
-        : "Report submitted. The committee will review it."
+        ? "Once it is approved you can request an OD for it."
+        : "The committee will review it."
     );
     setForm({ description: "", workDate: "" });
     if (area === "ask") setTopic("");
-    setImagePreview(null);
-    if (fileRef.current) fileRef.current.value = "";
+    clearImage();
     loadAll();
   }
 
   async function handleRequestOD(e: React.FormEvent) {
     e.preventDefault();
     setODError("");
-    setODSuccess("");
 
     if (!odForm.reportId || !odForm.reason.trim()) {
       setODError("Please select a report and enter a reason.");
@@ -236,21 +262,26 @@ export default function MyReports({
       return;
     }
 
+    if (odForm.slots.length < 2 || odForm.slots.length % 2 !== 0) {
+      setODError("Pick an even number of time slots: 2, 4, 6 and so on.");
+      return;
+    }
+
     setODSubmitting(true);
     const res = await fetch("/api/od", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(odForm),
-    });
-    const data = await res.json();
+    }).catch(() => null);
+    const data = res ? await res.json().catch(() => ({})) : {};
     setODSubmitting(false);
 
-    if (!res.ok) {
-      setODError(data.error || "Failed to submit OD request");
+    if (!res?.ok) {
+      setODError(data.error || "The OD request could not be sent. Check your connection and try again.");
       return;
     }
 
-    setODSuccess("OD request submitted. The Super Admin will mark it as approved once the college grants the OD.");
+    toast.success("OD request sent", "The Super Admin marks it approved once the college grants the OD.");
     setODForm({ reportId: "", reason: "", slots: [], eventId: "" });
     loadAll();
   }
@@ -371,24 +402,45 @@ export default function MyReports({
                   Proof image <span className="text-red-400">(required)</span>
                 </label>
                 <div
-                  className={`cursor-pointer p-6 text-center transition-colors ${s.drop}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={imageFile ? `Change proof image (${imageFile.name})` : "Choose a proof image"}
+                  className={`relative cursor-pointer p-6 text-center transition-colors ${s.drop} ${dragging ? (stage ? "border-orange-400/70 bg-orange-500/5" : "border-violet-400/70 bg-violet-500/5") : ""}`}
                   onClick={() => fileRef.current?.click()}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), fileRef.current?.click())}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                  }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragging(false);
+                    pickImage(e.dataTransfer.files?.[0]);
+                  }}
                 >
                   {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="mx-auto max-h-40 rounded-xl object-contain" />
+                    <>
+                      <img src={imagePreview} alt="Selected proof" className="mx-auto max-h-40 rounded-xl object-contain" />
+                      <p className={`mt-2 truncate text-xs ${s.muted}`}>{imageFile?.name} · click to change</p>
+                    </>
                   ) : (
                     <div className="flex flex-col items-center gap-2">
                       <Upload size={24} className={s.muted} />
-                      <p className={`text-sm ${s.muted}`}>Click to upload an image</p>
-                      <p className={`text-xs ${s.faint}`}>JPG, PNG or HEIC</p>
+                      <p className={`text-sm ${s.muted}`}>Click or drop a photo or screenshot here</p>
+                      <p className={`text-xs ${s.faint}`}>Large phone photos are shrunk automatically before upload</p>
                     </div>
                   )}
                 </div>
-                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                {imageFile && (
+                  <button type="button" onClick={clearImage} className={`mt-2 inline-flex items-center gap-1 text-xs ${s.muted} hover:text-white`}>
+                    <X size={12} aria-hidden="true" /> Remove image
+                  </button>
+                )}
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => pickImage(e.target.files?.[0])} />
               </div>
 
               {error && <Alert tone="red">{error}</Alert>}
-              {success && <Alert tone="green">{success}</Alert>}
 
               <button type="submit" disabled={submitting} className={s.primary}>
                 {submitting ? "Submitting..." : "Submit report"}
@@ -401,9 +453,15 @@ export default function MyReports({
               <h2 className={s.title}>My submitted reports</h2>
             </header>
             {loading ? (
-              <p className={`p-8 text-center text-sm ${s.muted}`}>Loading...</p>
+              <div className="space-y-2 p-4" aria-busy="true">
+                {[0, 1, 2].map((i) => (
+                  <Skeleton key={i} stage={stage} className="h-14 w-full" />
+                ))}
+              </div>
             ) : reports.length === 0 ? (
-              <p className={`p-8 text-center text-sm ${s.muted}`}>No reports submitted yet.</p>
+              <div className="p-4">
+                <EmptyState compact stage={stage} icon={FileText} title="No reports yet" body="Reports you submit appear here with their status." />
+              </div>
             ) : (
               <ul className="divide-y divide-white/5">
                 {reports.map((report) => (
@@ -551,7 +609,6 @@ export default function MyReports({
                 </div>
 
                 {odError && <Alert tone="red">{odError}</Alert>}
-                {odSuccess && <Alert tone="green">{odSuccess}</Alert>}
 
                 <button type="submit" disabled={odSubmitting} className={s.primary}>
                   {odSubmitting ? "Submitting..." : "Request OD"}
@@ -574,9 +631,15 @@ export default function MyReports({
               <h2 className={s.title}>My OD requests</h2>
             </header>
             {loading ? (
-              <p className={`p-8 text-center text-sm ${s.muted}`}>Loading...</p>
+              <div className="space-y-2 p-4" aria-busy="true">
+                {[0, 1].map((i) => (
+                  <Skeleton key={i} stage={stage} className="h-14 w-full" />
+                ))}
+              </div>
             ) : odRequests.length === 0 ? (
-              <p className={`p-8 text-center text-sm ${s.muted}`}>No OD requests yet.</p>
+              <div className="p-4">
+                <EmptyState compact stage={stage} icon={FileBadge} title="No OD requests yet" body="Requests you send appear here, and turn green once the OD is granted." />
+              </div>
             ) : (
               <ul className="divide-y divide-white/5">
                 {odRequests.map((od) => (

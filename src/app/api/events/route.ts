@@ -14,6 +14,7 @@ export async function GET() {
 
     const events = await db.event.findMany({
       orderBy: { eventDate: "desc" },
+      include: { _count: { select: { odRequests: true } } },
     });
     return NextResponse.json(events);
   } catch (error) {
