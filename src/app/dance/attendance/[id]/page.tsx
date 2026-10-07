@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, CalendarX2 } from "lucide-react";
+import { EmptyState } from "@/components/ui/states";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
@@ -54,14 +55,24 @@ export default async function MarkAttendancePage({
       </div>
 
       <div className="mt-6">
-        <AttendanceMarker
-          rehearsalId={rehearsal.id}
-          dancers={dancers.map((d) => ({
-            id: d.id,
-            fullName: d.fullName,
-            status: byMember.get(d.id) ?? null,
-          }))}
-        />
+        {rehearsal.cancelledAt ? (
+          <EmptyState
+            stage
+            icon={CalendarX2}
+            title="This rehearsal was cancelled"
+            body={`Cancelled by ${rehearsal.cancelledBy ?? "the club"}, so there is no attendance to mark.`}
+            action={{ label: "Back to rehearsals", href: `/dance/rehearsals?team=${encodeURIComponent(rehearsal.team)}` }}
+          />
+        ) : (
+          <AttendanceMarker
+            rehearsalId={rehearsal.id}
+            dancers={dancers.map((d) => ({
+              id: d.id,
+              fullName: d.fullName,
+              status: byMember.get(d.id) ?? null,
+            }))}
+          />
+        )}
       </div>
     </div>
   );

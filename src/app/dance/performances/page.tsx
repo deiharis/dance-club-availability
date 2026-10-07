@@ -5,6 +5,9 @@ import { getDanceUser, pageTeam } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import PerformancesClient from "@/components/dance/PerformancesClient";
+import { todayIST } from "@/lib/notify";
+
+const ist = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 
 export default async function PerformancesPage({
   searchParams,
@@ -38,13 +41,16 @@ export default async function PerformancesPage({
     }),
   ]);
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Indian calendar day, so between midnight and 05:30 yesterday is not still "upcoming".
+  const today = todayIST().toISOString().slice(0, 10);
   const all = rows.map((p) => ({
     id: p.id,
     name: p.name,
     date: p.eventDate.toISOString().slice(0, 10),
     venue: p.venue,
     dancerIds: p.dancers.map((d) => d.id),
+    cancelledAt: p.cancelledAt ? ist(p.cancelledAt) : null,
+    cancelledBy: p.cancelledBy,
   }));
   const upcoming = all.filter((p) => p.date >= today);
   const past = all.filter((p) => p.date < today).reverse();
@@ -82,6 +88,7 @@ export default async function PerformancesPage({
           dancers={dancers}
           upcoming={upcoming}
           past={past}
+          today={today}
           canManage={dance.canManage(team)}
           myId={dance.member.id}
         />

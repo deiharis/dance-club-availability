@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCheck, Users } from "lucide-react";
+import { useToast } from "@/components/ui/feedback";
+import { EmptyState } from "@/components/ui/states";
 
 type Status = "PRESENT" | "ABSENT" | "EXCUSED";
 type Dancer = { id: string; fullName: string; status: Status | null };
@@ -20,11 +23,14 @@ export default function AttendanceMarker({
   dancers: Dancer[];
 }) {
   const router = useRouter();
-  const [marks, setMarks] = useState<Record<string, Status | null>>(
-    Object.fromEntries(dancers.map((d) => [d.id, d.status]))
-  );
+  const toast = useToast();
+  const initial = () => Object.fromEntries(dancers.map((d) => [d.id, d.status]));
+  const [saved, setSaved] = useState<Record<string, Status | null>>(initial);
+  const [marks, setMarks] = useState<Record<string, Status | null>>(initial);
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const markedCount = Object.values(marks).filter(Boolean).length;
+  const dirty = dancers.some((d) => marks[d.id] !== saved[d.id]);
 
   async function save() {
     // Only send dancers that have been marked; unmarked stay unmarked.
@@ -32,55 +38,48 @@ export default function AttendanceMarker({
       .filter(([, s]) => s)
       .map(([memberId, status]) => ({ memberId, status }));
     setBusy(true);
-    setMsg(null);
     const res = await fetch(`/api/dance/rehearsals/${rehearsalId}/attendance`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ records }),
-    });
+    }).catch(() => null);
     setBusy(false);
-    if (!res.ok) {
-      setMsg({ ok: false, text: (await res.json()).error ?? "Could not save" });
+    if (!res?.ok) {
+      const error = res ? (await res.json().catch(() => ({}))).error : "Check your connection and try again.";
+      toast.error("Attendance not saved", error ?? "Please try again.");
       return;
     }
-    setMsg({ ok: true, text: `Saved ${records.length} record${records.length === 1 ? "" : "s"}.` });
+    setSaved(marks);
+    toast.success("Attendance saved", `${records.length} of ${dancers.length} dancer${dancers.length === 1 ? "" : "s"} marked.`);
     router.refresh();
   }
 
-  const markedCount = Object.values(marks).filter(Boolean).length;
+  if (dancers.length === 0) {
+    return <EmptyState stage icon={Users} title="No dancers in this team yet" body="Add dancers on the Roster page, then mark attendance here." action={{ label: "Open roster", href: "/dance/roster" }} />;
+  }
 
   return (
     <div>
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          onClick={() =>
-            setMarks(Object.fromEntries(dancers.map((d) => [d.id, "PRESENT" as Status])))
-          }
-          className="text-sm border border-white/10 hover:border-orange-500/40 text-orange-100/80 px-3 py-2 rounded-2xl"
-        >
-          Mark all present
-        </button>
-        <span className="text-orange-100/50 text-sm">
-          {markedCount} of {dancers.length} marked
-        </span>
-      </div>
+      <button
+        onClick={() => setMarks(Object.fromEntries(dancers.map((d) => [d.id, "PRESENT" as Status])))}
+        className="press flex items-center gap-2 rounded-full border border-white/10 px-3 py-2 text-sm text-orange-100/80 hover:border-orange-500/40 hover:text-white"
+      >
+        <CheckCheck size={15} aria-hidden="true" />
+        Mark everyone present
+      </button>
 
-      <div className="mt-4 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl divide-y divide-white/5">
+      <div className="mt-4 divide-y divide-white/5 rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
         {dancers.map((d) => (
-          <div
-            key={d.id}
-            className="px-4 py-3 flex flex-wrap items-center justify-between gap-3"
-          >
-            <span className="text-white text-sm font-medium">{d.fullName}</span>
-            <div className="flex gap-2">
+          <div key={d.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <span className="text-sm font-medium text-white">{d.fullName}</span>
+            <div className="flex gap-2" role="group" aria-label={`Attendance for ${d.fullName}`}>
               {OPTIONS.map((o) => (
                 <button
                   key={o.value}
                   onClick={() => setMarks({ ...marks, [d.id]: o.value })}
-                  className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-colors ${
-                    marks[d.id] === o.value
-                      ? o.on
-                      : "border-white/10 text-orange-100/60 hover:text-white"
+                  aria-pressed={marks[d.id] === o.value}
+                  className={`press rounded-full border px-3 py-1.5 text-xs font-medium transition-colors duration-120 ${
+                    marks[d.id] === o.value ? o.on : "border-white/10 text-orange-100/60 hover:text-white"
                   }`}
                 >
                   {o.label}
@@ -89,26 +88,22 @@ export default function AttendanceMarker({
             </div>
           </div>
         ))}
-        {dancers.length === 0 && (
-          <p className="px-4 py-8 text-center text-orange-100/50 text-sm">
-            No dancers in this team yet.
-          </p>
-        )}
       </div>
 
-      {msg && (
-        <p className={`mt-3 text-sm ${msg.ok ? "text-green-400" : "text-red-400"}`}>
-          {msg.text}
-        </p>
-      )}
-
-      <button
-        onClick={save}
-        disabled={busy || dancers.length === 0}
-        className="mt-4 bg-orange-500 shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-full"
-      >
-        {busy ? "Saving..." : "Save attendance"}
-      </button>
+      {/* Stays in view at the bottom of the screen on long team lists */}
+      <div className="sticky bottom-4 z-10 mt-4 flex items-center justify-between gap-3 rounded-full border border-white/10 bg-black/70 py-2 pl-5 pr-2 backdrop-blur">
+        <span className="text-sm text-orange-100/70" aria-live="polite">
+          {markedCount} of {dancers.length} marked
+          {dirty && <span className="ml-2 text-amber-300">· unsaved changes</span>}
+        </span>
+        <button
+          onClick={save}
+          disabled={busy || !dirty}
+          className="press rounded-full bg-orange-500 px-4 py-2 text-sm font-medium text-white shadow-[0_0_24px_-6px_rgba(249,115,22,0.7)] hover:bg-orange-400 disabled:opacity-50"
+        >
+          {busy ? "Saving..." : dirty ? "Save attendance" : "Saved"}
+        </button>
+      </div>
     </div>
   );
 }

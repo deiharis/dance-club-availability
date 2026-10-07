@@ -29,6 +29,10 @@ export async function PUT(
     const r = await load(params.id);
     if ("res" in r) return r.res;
 
+    if (r.performance.cancelledAt) {
+      return NextResponse.json({ error: "This performance was cancelled, so its dancers can no longer be changed" }, { status: 400 });
+    }
+
     const { dancerIds } = await req.json();
     const ids: string[] = Array.isArray(dancerIds) ? dancerIds : [];
 
@@ -71,8 +75,10 @@ export async function PUT(
   }
 }
 
-// Cancel (delete) a performance. If it had not happened yet, everyone in THAT team (plus SuperAdmins,
-// minus whoever cancelled) is notified here on the server. Deleting a past one notifies nobody.
+// Cancel or delete a performance (same rules as rehearsals):
+// - Upcoming and still going ahead: CANCELLED, kept in the history with who cancelled it, and
+//   everyone in THAT team (plus SuperAdmins, minus whoever cancelled) is notified on the server.
+// - Past, or already cancelled: deleted for good, nobody is notified.
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
@@ -82,18 +88,23 @@ export async function DELETE(
     if ("res" in r) return r.res;
 
     const p = r.performance;
-    await db.performance.delete({ where: { id: params.id } });
-
-    if (p.eventDate >= todayIST()) {
-      await notifyTeam({
-        team: p.team,
-        actorMemberId: r.caller.member?.id,
-        type: "PERFORMANCE_CANCELLED",
-        message: `Performance cancelled: "${p.name}" scheduled for ${dateLabel(p.eventDate)}${p.venue ? ` at ${p.venue}` : ""} has been cancelled by ${cancelledBy(r.caller)}.`,
-        link: teamLink("/dance/performances", p.team),
-      });
+    if (p.cancelledAt || p.eventDate < todayIST()) {
+      await db.performance.delete({ where: { id: params.id } });
+      return NextResponse.json({ deleted: true });
     }
-    return NextResponse.json({ success: true });
+
+    await db.performance.update({
+      where: { id: params.id },
+      data: { cancelledAt: new Date(), cancelledBy: r.caller.member?.fullName ?? "Super Admin" },
+    });
+    await notifyTeam({
+      team: p.team,
+      actorMemberId: r.caller.member?.id,
+      type: "PERFORMANCE_CANCELLED",
+      message: `Performance cancelled: "${p.name}" scheduled for ${dateLabel(p.eventDate)}${p.venue ? ` at ${p.venue}` : ""} has been cancelled by ${cancelledBy(r.caller)}.`,
+      link: teamLink("/dance/performances", p.team),
+    });
+    return NextResponse.json({ cancelled: true });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
   }

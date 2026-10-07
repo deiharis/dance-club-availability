@@ -23,6 +23,9 @@ export async function PUT(
       return NextResponse.json({ error: "Rehearsal not found" }, { status: 404 });
     }
     if (!caller.canManage(rehearsal.team)) return forbidden();
+    if (rehearsal.cancelledAt) {
+      return NextResponse.json({ error: "This rehearsal was cancelled, so there is no attendance to mark" }, { status: 400 });
+    }
 
     const { records } = await req.json();
     if (!Array.isArray(records)) {

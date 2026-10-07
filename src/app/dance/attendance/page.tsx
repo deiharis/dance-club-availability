@@ -4,6 +4,9 @@ import { db } from "@/lib/db";
 import { getDanceUser, pageTeam } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
+import { todayIST } from "@/lib/notify";
+import { ClipboardCheck } from "lucide-react";
+import { EmptyState } from "@/components/ui/states";
 
 const STATUS_STYLE: Record<string, string> = {
   PRESENT: "text-green-300 bg-green-500/15",
@@ -47,10 +50,10 @@ export default async function AttendancePage({
     );
   }
 
-  // Rehearsals up to and including today
-  const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+  // Rehearsals up to and including today (Indian date) that went ahead; cancelled ones had no attendance.
+  const today = todayIST();
   const rehearsals = await db.rehearsal.findMany({
-    where: { team, date: { lte: today } },
+    where: { team, date: { lte: today }, cancelledAt: null },
     orderBy: [{ date: "desc" }, { startTime: "desc" }],
     include: { attendance: true },
   });
@@ -126,7 +129,14 @@ export default async function AttendancePage({
                     <td className="px-4 py-3 text-orange-100/80">{p}</td>
                     <td className="px-4 py-3 text-orange-100/80">{a}</td>
                     <td className="px-4 py-3 text-orange-100/80">{count(d.id, "EXCUSED")}</td>
-                    <td className="px-4 py-3 text-orange-200 font-medium">{pct(p, a)}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-medium text-orange-200">{pct(p, a)}</span>
+                      {p + a > 0 && (
+                        <span className="mt-1 block h-1 w-20 overflow-hidden rounded-full bg-white/10" aria-hidden="true">
+                          <span className="block h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-300" style={{ width: `${Math.round((p / (p + a)) * 100)}%` }} />
+                        </span>
+                      )}
+                    </td>
                   </tr>
                 );
               })}
@@ -150,9 +160,14 @@ export default async function AttendancePage({
       </h2>
 
       {rehearsals.length === 0 ? (
-        <p className="text-orange-100/50 text-sm">
-          No rehearsals have happened yet.
-        </p>
+        <EmptyState
+          stage
+          compact
+          icon={ClipboardCheck}
+          title="No rehearsals have happened yet"
+          body={manager ? "Once a rehearsal date arrives it appears here, ready for you to mark who came." : "Your record appears here after your first rehearsal."}
+          action={manager ? { label: "Plan a rehearsal", href: `/dance/rehearsals?team=${encodeURIComponent(team)}` } : undefined}
+        />
       ) : (
         <div className="space-y-3">
           {rehearsals.map((r) => {

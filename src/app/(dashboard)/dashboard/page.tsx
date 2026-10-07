@@ -47,10 +47,10 @@ export default async function DashboardPage() {
       db.member.count({ where: NO_TIMETABLE }),
       db.event.findMany({ where: { eventDate: { gte: today } }, orderBy: { eventDate: "asc" }, take: 5 }),
       teamFilter
-        ? db.rehearsal.findMany({ where: { ...teamFilter, date: { gte: today } }, orderBy: [{ date: "asc" }, { startTime: "asc" }], take: 5 })
+        ? db.rehearsal.findMany({ where: { ...teamFilter, date: { gte: today }, cancelledAt: null }, orderBy: [{ date: "asc" }, { startTime: "asc" }], take: 5 })
         : Promise.resolve([]),
       teamFilter
-        ? db.performance.findMany({ where: { ...teamFilter, eventDate: { gte: today } }, orderBy: { eventDate: "asc" }, take: 5 })
+        ? db.performance.findMany({ where: { ...teamFilter, eventDate: { gte: today }, cancelledAt: null }, orderBy: { eventDate: "asc" }, take: 5 })
         : Promise.resolve([]),
       db.member.findMany({ take: 5, orderBy: { createdAt: "desc" }, select: { id: true, fullName: true, category: true, team: true, position: true } }),
       isSuper ? listProgrammeIssues().then((l) => l.length) : Promise.resolve(0),

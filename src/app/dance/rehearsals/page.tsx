@@ -5,6 +5,9 @@ import { getDanceUser, pageTeam } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import RehearsalsClient from "@/components/dance/RehearsalsClient";
+import { todayIST } from "@/lib/notify";
+
+const ist = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
 
 export default async function RehearsalsPage({
   searchParams,
@@ -29,9 +32,11 @@ export default async function RehearsalsPage({
   const rows = await db.rehearsal.findMany({
     where: { team },
     orderBy: [{ date: "asc" }, { startTime: "asc" }],
+    include: { _count: { select: { attendance: true } } },
   });
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Indian calendar day, so between midnight and 05:30 yesterday is not still "upcoming".
+  const today = todayIST().toISOString().slice(0, 10);
   const all = rows.map((r) => ({
     id: r.id,
     title: r.title,
@@ -39,6 +44,9 @@ export default async function RehearsalsPage({
     startTime: r.startTime,
     endTime: r.endTime,
     venue: r.venue,
+    cancelledAt: r.cancelledAt ? ist(r.cancelledAt) : null,
+    cancelledBy: r.cancelledBy,
+    marked: r._count.attendance,
   }));
   const upcoming = all.filter((r) => r.date >= today);
   const past = all.filter((r) => r.date < today).reverse();
@@ -75,6 +83,7 @@ export default async function RehearsalsPage({
           team={team}
           upcoming={upcoming}
           past={past}
+          today={today}
           canManage={dance.canManage(team)}
         />
       </div>

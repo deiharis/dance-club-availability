@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ArrowUpRight, ArrowRight } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
+import { todayIST } from "@/lib/notify";
 import Orbit from "@/components/dance/Orbit";
 
 const fmt = (d: Date) =>
@@ -24,7 +25,7 @@ export default async function DanceDashboardPage() {
   // Anyone in a dance team (pure dancers and members who also dance) gets their personal cards.
   const isDancer = !!member.team;
   const team = member.team;
-  const today = new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z");
+  const today = todayIST();
 
   // Everyone sees their own team; the SuperAdmin and Advisory also see every team's size.
   const teamCounts =
@@ -40,11 +41,11 @@ export default async function DanceDashboardPage() {
     ? await Promise.all([
         db.member.count({ where: { team } }),
         db.rehearsal.findFirst({
-          where: { team, date: { gte: today } },
+          where: { team, date: { gte: today }, cancelledAt: null },
           orderBy: [{ date: "asc" }, { startTime: "asc" }],
         }),
         db.performance.findFirst({
-          where: { team, eventDate: { gte: today } },
+          where: { team, eventDate: { gte: today }, cancelledAt: null },
           orderBy: { eventDate: "asc" },
           include: { dancers: { where: { id: member.id }, select: { id: true } } },
         }),

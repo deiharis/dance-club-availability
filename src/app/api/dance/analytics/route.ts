@@ -34,9 +34,9 @@ export async function GET(req: Request) {
 
     const [classEntries, rehearsals, attendance, performances, pendingReports] = await Promise.all([
       db.timetableEntry.findMany({ where: { memberId: { in: ids }, status: "CLASS" } }),
-      db.rehearsal.findMany({ where: { team }, orderBy: { date: "asc" } }),
+      db.rehearsal.findMany({ where: { team, cancelledAt: null }, orderBy: { date: "asc" } }),
       db.attendance.findMany({ where: { memberId: { in: ids } } }),
-      db.performance.findMany({ where: { team }, select: { eventDate: true } }),
+      db.performance.findMany({ where: { team, cancelledAt: null }, select: { eventDate: true } }),
       db.report.count({
         where: {
           status: "PENDING",

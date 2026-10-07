@@ -101,6 +101,9 @@ model Rehearsal {
   endTime   String
   venue     String?
   createdAt DateTime @default(now())
+  // Cancelled before it happened: kept in the history with who cancelled it (null = going ahead).
+  cancelledAt DateTime?
+  cancelledBy String?
 
   attendance Attendance[]
 }
@@ -125,6 +128,9 @@ model Performance {
   eventDate DateTime
   venue     String?
   createdAt DateTime @default(now())
+  // Cancelled before it happened: kept in the history with who cancelled it (null = going ahead).
+  cancelledAt DateTime?
+  cancelledBy String?
 
   dancers Member[] @relation("PerformanceDancers")
 }
