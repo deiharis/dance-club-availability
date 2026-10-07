@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search as SearchIcon, X, SlidersHorizontal, ArrowUpRight } from "lucide-react";
+import { Search as SearchIcon, X, SlidersHorizontal, ArrowUpRight, Copy, UserX } from "lucide-react";
+import { useToast } from "@/components/ui/feedback";
+import { Skeleton, EmptyState } from "@/components/ui/states";
 import { SLOTS, DAYS, DAY_LABELS } from "@/lib/timetable";
 import {
   CORE_TEAMS,
@@ -26,6 +28,8 @@ interface Member {
 }
 
 const ACTIVE_SLOTS = SLOTS.filter((s) => s.slot !== "Lunch");
+const MORNING = ACTIVE_SLOTS.slice(0, 6).map((s) => s.slot);
+const AFTERNOON = ACTIVE_SLOTS.slice(6).map((s) => s.slot);
 
 function getCategoryLabel(category: string) {
   if (category === "CORE") return "Core";
@@ -68,6 +72,7 @@ const chip = (on: boolean) =>
   }`;
 
 export default function SearchPage() {
+  const toast = useToast();
   const [draft, setDraft] = useState({ ...EMPTY_FILTERS });
   const [applied, setApplied] = useState<typeof EMPTY_FILTERS | null>(null);
   const [results, setResults] = useState<Member[]>([]);
@@ -88,7 +93,9 @@ export default function SearchPage() {
     }));
   }
 
-  async function handleSearch() {
+  const handleSearch = () => runSearch(draft);
+
+  async function runSearch(draft: typeof EMPTY_FILTERS) {
     setLoading(true);
     setSearched(true);
     setApplied({ ...draft });
@@ -107,12 +114,36 @@ export default function SearchPage() {
     if (draft.selectedSlots.length > 0)
       params.set("slots", draft.selectedSlots.join(","));
 
-    const res = await fetch(`/api/search?${params.toString()}`, {
-      cache: "no-store",
-    });
-    const data = await res.json();
-    setResults(Array.isArray(data) ? data : []);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/search?${params.toString()}`, { cache: "no-store" });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setResults(Array.isArray(data) ? data : []);
+    } catch {
+      setResults([]);
+      setSearched(false);
+      setRailOpen(true);
+      toast.error("Search did not finish", "Check your connection and press Search again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  // Click a filter chip above the results to drop that filter and search again.
+  function removeFilter(reset: Partial<typeof EMPTY_FILTERS>) {
+    const next = { ...(applied ?? draft), ...reset };
+    setDraft(next);
+    runSearch(next);
+  }
+
+  async function copyNames() {
+    const text = results.map((m, i) => `${i + 1}. ${m.fullName} (${m.registerNumber})`).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${results.length} name${results.length === 1 ? "" : "s"}`, "Paste them into WhatsApp or a document.");
+    } catch {
+      toast.error("Could not copy", "Your browser blocked the clipboard.");
+    }
   }
 
   function handleClear() {
@@ -164,7 +195,7 @@ export default function SearchPage() {
       <div className="p-4 sm:p-8 lg:grid lg:grid-cols-[19rem_minmax(0,1fr)] lg:items-start lg:gap-8">
         {/* ── Filter rail ─────────────────────────────────────────── */}
         <aside
-          className={`${railOpen ? "block" : "hidden"} lg:block mb-6 lg:mb-0 lg:sticky lg:top-24 rounded-xl border border-white/15 bg-gradient-to-b from-white/[0.04] to-transparent`}
+          className={`${railOpen ? "block" : "hidden"} lg:block mb-6 lg:mb-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7.5rem)] lg:overflow-y-auto overscroll-contain rounded-xl border border-white/15 bg-gradient-to-b from-white/[0.04] to-transparent`}
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <p className="text-sm font-bold text-white">
@@ -348,6 +379,34 @@ export default function SearchPage() {
                     </button>
                   ))}
                 </div>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {[
+                    { l: "Morning", v: MORNING },
+                    { l: "Afternoon", v: AFTERNOON },
+                    { l: "Whole day", v: [...MORNING, ...AFTERNOON] },
+                  ].map((p) => (
+                    <button
+                      key={p.l}
+                      type="button"
+                      onClick={() => set({ selectedSlots: p.v })}
+                      className="rounded px-2 py-1 text-[11px] font-medium text-violet-300 hover:bg-violet-500/10 hover:text-violet-200"
+                    >
+                      {p.l}
+                    </button>
+                  ))}
+                  {draft.selectedSlots.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => set({ selectedSlots: [] })}
+                      className="rounded px-2 py-1 text-[11px] font-medium text-zinc-500 hover:text-zinc-300"
+                    >
+                      Clear slots
+                    </button>
+                  )}
+                </div>
+                {draft.day && draft.selectedSlots.length === 0 && (
+                  <p className="mt-2 text-xs text-amber-400">Pick at least one slot to see who is free on {DAY_LABELS[draft.day]}</p>
+                )}
                 {draft.selectedSlots.length > 0 && !draft.day && (
                   <p className="mt-2 text-xs text-amber-400">
                     Pick a day to filter by slot availability
@@ -355,7 +414,10 @@ export default function SearchPage() {
                 )}
               </div>
             </section>
+          </div>
 
+          {/* Pinned to the bottom of the rail so it is always in reach, however long the filters get */}
+          <div className="sticky bottom-0 border-t border-white/10 bg-surface/95 p-4 backdrop-blur">
             <button
               onClick={handleSearch}
               disabled={loading}
@@ -372,27 +434,33 @@ export default function SearchPage() {
           {applied && searched && !loading && (
             <div className="mb-4 flex flex-wrap items-center gap-2">
               <span className="text-xs text-zinc-500">Active filters</span>
-              {[
-                applied.query && `"${applied.query}"`,
-                applied.category && getCategoryLabel(applied.category),
-                applied.isFFCS && "FFCS enrolled",
-                applied.department && `Dept: ${applied.department}`,
-                applied.academicYear && `Year ${applied.academicYear}`,
-                applied.position,
-                applied.team,
-                applied.skillLevel &&
-                  (applied.skillLevel === "PROFESSIONAL" ? "Professional" : "Amateur"),
-                applied.day &&
-                  `${DAY_LABELS[applied.day]}${
-                    applied.selectedSlots.length > 0 ? ` · ${applied.selectedSlots.join(", ")}` : ""
-                  }`,
-              ]
-                .filter(Boolean)
-                .map((t) => (
-                  <span key={String(t)} className="rounded bg-violet-500/15 px-2 py-1 text-xs text-violet-200">
-                    {t}
-                  </span>
-                ))}
+              {(
+                [
+                  applied.query && { t: `"${applied.query}"`, r: { query: "" } },
+                  applied.category && { t: getCategoryLabel(applied.category), r: { category: "", position: "", skillLevel: "" } },
+                  applied.isFFCS && { t: "FFCS enrolled", r: { isFFCS: "" } },
+                  applied.department && { t: `Dept: ${applied.department}`, r: { department: "" } },
+                  applied.academicYear && { t: `Year ${applied.academicYear}`, r: { academicYear: "" } },
+                  applied.position && { t: applied.position, r: { position: "" } },
+                  applied.team && { t: applied.team, r: { team: "" } },
+                  applied.skillLevel && { t: applied.skillLevel === "PROFESSIONAL" ? "Professional" : "Amateur", r: { skillLevel: "" } },
+                  applied.day && {
+                    t: `${DAY_LABELS[applied.day]}${applied.selectedSlots.length > 0 ? ` · ${applied.selectedSlots.join(", ")}` : ""}`,
+                    r: { day: "", selectedSlots: [] },
+                  },
+                ].filter(Boolean) as { t: string; r: Partial<typeof EMPTY_FILTERS> }[]
+              ).map((c) => (
+                <button
+                  key={c.t}
+                  type="button"
+                  onClick={() => removeFilter(c.r)}
+                  aria-label={`Remove filter ${c.t}`}
+                  className="group flex items-center gap-1 rounded bg-violet-500/15 px-2 py-1 text-xs text-violet-200 hover:bg-violet-500/25"
+                >
+                  {c.t}
+                  <X size={11} className="text-violet-300/60 group-hover:text-white" aria-hidden="true" />
+                </button>
+              ))}
             </div>
           )}
 
@@ -405,8 +473,11 @@ export default function SearchPage() {
               </p>
             </div>
           ) : loading ? (
-            <div className="rounded-xl border border-white/15 p-14 text-center">
-              <p className="text-sm text-zinc-500">Searching...</p>
+            <div className="space-y-2 rounded-xl border border-white/15 p-4" aria-busy="true" aria-label="Searching">
+              <Skeleton className="h-5 w-40" />
+              {Array.from({ length: 6 }, (_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-white/15 bg-gradient-to-b from-white/[0.04] to-transparent">
@@ -414,16 +485,38 @@ export default function SearchPage() {
                 <p className="text-sm font-bold text-white tabular-nums">
                   {results.length} member{results.length !== 1 ? "s" : ""} found
                 </p>
-                {applied?.day && applied.selectedSlots.length > 0 && (
-                  <p className="text-xs text-emerald-400">
-                    Free on {DAY_LABELS[applied.day]} during {applied.selectedSlots.join(", ")}
-                  </p>
-                )}
+                <div className="flex items-center gap-3">
+                  {applied?.day && applied.selectedSlots.length > 0 && (
+                    <p className="hidden text-xs text-emerald-400 sm:block">
+                      Free on {DAY_LABELS[applied.day]} during {applied.selectedSlots.join(", ")}
+                    </p>
+                  )}
+                  {results.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={copyNames}
+                      className="press flex items-center gap-1.5 rounded-md border border-zinc-700 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:border-zinc-500 hover:text-white"
+                    >
+                      <Copy size={12} aria-hidden="true" />
+                      Copy names
+                    </button>
+                  )}
+                </div>
               </div>
 
               {results.length === 0 ? (
-                <div className="p-14 text-center">
-                  <p className="text-sm text-zinc-500">No members match your filters.</p>
+                <div className="p-4">
+                  <EmptyState
+                    compact
+                    icon={UserX}
+                    title="No members match"
+                    body={
+                      applied?.day && applied.selectedSlots.length > 0
+                        ? "Nobody is free during every slot you picked. Try fewer slots or another day."
+                        : "Remove a filter above, or clear them all and start again."
+                    }
+                    action={{ label: "Clear all filters", onClick: handleClear }}
+                  />
                 </div>
               ) : (
                 <>
@@ -432,12 +525,12 @@ export default function SearchPage() {
                     <thead>
                       <tr className="border-b border-white/10 bg-white/[0.02] text-left text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
                         <th className="px-5 py-2.5">Member</th>
-                        <th className="px-4 py-2.5">Reg no.</th>
                         <th className="px-4 py-2.5">Category</th>
                         <th className="px-4 py-2.5">Position / team</th>
-                        <th className="px-4 py-2.5">Dept</th>
-                        <th className="px-4 py-2.5">Year</th>
-                        <th className="px-5 py-2.5 text-right">Timetable</th>
+                        <th className="px-4 py-2.5">Course</th>
+                        <th className="px-5 py-2.5 text-right">
+                          <span className="sr-only">Timetable</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
@@ -450,12 +543,11 @@ export default function SearchPage() {
                               </div>
                               <div className="min-w-0">
                                 <p className="truncate text-sm font-medium text-white">{member.fullName}</p>
-                                <p className="truncate text-xs text-zinc-500">{member.email}</p>
+                                <p className="truncate text-xs text-zinc-500">
+                                  <span className="font-mono">{member.registerNumber}</span> · Year {member.academicYear}
+                                </p>
                               </div>
                             </div>
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className="font-mono text-xs text-zinc-300">{member.registerNumber}</span>
                           </td>
                           <td className="px-4 py-2.5">
                             <div className="flex flex-wrap items-center gap-1.5">
@@ -481,14 +573,13 @@ export default function SearchPage() {
                             {member.team && <p className="mt-0.5 text-xs text-violet-400">{member.team}</p>}
                           </td>
                           <td className="px-4 py-2.5 text-sm text-zinc-300">{member.department}</td>
-                          <td className="px-4 py-2.5 text-sm tabular-nums text-zinc-300">Y{member.academicYear}</td>
                           <td className="px-5 py-2.5 text-right">
                             <Link
                               href={`/timetable/${member.id}`}
                               className="inline-flex items-center gap-1 rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 transition-colors hover:border-violet-400/60 hover:text-white"
                             >
-                              View
-                              <ArrowUpRight size={12} />
+                              Timetable
+                              <ArrowUpRight size={12} aria-hidden="true" />
                             </Link>
                           </td>
                         </tr>

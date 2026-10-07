@@ -1,6 +1,7 @@
 import React from "react";
 import { consoleFont } from "@/lib/fonts";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { db } from "@/lib/db";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
@@ -54,9 +55,10 @@ export default async function MemberTimetablePage({
           </div>
           <Link
             href="/timetable"
-            className="text-sm text-gray-400 hover:text-white transition-colors"
+            className="press flex shrink-0 items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:text-white"
           >
-            Back to Timetable
+            <ArrowLeft size={13} aria-hidden="true" />
+            All timetables
           </Link>
         </div>
 

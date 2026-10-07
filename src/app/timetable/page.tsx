@@ -11,6 +11,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import { getCaller } from "@/lib/dance";
 import { NO_TIMETABLE } from "@/lib/timetable";
 import MemberShell, { MemberHeading } from "@/components/member/MemberShell";
+import TimetableDirectory from "@/components/timetable/TimetableDirectory";
 
 // ── Member's own editable timetable ──────────────────────
 async function MemberTimetableView() {
@@ -47,62 +48,6 @@ async function MemberTimetableView() {
   );
 }
 
-// ── Admin timetable card per member ──────────────────────
-// Gets its entries from the page (loaded for everyone in ONE query). It used to query the database
-// itself, once per member: with ~300 members that was ~300 queries at once, which ran out of
-// database connections on Vercel and crashed the page.
-function MemberTimetableCard({
-  member,
-}: {
-  member: {
-    id: string;
-    fullName: string;
-    registerNumber: string;
-    department: string;
-    position: string | null;
-    timetableEntries: { day: string; slot: string; status: string }[];
-  };
-}) {
-  const entries = member.timetableEntries;
-
-  return (
-    <div className="bg-surface border border-gray-800 rounded-xl overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center">
-            <span className="text-purple-400 text-xs font-semibold">
-              {member.fullName.charAt(0).toUpperCase()}
-            </span>
-          </div>
-          <div>
-            <p className="text-white text-sm font-medium">{member.fullName}</p>
-            <p className="text-gray-500 text-xs">
-              {member.registerNumber} · {member.department}
-              {member.position ? ` · ${member.position}` : ""}
-            </p>
-          </div>
-        </div>
-        <Link
-          href={`/timetable/${member.id}`}
-          className="text-xs text-purple-400 hover:text-purple-300 transition-colors"
-        >
-          Full view
-        </Link>
-      </div>
-      <div className="px-6 py-4">
-        <TimetableGrid
-          memberId={member.id}
-          initialEntries={entries.map((e) => ({
-            day: e.day,
-            slot: e.slot,
-            status: e.status as "FREE" | "CLASS",
-          }))}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Main page — roles split here ─────────────────────────
 export default async function TimetablePage({
   searchParams,
@@ -133,8 +78,12 @@ export default async function TimetablePage({
     db.member.findMany({
       where: missing ? noTimetable : undefined,
       orderBy: { fullName: "asc" },
-      // Everyone's timetable in the same trip (2 queries total, not one per member).
-      include: { timetableEntries: { select: { day: true, slot: true, status: true } } },
+      // Everyone's class slots in the same trip (2 queries total, not one per member). Only CLASS
+      // rows are sent to the browser: a missing slot already means free.
+      select: {
+        id: true, fullName: true, registerNumber: true, department: true, position: true, team: true, category: true,
+        timetableEntries: { where: { status: "CLASS" }, select: { day: true, slot: true } },
+      },
     }),
     db.member.count({ where: noTimetable }),
   ]);
@@ -161,7 +110,7 @@ export default async function TimetablePage({
           <p className="text-gray-500 text-xs mt-0.5">
             {missing
               ? "Members who have not set their timetable yet. Fill it in here, or ask them to."
-              : "Click any cell to toggle between Free and Class"}
+              : "Find a member and open their week to view or edit it"}
           </p>
         </div>
         <div className="p-4 sm:p-8">
@@ -184,29 +133,10 @@ export default async function TimetablePage({
               </a>
             )}
           </div>
-          {missing && members.length === 0 ? (
-            <div className="bg-surface border border-gray-800 rounded-xl p-12 text-center">
-              <p className="text-gray-400 text-sm">Everyone has set their timetable.</p>
-            </div>
-          ) : members.length === 0 ? (
-            <div className="bg-surface border border-gray-800 rounded-xl p-12 text-center">
-              <p className="text-gray-500 text-sm mb-4">
-                No members yet. Add members first.
-              </p>
-              <Link
-                href="/members/add"
-                className="bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
-              >
-                Add Member
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {members.map((member) => (
-                <MemberTimetableCard key={member.id} member={member} />
-              ))}
-            </div>
-          )}
+          <TimetableDirectory
+            missing={missing}
+            members={members.map(({ timetableEntries, ...m }) => ({ ...m, classes: timetableEntries.map((e) => `${e.day}_${e.slot}`) }))}
+          />
         </div>
       </main>
     </div>
