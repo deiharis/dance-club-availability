@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Splash from "@/components/brand/Splash";
 import { LogoLockup } from "@/components/brand/Logo";
 import { brandFont } from "@/lib/fonts";
+import PasswordInput from "@/components/ui/PasswordInput";
 
 const input =
   "w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white placeholder-zinc-600 transition-colors focus:border-amber-400/70 focus:outline-none focus:ring-2 focus:ring-amber-400/20";
@@ -37,15 +38,20 @@ export default function LoginPage() {
       email,
       password,
       redirect: false,
-    });
+    }).catch(() => null);
 
-    setLoading(false);
-
-    if (result?.error) {
+    if (!result) {
+      setLoading(false);
+      setError("Could not reach the server. Check your connection and try again.");
+      return;
+    }
+    if (result.error) {
+      setLoading(false);
       setError("Invalid email or password");
       return;
     }
 
+    // Stay on "Signing in..." while the next page loads (it redirects by role).
     router.push("/");
   }
 
@@ -68,10 +74,11 @@ export default function LoginPage() {
 
           <form onSubmit={handleLogin} className="mt-6 space-y-4">
             <div>
-              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-zinc-500">
+              <label htmlFor="login-email" className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-zinc-500">
                 Email address
               </label>
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -83,11 +90,11 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-zinc-500">
+              <label htmlFor="login-password" className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-zinc-500">
                 Password
               </label>
-              <input
-                type="password"
+              <PasswordInput
+                id="login-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Your password"
@@ -110,8 +117,13 @@ export default function LoginPage() {
             )}
 
             {error && (
-              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3">
+              <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3" role="alert">
                 <p className="text-sm text-red-400">{error}</p>
+                {error.startsWith("Invalid") && (
+                  <p className="mt-1 text-xs text-red-300/70">
+                    Check for typing mistakes (the eye shows what you typed). Forgotten it? Ask the Super Admin to reset your password.
+                  </p>
+                )}
               </div>
             )}
 
