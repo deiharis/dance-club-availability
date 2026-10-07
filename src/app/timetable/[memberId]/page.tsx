@@ -61,7 +61,7 @@ export default async function MemberTimetablePage({
         </div>
 
         <div className="p-4 sm:p-8 min-w-0">
-          <div className="bg-[#111014] border border-gray-800 rounded-xl px-4 sm:px-6 py-6">
+          <div className="bg-surface border border-gray-800 rounded-xl px-4 sm:px-6 py-6">
             <TimetableGrid
               memberId={member.id}
               initialEntries={entries.map((e) => ({

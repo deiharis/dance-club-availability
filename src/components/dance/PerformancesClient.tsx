@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, MapPin, Pencil } from "lucide-react";
@@ -95,6 +97,8 @@ function Item({
   onError: (m: string) => void;
 }) {
   const router = useRouter();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [editing, setEditing] = useState(false);
   const [ids, setIds] = useState(p.dancerIds);
   const [busy, setBusy] = useState(false);
@@ -116,13 +120,26 @@ function Item({
 
   async function remove() {
     const upcoming = p.date >= new Date().toLocaleDateString("en-CA");
-    const msg = upcoming
-      ? `Cancel "${p.name}" on ${p.date}? Everyone in the team will be notified that it is cancelled.`
-      : `Delete "${p.name}"?`;
-    if (!confirm(msg)) return;
+    const ok = await confirm(
+      upcoming
+        ? {
+            title: `Cancel "${p.name}"?`,
+            body: `It is on ${p.date}. Everyone in the team will be notified that it has been cancelled.`,
+            confirmLabel: "Cancel performance",
+            cancelLabel: "Keep it",
+            tone: "danger",
+          }
+        : { title: `Delete "${p.name}"?`, body: "This past performance is removed from the list.", confirmLabel: "Delete", tone: "danger" }
+    );
+    if (!ok) return;
     onError("");
     const res = await fetch(`/api/dance/performances/${p.id}`, { method: "DELETE" });
-    if (!res.ok) return onError((await res.json()).error ?? "Could not delete");
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({}))).error ?? "Could not delete";
+      toast.error(upcoming ? "Could not cancel the performance" : "Could not delete", msg);
+      return onError(msg);
+    }
+    toast.success(upcoming ? "Performance cancelled" : "Performance deleted", upcoming ? "The team has been notified." : p.name);
     router.refresh();
   }
 

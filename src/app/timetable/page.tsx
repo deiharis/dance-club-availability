@@ -66,7 +66,7 @@ function MemberTimetableCard({
   const entries = member.timetableEntries;
 
   return (
-    <div className="bg-[#111014] border border-gray-800 rounded-xl overflow-hidden">
+    <div className="bg-surface border border-gray-800 rounded-xl overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-purple-600/20 border border-purple-500/20 rounded-full flex items-center justify-center">
@@ -185,11 +185,11 @@ export default async function TimetablePage({
             )}
           </div>
           {missing && members.length === 0 ? (
-            <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
+            <div className="bg-surface border border-gray-800 rounded-xl p-12 text-center">
               <p className="text-gray-400 text-sm">Everyone has set their timetable.</p>
             </div>
           ) : members.length === 0 ? (
-            <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
+            <div className="bg-surface border border-gray-800 rounded-xl p-12 text-center">
               <p className="text-gray-500 text-sm mb-4">
                 No members yet. Add members first.
               </p>

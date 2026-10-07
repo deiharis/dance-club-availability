@@ -1,22 +1,36 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import { useState } from "react";
 import { KeyRound } from "lucide-react";
 
 // SuperAdmin only (the Edit page shows it when the API says so; the API re-checks).
 export default function ResetPassword({ memberId, name }: { memberId: string; name: string }) {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [temp, setTemp] = useState("");
 
   async function reset() {
-    if (!confirm(`Reset ${name}'s password? Their current password stops working immediately.`)) return;
+    const ok = await confirm({
+      title: `Reset ${name}'s password?`,
+      body: "Their current password stops working immediately. It becomes their register number, and they must choose a new one when they next log in.",
+      confirmLabel: "Reset password",
+      tone: "danger",
+    });
+    if (!ok) return;
     setLoading(true);
     setError("");
     const res = await fetch(`/api/members/${memberId}/password`, { method: "POST" });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
-    if (!res.ok) return setError(data.error || "Something went wrong");
+    if (!res.ok) {
+      toast.error("Could not reset the password", data.error);
+      return setError(data.error || "Something went wrong");
+    }
+    toast.success("Password reset", `Temporary password: ${data.tempPassword}`);
     setTemp(data.tempPassword);
   }
 

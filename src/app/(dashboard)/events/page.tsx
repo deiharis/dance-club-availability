@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import React, { useState, useEffect } from "react";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import { panel, control, controlLabel, sectionTitle, dateIN } from "@/components/console/ui";
@@ -12,6 +14,8 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -57,9 +61,17 @@ export default function EventsPage() {
   }
 
   async function handleDelete(id: string, name: string) {
-    if (!confirm(`Delete event "${name}"? This cannot be undone.`)) return;
+    const ok = await confirm({
+      title: `Delete "${name}"?`,
+      body: "Members will no longer be able to choose this event for OD requests. This cannot be undone.",
+      confirmLabel: "Delete event",
+      tone: "danger",
+    });
+    if (!ok) return;
     const res = await fetch(`/api/events/${id}`, { method: "DELETE" });
-    if (res.ok) loadEvents();
+    if (!res.ok) return toast.error("Could not delete the event", (await res.json().catch(() => ({}))).error);
+    toast.success("Event deleted", name);
+    loadEvents();
   }
 
   // Dates are stored as UTC midnight; compare on the date part only.

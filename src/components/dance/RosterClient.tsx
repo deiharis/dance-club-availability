@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, UserPlus, UserMinus, Upload, Download, FileSpreadsheet, X, Pencil } from "lucide-react";
@@ -62,6 +64,8 @@ export default function RosterClient({
   readOnly?: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
@@ -119,18 +123,38 @@ export default function RosterClient({
 
   // Core / Normal / FFCS-only members only leave the team; their account stays.
   async function removeFromTeam(d: Dancer) {
-    if (!confirm(`Take ${d.fullName} out of ${team}? Their account and committee role stay.`)) return;
+    const ok = await confirm({
+      title: `Take ${d.fullName} out of ${team}?`,
+      body: "They leave the dance team only. Their account and committee role stay exactly as they are.",
+      confirmLabel: "Remove from team",
+      tone: "danger",
+    });
+    if (!ok) return;
     setError("");
     const res = await fetch(`/api/dance/members/${d.id}/team`, { method: "PATCH" });
-    if (!res.ok) setError((await res.json()).error ?? "Could not remove from team");
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({}))).error ?? "Could not remove from team";
+      toast.error("Could not remove from team", msg);
+      setError(msg);
+    } else toast.success(`${d.fullName} removed from ${team}`);
     router.refresh();
   }
 
   async function remove(d: Dancer) {
-    if (!confirm(`Remove ${d.fullName} and delete their account?`)) return;
+    const ok = await confirm({
+      title: `Remove ${d.fullName}?`,
+      body: "Their account is deleted, together with their timetable, reports and attendance. This cannot be undone.",
+      confirmLabel: "Delete dancer",
+      tone: "danger",
+    });
+    if (!ok) return;
     setError("");
     const res = await fetch(`/api/members/${d.id}`, { method: "DELETE" });
-    if (!res.ok) setError((await res.json()).error ?? "Could not remove");
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({}))).error ?? "Could not remove";
+      toast.error("Could not remove the dancer", msg);
+      setError(msg);
+    } else toast.success(`${d.fullName} removed`);
     router.refresh();
   }
 

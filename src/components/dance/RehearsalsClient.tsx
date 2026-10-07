@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarPlus, Trash2, MapPin, Clock } from "lucide-react";
@@ -97,6 +99,8 @@ export default function RehearsalsClient({
   canManage: boolean;
 }) {
   const router = useRouter();
+  const toast = useToast();
+  const confirm = useConfirm();
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState("");
@@ -127,13 +131,32 @@ export default function RehearsalsClient({
   async function remove(r: Rehearsal) {
     // Upcoming: the team is told it is cancelled (by the server). Past: just tidying up.
     const upcoming = r.date >= new Date().toLocaleDateString("en-CA");
-    const msg = upcoming
-      ? `Cancel "${r.title}" on ${r.date}? Everyone in the team will be notified that it is cancelled.`
-      : `Delete "${r.title}"? Its attendance records are deleted too.`;
-    if (!confirm(msg)) return;
+    const ok = await confirm(
+      upcoming
+        ? {
+            title: `Cancel "${r.title}"?`,
+            body: `It is on ${r.date}, ${r.startTime} - ${r.endTime}. Everyone in the team will be notified that it has been cancelled.`,
+            confirmLabel: "Cancel rehearsal",
+            cancelLabel: "Keep it",
+            tone: "danger",
+          }
+        : {
+            title: `Delete "${r.title}"?`,
+            body: "This past rehearsal and its attendance records are removed. This cannot be undone.",
+            confirmLabel: "Delete",
+            tone: "danger",
+          }
+    );
+    if (!ok) return;
     setError("");
     const res = await fetch(`/api/dance/rehearsals/${r.id}`, { method: "DELETE" });
-    if (!res.ok) setError((await res.json()).error ?? "Could not delete");
+    if (!res.ok) {
+      const msg = (await res.json().catch(() => ({}))).error ?? "Could not delete";
+      toast.error(upcoming ? "Could not cancel the rehearsal" : "Could not delete", msg);
+      setError(msg);
+    } else {
+      toast.success(upcoming ? "Rehearsal cancelled" : "Rehearsal deleted", upcoming ? "The team has been notified." : r.title);
+    }
     router.refresh();
   }
 

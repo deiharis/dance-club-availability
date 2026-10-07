@@ -6,6 +6,51 @@
 :root {
   --background: #0a0a0c;
   --foreground: #ededed;
+  /* Design tokens (Phase 1). Motion: one curve, three speeds (also Tailwind ease-brand,
+     duration-120 / 200 / 320). Focus ring: violet in the console, gold on the Dance Floor. */
+  --ease-brand: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+  --focus: #a78bfa;
+  /* Browser-drawn parts (date pickers, dropdown lists, scrollbars, checkboxes) in dark mode */
+  color-scheme: dark;
+}
+.stage-glow { --focus: #fbbf24; }
+
+/* Visible keyboard focus everywhere (mouse clicks do not show it: :focus-visible only). */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ── Feedback (components/ui/feedback.tsx) and loading (components/ui/states.tsx) ── */
+@keyframes fb-rise { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes fb-fade { from { opacity: 0; } to { opacity: 1; } }
+.fb-toast { animation: fb-rise var(--dur-2) var(--ease-brand) both; }
+.fb-dialog { animation: fb-rise var(--dur-2) var(--ease-brand) both; }
+.fb-backdrop { animation: fb-fade var(--dur-2) var(--ease-brand) both; }
+
+/* Skeleton shimmer: a soft highlight sweeping across the placeholder. */
+.sk {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+.sk::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+  animation: sk-sweep 1.4s var(--ease-brand) infinite;
+}
+.sk-stage { background: rgba(251, 191, 36, 0.06); }
+@keyframes sk-sweep { to { transform: translateX(100%); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .fb-toast, .fb-dialog, .fb-backdrop { animation: none; }
+  .sk::after { animation: none; }
 }
 
 body {

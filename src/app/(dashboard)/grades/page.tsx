@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import React, { useState, useEffect, useMemo } from "react";
 import { Plus, Pencil, Trash2, GraduationCap, X, Check, Search } from "lucide-react";
 import { panel, control, controlLabel, sectionTitle, Avatar } from "@/components/console/ui";
@@ -81,6 +83,8 @@ function Distribution({ grades }: { grades: Grade[] }) {
 }
 
 export default function GradesPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -177,9 +181,17 @@ export default function GradesPage() {
   }
 
   async function handleDeleteGrade(gradeId: string) {
-    if (!confirm("Delete this grade entry?")) return;
+    const ok = await confirm({
+      title: "Delete this grade?",
+      body: "The grade entry is removed from this member's FFCS record. This cannot be undone.",
+      confirmLabel: "Delete grade",
+      tone: "danger",
+    });
+    if (!ok) return;
     const res = await fetch(`/api/grades/${gradeId}`, { method: "DELETE" });
-    if (res.ok) loadMembers();
+    if (!res.ok) return toast.error("Could not delete the grade", (await res.json().catch(() => ({}))).error);
+    toast.success("Grade deleted");
+    loadMembers();
   }
 
   function startEdit(grade: Grade) {

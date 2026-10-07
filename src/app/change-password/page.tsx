@@ -17,7 +17,7 @@ export default async function ChangePasswordPage() {
 
   return (
     <div className={`${consoleFont.className} flex min-h-screen items-center justify-center bg-base p-4`}>
-      <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-[#111014] p-6 sm:p-8">
+      <div className="w-full max-w-md rounded-lg border border-zinc-800 bg-surface p-6 sm:p-8">
         <ChangePasswordForm forced={!!user?.mustChangePassword} />
       </div>
     </div>

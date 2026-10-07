@@ -1,5 +1,7 @@
 "use client";
 
+import { useToast, useConfirm } from "@/components/ui/feedback";
+
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import Link from "next/link";
 import ProgrammeIssuesCard from "@/components/members/ProgrammeIssuesCard";
@@ -44,6 +46,8 @@ const secondaryBtn =
   "flex items-center gap-1.5 border border-zinc-700 hover:bg-white/5 hover:border-zinc-500 disabled:opacity-50 text-zinc-200 text-xs sm:text-sm font-medium px-3 py-2 rounded-lg transition-colors";
 
 export default function MembersPage() {
+  const toast = useToast();
+  const confirm = useConfirm();
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
@@ -158,10 +162,14 @@ export default function MembersPage() {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
     // Typed confirmation: this deletes accounts and everything linked to them, and cannot be undone.
-    const typed = window.prompt(
-      `Delete ${ids.length} member${ids.length === 1 ? "" : "s"} and their accounts, timetables, reports and attendance? This cannot be undone.\n\nType DELETE to confirm.`
-    );
-    if (typed?.trim().toUpperCase() !== "DELETE") return;
+    const ok = await confirm({
+      title: `Delete ${ids.length} member${ids.length === 1 ? "" : "s"}?`,
+      body: "Their accounts are deleted together with their timetables, reports and attendance. The Super Admin and your own account are never deleted. This cannot be undone.",
+      confirmLabel: `Delete ${ids.length}`,
+      tone: "danger",
+      requireText: "DELETE",
+    });
+    if (!ok) return;
     setDeleting(true);
     setBulkResult(null);
     const res = await fetch("/api/members/bulk-delete", {
@@ -275,7 +283,7 @@ export default function MembersPage() {
         <ProgrammeIssuesCard refreshKey={reloads} />
 
         {importResult && (
-          <div className="bg-[#111014] border border-zinc-800 rounded-lg p-4 mb-4">
+          <div className="bg-surface border border-zinc-800 rounded-lg p-4 mb-4">
             <p className="text-white text-sm font-medium mb-1">
               Import complete: {importResult.created} added
               {importResult.attached ? `, ${importResult.attached} existing member${importResult.attached === 1 ? "" : "s"} added to their dance team` : ""},{" "}
@@ -298,7 +306,7 @@ export default function MembersPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search name, register no, email, department"
-              className="w-full rounded-lg border border-zinc-700 bg-[#111014] py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-600"
+              className="w-full rounded-lg border border-zinc-700 bg-surface py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-600"
             />
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -332,7 +340,7 @@ export default function MembersPage() {
         </div>
 
         {bulkResult && (
-          <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-[#111014] px-4 py-3">
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-surface px-4 py-3">
             <p className="text-sm text-zinc-200">{bulkResult}</p>
             <button onClick={() => setBulkResult(null)} className="text-xs text-violet-400 hover:text-violet-300">Dismiss</button>
           </div>
@@ -367,18 +375,18 @@ export default function MembersPage() {
         {loading ? (
           <div className="p-12 text-center"><p className="text-zinc-500 text-sm">Loading...</p></div>
         ) : members.length === 0 ? (
-          <div className="bg-[#111014] border border-zinc-800 rounded-lg p-12 text-center">
+          <div className="bg-surface border border-zinc-800 rounded-lg p-12 text-center">
             <p className="text-zinc-500 text-sm mb-4">No members yet.</p>
             <Link href="/members/add" className="bg-violet-600 hover:bg-violet-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Add your first member</Link>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="bg-[#111014] border border-zinc-800 rounded-lg p-12 text-center">
+          <div className="bg-surface border border-zinc-800 rounded-lg p-12 text-center">
             <p className="text-zinc-500 text-sm">No members match your search.</p>
           </div>
         ) : (
           <>
             {/* Desktop table: dense rows, small-caps header */}
-            <div className="hidden md:block bg-[#111014] border border-zinc-800 rounded-lg overflow-hidden">
+            <div className="hidden md:block bg-surface border border-zinc-800 rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/40 text-left text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
@@ -460,7 +468,7 @@ export default function MembersPage() {
             {/* Mobile cards */}
             <div className="md:hidden space-y-3">
               {filtered.map((member) => (
-                <div key={member.id} className={`bg-[#111014] border rounded-lg p-4 ${selected.has(member.id) ? "border-red-500/40" : "border-zinc-800"}`}>
+                <div key={member.id} className={`bg-surface border rounded-lg p-4 ${selected.has(member.id) ? "border-red-500/40" : "border-zinc-800"}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-3 min-w-0">
                       {selectMode && (

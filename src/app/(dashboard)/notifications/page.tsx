@@ -64,13 +64,13 @@ export default async function CommitteeNotificationsPage() {
 
       <div className="p-4 sm:p-8 max-w-3xl">
         {notifications.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 bg-[#111014] p-12 text-center">
+          <div className="rounded-lg border border-zinc-800 bg-surface p-12 text-center">
             <p className="text-sm text-zinc-500">
               Nothing yet. New reports and OD requests that need a decision will show up here.
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-zinc-800/70 overflow-hidden rounded-lg border border-zinc-800 bg-[#111014]">
+          <div className="divide-y divide-zinc-800/70 overflow-hidden rounded-lg border border-zinc-800 bg-surface">
             {notifications.map((n) => {
               const kind = KIND[n.type] ?? KIND.REPORT_SUBMITTED;
               const Icon = kind.icon;

@@ -130,7 +130,7 @@ function Grid({
         <table className="border-collapse w-full">
           <thead>
             <tr>
-              <th className="text-left text-gray-400 text-[10px] font-medium uppercase tracking-wide px-2 py-1.5 w-16 sticky left-0 bg-[#111014] z-10">
+              <th className="text-left text-gray-400 text-[10px] font-medium uppercase tracking-wide px-2 py-1.5 w-16 sticky left-0 bg-surface z-10">
                 Day
               </th>
               {SLOTS.map((slotInfo) => {
@@ -157,7 +157,7 @@ function Grid({
             {DAYS.map((day) => (
               <tr key={day} className="border-t border-gray-800/50">
                 {/* Day label */}
-                <td className="px-2 py-1 sticky left-0 bg-[#111014] z-10">
+                <td className="px-2 py-1 sticky left-0 bg-surface z-10">
                   <span className="text-gray-200 text-xs font-medium">
                     {DAY_LABELS[day].slice(0, 3)}
                   </span>
@@ -214,7 +214,7 @@ function Grid({
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-[#111014] border border-gray-700 rounded-lg px-3 py-2 pointer-events-none shadow-xl"
+          className="fixed z-50 bg-surface border border-gray-700 rounded-lg px-3 py-2 pointer-events-none shadow-xl"
           style={{ left: tooltip.x + 12, top: tooltip.y - 10 }}
         >
           <p className="text-white text-xs font-medium">
