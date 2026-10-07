@@ -48,11 +48,13 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Mark notifications as read. Optional body { section: "COMMITTEE" | "DANCE" }
-    // limits it to one feed; with no section, everything is marked.
+    // Mark notifications as read. Body { id } marks that one (opened from a feed); otherwise
+    // optional { section: "COMMITTEE" | "DANCE" } limits it to one feed, and no body marks everything.
+    // memberId in every filter: you can only ever mark your own notifications.
     const body = await req.json().catch(() => ({}));
+    const one = typeof body?.id === "string" ? { id: body.id } : sectionWhere(parseSection(body?.section));
     await db.notification.updateMany({
-      where: { memberId: member.id, read: false, ...sectionWhere(parseSection(body?.section)) },
+      where: { memberId: member.id, read: false, ...one },
       data: { read: true },
     });
 

@@ -7,6 +7,8 @@ import { NO_TIMETABLE } from "@/lib/timetable";
 import { listProgrammeIssues } from "@/lib/programme-issues";
 import HaloParallax from "@/components/console/HaloParallax";
 import { CountUp } from "@/components/analytics/parts";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { onboardingSteps } from "@/lib/onboarding";
 import {
   FileText,
   FileBadge,
@@ -37,7 +39,7 @@ export default async function DashboardPage() {
   const today = new Date(new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) + "T00:00:00Z");
   const teamFilter = caller.seesAllTeams ? {} : caller.member?.team ? { team: caller.member.team } : null;
 
-  const [byCategory, ffcs, pendingReports, pendingOD, noTimetable, events, rehearsals, performances, recent, programmeIssues] =
+  const [byCategory, ffcs, pendingReports, pendingOD, noTimetable, events, rehearsals, performances, recent, programmeIssues, myClasses] =
     await Promise.all([
       db.member.groupBy({ by: ["category"], _count: true }),
       db.member.count({ where: { isFFCS: true } }),
@@ -54,6 +56,8 @@ export default async function DashboardPage() {
         : Promise.resolve([]),
       db.member.findMany({ take: 5, orderBy: { createdAt: "desc" }, select: { id: true, fullName: true, category: true, team: true, position: true } }),
       isSuper ? listProgrammeIssues().then((l) => l.length) : Promise.resolve(0),
+      // Your own timetable, for the "Finish setting up" checklist
+      caller.member ? db.timetableEntry.count({ where: { memberId: caller.member.id, status: "CLASS" } }) : Promise.resolve(1),
     ]);
 
   const countOf = (key: string) => byCategory.find((c) => c.category === key)?._count ?? 0;
@@ -277,6 +281,7 @@ export default async function DashboardPage() {
 
           {/* Side column */}
           <aside className="space-y-10">
+            {caller.member && <OnboardingChecklist steps={onboardingSteps(caller.member, myClasses > 0)} />}
             <section aria-labelledby="quick-h">
               <h2 id="quick-h" className="mb-4 text-lg font-bold text-white">Quick actions</h2>
               <div className="grid grid-cols-2 gap-2">

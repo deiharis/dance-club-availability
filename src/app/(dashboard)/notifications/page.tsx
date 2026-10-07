@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, FileText, FileBadge, ArrowUpRight, Music, UserPlus, GraduationCap } from "lucide-react";
+import { CheckCircle, XCircle, FileText, FileBadge, ArrowUpRight, Music, UserPlus, GraduationCap, Bell } from "lucide-react";
 import { db } from "@/lib/db";
 import { getCaller } from "@/lib/dance";
-import { sectionWhere } from "@/lib/notify";
+import { sectionWhere, dayGroup } from "@/lib/notify";
 import MarkAllRead from "@/components/notifications/MarkAllRead";
+import NotificationLink from "@/components/notifications/NotificationLink";
+import { EmptyState } from "@/components/ui/states";
 
 // Icon per Working Committee notification type.
 const KIND: Record<string, { icon: React.ElementType; color: string }> = {
@@ -33,6 +35,13 @@ export default async function CommitteeNotificationsPage() {
       : Promise.resolve(0),
   ]);
   const unread = notifications.filter((n) => !n.read).length;
+  // Newest first, under Today / Yesterday / This week / Earlier.
+  const groups: { title: string; items: typeof notifications }[] = [];
+  for (const n of notifications) {
+    const title = dayGroup(n.createdAt);
+    if (groups.at(-1)?.title !== title) groups.push({ title, items: [] });
+    groups.at(-1)!.items.push(n);
+  }
 
   return (
     <div>
@@ -64,52 +73,53 @@ export default async function CommitteeNotificationsPage() {
 
       <div className="p-4 sm:p-8 max-w-3xl">
         {notifications.length === 0 ? (
-          <div className="rounded-lg border border-zinc-800 bg-surface p-12 text-center">
-            <p className="text-sm text-zinc-500">
-              Nothing yet. New reports and OD requests that need a decision will show up here.
-            </p>
-          </div>
+          <EmptyState icon={Bell} title="No notifications yet" body="New reports and OD requests that need a decision, and news about your own reports, will show up here." />
         ) : (
-          <div className="divide-y divide-zinc-800/70 overflow-hidden rounded-lg border border-zinc-800 bg-surface">
-            {notifications.map((n) => {
-              const kind = KIND[n.type] ?? KIND.REPORT_SUBMITTED;
-              const Icon = kind.icon;
-              const row = (
-                <div
-                  className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03] ${
-                    n.read ? "" : "bg-violet-500/[0.06]"
-                  }`}
-                >
-                  <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${kind.color}`}>
-                    <Icon size={15} />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className={`text-sm ${n.read ? "text-zinc-300" : "font-medium text-white"}`}>
-                      {n.message}
-                    </p>
-                    <p className="mt-0.5 text-[11px] text-zinc-500">
-                      {n.createdAt.toLocaleString("en-IN", {
-                        day: "numeric",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        timeZone: "Asia/Kolkata",
-                      })}
-                    </p>
-                  </div>
-                  {!n.read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-violet-400" />}
-                  {n.link && <ArrowUpRight size={14} className="mt-1.5 shrink-0 text-zinc-600" />}
-                </div>
-              );
-              return n.link ? (
-                <Link key={n.id} href={n.link} className="block">
-                  {row}
-                </Link>
-              ) : (
-                <div key={n.id}>{row}</div>
-              );
-            })}
-          </div>
+          groups.map((g) => (
+            <section key={g.title} className="mb-6">
+              <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">{g.title}</h2>
+              <div className="divide-y divide-zinc-800/70 overflow-hidden rounded-lg border border-zinc-800 bg-surface">
+                {g.items.map((n) => {
+                  const kind = KIND[n.type] ?? KIND.REPORT_SUBMITTED;
+                  const Icon = kind.icon;
+                  const row = (
+                    <div
+                      className={`flex items-start gap-3 px-4 py-3 transition-colors hover:bg-white/[0.03] ${
+                        n.read ? "" : "bg-violet-500/[0.06]"
+                      }`}
+                    >
+                      <span className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${kind.color}`}>
+                        <Icon size={15} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className={`text-sm ${n.read ? "text-zinc-300" : "font-medium text-white"}`}>
+                          {n.message}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-zinc-500">
+                          {n.createdAt.toLocaleString("en-IN", {
+                            day: "numeric",
+                            month: "short",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            timeZone: "Asia/Kolkata",
+                          })}
+                        </p>
+                      </div>
+                      {!n.read && <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-violet-400" />}
+                      {n.link && <ArrowUpRight size={14} className="mt-1.5 shrink-0 text-zinc-600" />}
+                    </div>
+                  );
+                  return n.link ? (
+                    <NotificationLink key={n.id} id={n.id} href={n.link} unread={!n.read}>
+                      {row}
+                    </NotificationLink>
+                  ) : (
+                    <div key={n.id}>{row}</div>
+                  );
+                })}
+              </div>
+            </section>
+          ))
         )}
       </div>
     </div>

@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight, GraduationCap, CalendarX } from "lucide-react";
+import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight, GraduationCap, CalendarX, Bell } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
-import { sectionWhere } from "@/lib/notify";
+import { sectionWhere, dayGroup } from "@/lib/notify";
+import NotificationLink from "@/components/notifications/NotificationLink";
+import { EmptyState } from "@/components/ui/states";
 import StageHeader from "@/components/dance/StageHeader";
 import MarkAllRead from "@/components/notifications/MarkAllRead";
 
@@ -36,6 +38,13 @@ export default async function DanceNotificationsPage() {
       : Promise.resolve(0),
   ]);
   const unread = notifications.filter((n) => !n.read).length;
+  // Newest first, under Today / Yesterday / This week / Earlier.
+  const groups: { title: string; items: typeof notifications }[] = [];
+  for (const n of notifications) {
+    const title = dayGroup(n.createdAt);
+    if (groups.at(-1)?.title !== title) groups.push({ title, items: [] });
+    groups.at(-1)!.items.push(n);
+  }
 
   return (
     <div className="p-4 sm:p-8 max-w-2xl">
@@ -64,43 +73,51 @@ export default async function DanceNotificationsPage() {
         </div>
       </StageHeader>
 
-      <div className="space-y-3">
+      <div>
         {notifications.length === 0 && (
-          <p className="text-orange-100/50 text-sm">No notifications yet.</p>
+          <EmptyState stage icon={Bell} title="No updates yet" body="New rehearsals, performances, attendance and decisions on your reports will show up here." />
         )}
-        {notifications.map((n) => {
-          const kind = KIND[n.type] ?? KIND.REHEARSAL_ADDED;
-          const Icon = kind.icon;
-          const card = (
-            <div
-              className={`flex items-start gap-3 rounded-3xl border px-4 py-3 transition ${
-                n.read
-                  ? "bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border-white/10"
-                  : "bg-orange-500/10 border-orange-500/30"
-              } ${n.link ? "hover:border-amber-300/40" : ""}`}
-            >
-              <Icon size={18} className={`mt-0.5 shrink-0 ${kind.color}`} />
-              <div>
-                <p className="text-white text-sm">{n.message}</p>
-                <p className="text-orange-100/50 text-xs mt-1">
-                  {n.createdAt.toLocaleDateString("en-IN", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    timeZone: "Asia/Kolkata",
-                  })}
-                </p>
-              </div>
+        {groups.map((g) => (
+          <section key={g.title} className="mb-6">
+            <h2 className="mb-3 text-[11px] font-medium uppercase tracking-[0.2em] text-orange-100/50">{g.title}</h2>
+            <div className="space-y-3">
+              {g.items.map((n) => {
+                const kind = KIND[n.type] ?? KIND.REHEARSAL_ADDED;
+                const Icon = kind.icon;
+                const card = (
+                  <div
+                    className={`flex items-start gap-3 rounded-3xl border px-4 py-3 transition ${
+                      n.read
+                        ? "bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border-white/10"
+                        : "bg-orange-500/10 border-orange-500/30"
+                    } ${n.link ? "hover:border-amber-300/40" : ""}`}
+                  >
+                    <Icon size={18} className={`mt-0.5 shrink-0 ${kind.color}`} />
+                    <div>
+                      <p className="text-white text-sm">{n.message}</p>
+                      <p className="text-orange-100/50 text-xs mt-1">
+                        {n.createdAt.toLocaleString("en-IN", {
+                          day: "numeric",
+                          month: "short",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          timeZone: "Asia/Kolkata",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                );
+                return n.link ? (
+                  <NotificationLink key={n.id} id={n.id} href={n.link} unread={!n.read}>
+                    {card}
+                  </NotificationLink>
+                ) : (
+                  <div key={n.id}>{card}</div>
+                );
+              })}
             </div>
-          );
-          return n.link ? (
-            <Link key={n.id} href={n.link} className="block">
-              {card}
-            </Link>
-          ) : (
-            <div key={n.id}>{card}</div>
-          );
-        })}
+          </section>
+        ))}
       </div>
     </div>
   );

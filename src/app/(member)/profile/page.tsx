@@ -8,6 +8,9 @@ import { CheckCircle, XCircle, Bell, ArrowUpRight, GraduationCap } from "lucide-
 import TimetableGrid from "@/components/timetable/TimetableGrid";
 import MemberShell, { MemberHeading } from "@/components/member/MemberShell";
 import ProgrammeFixBanner from "@/components/ProgrammeFixBanner";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { onboardingSteps } from "@/lib/onboarding";
+import { hasFilledTimetable } from "@/lib/timetable";
 
 const CATEGORY: Record<string, { label: string; chip: string }> = {
   CORE: { label: "Core member", chip: "bg-violet-500/15 text-violet-300" },
@@ -74,6 +77,8 @@ export default async function ProfilePage() {
       <MemberHeading label="Member portal" title={`Welcome, ${firstName}`} subtitle="Your details, updates and weekly timetable." />
 
       <div className="space-y-6">
+        <OnboardingChecklist steps={onboardingSteps(member, hasFilledTimetable(entries))} />
+
         {/* Profile card */}
         <section className={`${panel} p-5 sm:p-6`}>
           <div className="flex flex-wrap items-center gap-4">

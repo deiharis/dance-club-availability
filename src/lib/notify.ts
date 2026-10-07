@@ -119,6 +119,13 @@ export const teamLink = (path: string, team: string) =>
 export const todayIST = () =>
   new Date(new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) + "T00:00:00Z");
 
+// Heading for a notification in the feeds, by Indian calendar day: Today, Yesterday, This week, Earlier.
+export function dayGroup(createdAt: Date, now = new Date()) {
+  const day = (d: Date) => new Date(d.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) + "T00:00:00Z").getTime();
+  const days = Math.round((day(now) - day(createdAt)) / 86_400_000);
+  return days <= 0 ? "Today" : days === 1 ? "Yesterday" : days < 7 ? "This week" : "Earlier";
+}
+
 // Who cancelled it, in the words the team sees.
 export function cancelledBy(caller: { isSuper: boolean; isLead: boolean; member?: { fullName: string } | null }) {
   if (caller.isSuper) return "the Super Admin";

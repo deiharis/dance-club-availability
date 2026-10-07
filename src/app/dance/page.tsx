@@ -5,6 +5,8 @@ import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
 import { todayIST } from "@/lib/notify";
 import Orbit from "@/components/dance/Orbit";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import { onboardingSteps } from "@/lib/onboarding";
 
 const fmt = (d: Date) =>
   d.toLocaleDateString("en-IN", {
@@ -28,6 +30,8 @@ export default async function DanceDashboardPage() {
   const today = todayIST();
 
   // Everyone sees their own team; the SuperAdmin and Advisory also see every team's size.
+  const myClasses = await db.timetableEntry.count({ where: { memberId: member.id, status: "CLASS" } });
+
   const teamCounts =
     !dance.seesAllTeams
       ? []
@@ -114,6 +118,7 @@ export default async function DanceDashboardPage() {
 
       {/* Bottom block: stats, then what is coming up. Compact so it always fits. */}
       <div className="relative z-10 mx-auto w-full max-w-5xl space-y-3 pb-3">
+        <OnboardingChecklist variant="pill" steps={onboardingSteps(member, myClasses > 0)} />
         {isDancer && (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
