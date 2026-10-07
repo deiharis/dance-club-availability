@@ -122,7 +122,7 @@ export default function AvailabilityView({ team }: { team: string }) {
           </div>
 
           {/* Heatmap + who is free */}
-          <div className="grid gap-6 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <ChartCard
               title="Availability heatmap"
               subtitle="Number of dancers free in each slot. Brighter = more free. Tap a slot to pin it."
@@ -391,7 +391,7 @@ function Skeleton() {
           <div key={i} className={`${block} h-24`} />
         ))}
       </div>
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className={`${block} h-80 lg:col-span-2`} />
         <div className={`${block} h-80`} />
       </div>

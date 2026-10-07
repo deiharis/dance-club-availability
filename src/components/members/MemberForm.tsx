@@ -93,16 +93,16 @@ export default function MemberForm({
           <p className={panelTitle}>Identity</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label className={label}>Full name</label>
-              <input name="fullName" value={form.fullName} onChange={text("fullName")} required placeholder="John Doe" className={control} />
+              <label htmlFor="mf-full-name" className={label}>Full name</label>
+              <input id="mf-full-name" name="fullName" value={form.fullName} onChange={text("fullName")} required placeholder="John Doe" className={control} />
             </div>
             <div>
-              <label className={label}>Register number</label>
-              <input name="registerNumber" value={form.registerNumber} onChange={(e) => set({ registerNumber: e.target.value.toUpperCase() })} required placeholder="24BCE1234" className={`${control} font-mono uppercase`} />
+              <label htmlFor="mf-register-number" className={label}>Register number</label>
+              <input id="mf-register-number" name="registerNumber" value={form.registerNumber} onChange={(e) => set({ registerNumber: e.target.value.toUpperCase() })} required placeholder="24BCE1234" className={`${control} font-mono uppercase`} />
             </div>
             <div>
-              <label className={label}>Academic year</label>
-              <select name="academicYear" value={form.academicYear} onChange={text("academicYear")} className={control}>
+              <label htmlFor="mf-academic-year" className={label}>Academic year</label>
+              <select id="mf-academic-year" name="academicYear" value={form.academicYear} onChange={text("academicYear")} className={control}>
                 <option value="1">Year 1</option>
                 <option value="2">Year 2</option>
                 <option value="3">Year 3</option>
@@ -111,14 +111,14 @@ export default function MemberForm({
               </select>
             </div>
             <div className="sm:col-span-2">
-              <label className={label}>Email address</label>
-              <input name="email" type="email" value={form.email} onChange={text("email")} required placeholder="name@vitstudent.ac.in" className={control} />
+              <label htmlFor="mf-email-address" className={label}>Email address</label>
+              <input id="mf-email-address" name="email" type="email" value={form.email} onChange={text("email")} required placeholder="name@vitstudent.ac.in" className={control} />
             </div>
             <div>
-              <label className={label}>
+              <label htmlFor="mf-phone-optional" className={label}>
                 Phone <span className="text-zinc-600">(optional)</span>
               </label>
-              <input
+              <input id="mf-phone-optional"
                 name="phone"
                 value={form.phone}
                 onChange={text("phone")}
@@ -179,10 +179,10 @@ export default function MemberForm({
 
             {isCoreOrMember && (
               <div>
-                <label className={label}>
+                <label htmlFor="mf-position-required" className={label}>
                   Position <span className="text-red-400">(required)</span>
                 </label>
-                <select value={form.position} onChange={text("position")} required className={control}>
+                <select id="mf-position-required" value={form.position} onChange={text("position")} required className={control}>
                   <option value="">Select a position...</option>
                   {getTeamsForCategory(form.category).map((opt) => (
                     <option key={opt} value={opt}>{opt}</option>
@@ -274,8 +274,8 @@ export default function MemberForm({
           <p className={panelTitle}>Account</p>
           {mode === "add" ? (
             <div className="mt-4">
-              <label className={label}>Temporary password</label>
-              <input
+              <label htmlFor="mf-temporary-password" className={label}>Temporary password</label>
+              <input id="mf-temporary-password"
                 name="password"
                 type="password"
                 value={form.password ?? ""}

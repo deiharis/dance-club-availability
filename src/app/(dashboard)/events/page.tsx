@@ -167,8 +167,8 @@ export default function EventsPage() {
           <form onSubmit={handleAdd} className={`${panel} space-y-4 p-5`}>
             <h2 className={sectionTitle}>New event</h2>
             <div>
-              <label className={controlLabel}>Event name</label>
-              <input
+              <label htmlFor="ev-event-name" className={controlLabel}>Event name</label>
+              <input id="ev-event-name"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 required
@@ -177,8 +177,8 @@ export default function EventsPage() {
               />
             </div>
             <div>
-              <label className={controlLabel}>Event date</label>
-              <input
+              <label htmlFor="ev-event-date" className={controlLabel}>Event date</label>
+              <input id="ev-event-date"
                 type="date"
                 value={form.eventDate}
                 onChange={(e) => setForm({ ...form, eventDate: e.target.value })}

@@ -79,36 +79,36 @@ export default function EditDancerPanel({
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className={label}>Full name</label>
-          <input required className={input} value={f.fullName} onChange={(e) => set({ fullName: e.target.value })} />
+          <label htmlFor="ed-full-name" className={label}>Full name</label>
+          <input id="ed-full-name" required className={input} value={f.fullName} onChange={(e) => set({ fullName: e.target.value })} />
         </div>
         <div>
-          <label className={label}>Register number</label>
-          <input required className={input} value={f.registerNumber} onChange={(e) => set({ registerNumber: e.target.value })} />
+          <label htmlFor="ed-register-number" className={label}>Register number</label>
+          <input id="ed-register-number" required className={input} value={f.registerNumber} onChange={(e) => set({ registerNumber: e.target.value })} />
         </div>
         <div>
-          <label className={label}>Email (also their login)</label>
-          <input required type="email" className={input} value={f.email} onChange={(e) => set({ email: e.target.value })} />
+          <label htmlFor="ed-email-also-their" className={label}>Email (also their login)</label>
+          <input id="ed-email-also-their" required type="email" className={input} value={f.email} onChange={(e) => set({ email: e.target.value })} />
         </div>
         <div>
-          <label className={label}>Phone</label>
-          <input className={input} value={f.phone} onChange={(e) => set({ phone: e.target.value })} />
+          <label htmlFor="ed-phone" className={label}>Phone</label>
+          <input id="ed-phone" className={input} value={f.phone} onChange={(e) => set({ phone: e.target.value })} />
         </div>
         <div className="sm:col-span-2">
           <label className={label}>Programme / course</label>
           <ProgrammeSelect value={f.department} onChange={(department) => set({ department })} className={input} required={false} />
         </div>
         <div>
-          <label className={label}>Academic year</label>
-          <select className={input} value={f.academicYear} onChange={(e) => set({ academicYear: e.target.value })}>
+          <label htmlFor="ed-academic-year" className={label}>Academic year</label>
+          <select id="ed-academic-year" className={input} value={f.academicYear} onChange={(e) => set({ academicYear: e.target.value })}>
             {[1, 2, 3, 4, 5].map((y) => (
               <option key={y} value={y}>Year {y}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className={label}>Dancer role</label>
-          <select
+          <label htmlFor="ed-dancer-role" className={label}>Dancer role</label>
+          <select id="ed-dancer-role"
             className={`${input} disabled:opacity-60`}
             value={f.position}
             disabled={isSelf}

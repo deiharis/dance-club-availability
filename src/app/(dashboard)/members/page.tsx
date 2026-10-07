@@ -306,6 +306,7 @@ export default function MembersPage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search name, register no, email, department"
+              aria-label="Search members"
               className="w-full rounded-lg border border-zinc-700 bg-surface py-2 pl-9 pr-3 text-sm text-white placeholder-zinc-600"
             />
           </div>

@@ -112,7 +112,8 @@ export default function DanceSidebar({
         </div>
         <button
           onClick={() => setOpen(false)}
-          className="lg:hidden text-orange-100/70 hover:text-white p-1"
+          aria-label="Close menu"
+          className="lg:hidden -m-2 flex h-10 w-10 items-center justify-center rounded-full text-orange-100/70 hover:text-white"
         >
           <X size={18} />
         </button>
@@ -175,7 +176,9 @@ export default function DanceSidebar({
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="text-orange-100/80 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition-colors"
+          aria-label="Open menu"
+          aria-expanded={open}
+          className="-mr-2 flex h-10 w-10 items-center justify-center rounded-full text-orange-100/80 transition-colors hover:bg-white/10 hover:text-white"
         >
           <Menu size={20} />
         </button>

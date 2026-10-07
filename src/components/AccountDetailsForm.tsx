@@ -65,16 +65,16 @@ export default function AccountDetailsForm({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={label}>Academic year</label>
-          <select className={control} value={f.academicYear} onChange={(e) => setF({ ...f, academicYear: e.target.value })}>
+          <label htmlFor="acc-academic-year" className={label}>Academic year</label>
+          <select id="acc-academic-year" className={control} value={f.academicYear} onChange={(e) => setF({ ...f, academicYear: e.target.value })}>
             {[1, 2, 3, 4, 5].map((y) => (
               <option key={y} value={y}>Year {y}</option>
             ))}
           </select>
         </div>
         <div>
-          <label className={label}>Phone</label>
-          <input
+          <label htmlFor="acc-phone" className={label}>Phone</label>
+          <input id="acc-phone"
             className={control}
             inputMode="tel"
             value={f.phone}

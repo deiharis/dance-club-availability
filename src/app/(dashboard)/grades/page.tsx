@@ -230,6 +230,7 @@ export default function GradesPage() {
             <aside className="mb-6 lg:mb-0">
               {/* Phone: a simple picker */}
               <select
+                aria-label="Choose a member"
                 value={selected.id}
                 onChange={(e) => select(e.target.value)}
                 className={`${control} lg:hidden`}
@@ -385,8 +386,8 @@ export default function GradesPage() {
                 <h2 className={sectionTitle}>Add a grade</h2>
                 <div className="mt-4 grid gap-4 md:grid-cols-3">
                   <div>
-                    <label className={controlLabel}>Subject</label>
-                    <input
+                    <label htmlFor="gr-subject" className={controlLabel}>Subject</label>
+                    <input id="gr-subject"
                       value={newGrade.subject}
                       onChange={(e) => setNewGrade({ ...newGrade, subject: e.target.value })}
                       placeholder="e.g. Mathematics"
@@ -398,8 +399,8 @@ export default function GradesPage() {
                     <GradePicker value={newGrade.grade} onChange={(g) => setNewGrade({ ...newGrade, grade: g })} />
                   </div>
                   <div>
-                    <label className={controlLabel}>Remarks (optional)</label>
-                    <input
+                    <label htmlFor="gr-remarks-optional" className={controlLabel}>Remarks (optional)</label>
+                    <input id="gr-remarks-optional"
                       value={newGrade.remarks}
                       onChange={(e) => setNewGrade({ ...newGrade, remarks: e.target.value })}
                       placeholder="Optional note"

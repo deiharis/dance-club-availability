@@ -375,8 +375,8 @@ export default function MyReports({
               )}
 
               <div>
-                <label className={s.label}>Work description</label>
-                <textarea
+                <label htmlFor="rep-work-description" className={s.label}>Work description</label>
+                <textarea id="rep-work-description"
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   required
@@ -387,8 +387,8 @@ export default function MyReports({
               </div>
 
               <div>
-                <label className={s.label}>Date of work</label>
-                <input
+                <label htmlFor="rep-date-of-work" className={s.label}>Date of work</label>
+                <input id="rep-date-of-work"
                   type="date"
                   value={form.workDate}
                   onChange={(e) => setForm({ ...form, workDate: e.target.value })}
@@ -505,8 +505,8 @@ export default function MyReports({
 
               <form onSubmit={handleRequestOD} className="mt-4 space-y-4">
                 <div>
-                  <label className={s.label}>Approved report</label>
-                  <select
+                  <label htmlFor="rep-approved-report" className={s.label}>Approved report</label>
+                  <select id="rep-approved-report"
                     value={odForm.reportId}
                     onChange={(e) => setODForm({ ...odForm, reportId: e.target.value })}
                     required
@@ -523,7 +523,7 @@ export default function MyReports({
                 </div>
 
                 <div>
-                  <label className={s.label}>
+                  <label htmlFor="rep-event" className={s.label}>
                     Event <span className="text-red-400">(required)</span>
                   </label>
                   {events.length === 0 ? (
@@ -532,6 +532,7 @@ export default function MyReports({
                     </div>
                   ) : (
                     <select
+                      id="rep-event"
                       value={odForm.eventId}
                       onChange={(e) => setODForm({ ...odForm, eventId: e.target.value })}
                       required
@@ -597,8 +598,8 @@ export default function MyReports({
                 </div>
 
                 <div>
-                  <label className={s.label}>OD reason</label>
-                  <textarea
+                  <label htmlFor="rep-od-reason" className={s.label}>OD reason</label>
+                  <textarea id="rep-od-reason"
                     value={odForm.reason}
                     onChange={(e) => setODForm({ ...odForm, reason: e.target.value })}
                     required

@@ -130,7 +130,8 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
         </div>
         <button
           onClick={() => setOpen(false)}
-          className="lg:hidden text-zinc-400 hover:text-white p-1"
+          aria-label="Close menu"
+          className="lg:hidden -m-2 flex h-10 w-10 items-center justify-center rounded text-zinc-400 hover:text-white"
         >
           <X size={18} />
         </button>
@@ -195,7 +196,9 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
         </div>
         <button
           onClick={() => setOpen(true)}
-          className="text-zinc-400 hover:text-white p-1.5 rounded hover:bg-white/5 transition-colors"
+          aria-label="Open menu"
+          aria-expanded={open}
+          className="-mr-1.5 flex h-10 w-10 items-center justify-center rounded text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
         >
           <Menu size={20} />
         </button>

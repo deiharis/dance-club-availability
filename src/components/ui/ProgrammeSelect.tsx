@@ -44,6 +44,7 @@ export default function ProgrammeSelect({
     <div className="space-y-2">
       <select
         id={id}
+        aria-label={id ? undefined : "Programme"}
         value={choice}
         required={required}
         onChange={(e) => {
@@ -77,6 +78,7 @@ export default function ProgrammeSelect({
             onChange(e.target.value.trim() ? asOther(e.target.value) : "");
           }}
           placeholder="Type your programme, e.g. B.Des Interior Design"
+          aria-label="Programme (not listed)"
           className={className}
         />
       )}

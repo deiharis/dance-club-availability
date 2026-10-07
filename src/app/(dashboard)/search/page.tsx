@@ -240,13 +240,14 @@ export default function SearchPage() {
                   onChange={(e) => set({ query: e.target.value })}
                   onKeyDown={enter}
                   placeholder="Name or register number"
+                  aria-label="Name or register number"
                   className={`${control} pl-9`}
                 />
               </div>
 
               <div>
-                <label className={label}>Category</label>
-                <select value={draft.category} onChange={(e) => handleCategoryChange(e.target.value)} className={control}>
+                <label htmlFor="srch-category" className={label}>Category</label>
+                <select id="srch-category" value={draft.category} onChange={(e) => handleCategoryChange(e.target.value)} className={control}>
                   <option value="">All categories</option>
                   <option value="CORE">Core Members</option>
                   <option value="MEMBER">Normal Members</option>
@@ -257,8 +258,8 @@ export default function SearchPage() {
 
               {showPositionFilter && (
                 <div>
-                  <label className={label}>Position</label>
-                  <select value={draft.position} onChange={(e) => set({ position: e.target.value })} className={control}>
+                  <label htmlFor="srch-position" className={label}>Position</label>
+                  <select id="srch-position" value={draft.position} onChange={(e) => set({ position: e.target.value })} className={control}>
                     <option value="">All positions</option>
                     {(draft.category === "CORE" ? CORE_TEAMS : MEMBER_TEAMS).map((pos) => (
                       <option key={pos} value={pos}>{pos}</option>
@@ -269,8 +270,8 @@ export default function SearchPage() {
 
               {/* Any category can dance in a team (e.g. Core members), so this filter is always available */}
               <div>
-                <label className={label}>Dance team</label>
-                <select value={draft.team} onChange={(e) => set({ team: e.target.value })} className={control}>
+                <label htmlFor="srch-dance-team" className={label}>Dance team</label>
+                <select id="srch-dance-team" value={draft.team} onChange={(e) => set({ team: e.target.value })} className={control}>
                   <option value="">Any (or none)</option>
                   {DANCER_TEAMS.map((t) => (
                     <option key={t} value={t}>{t}</option>
@@ -281,8 +282,8 @@ export default function SearchPage() {
               {showDancerFilters && (
                 <>
                   <div>
-                    <label className={label}>Dancer role</label>
-                    <select value={draft.position} onChange={(e) => set({ position: e.target.value })} className={control}>
+                    <label htmlFor="srch-dancer-role" className={label}>Dancer role</label>
+                    <select id="srch-dancer-role" value={draft.position} onChange={(e) => set({ position: e.target.value })} className={control}>
                       <option value="">All roles</option>
                       {DANCER_ROLES.map((r) => (
                         <option key={r} value={r}>{r}</option>
@@ -328,8 +329,8 @@ export default function SearchPage() {
               </div>
 
               <div>
-                <label className={label}>Department</label>
-                <input
+                <label htmlFor="srch-department" className={label}>Department</label>
+                <input id="srch-department"
                   value={draft.department}
                   onChange={(e) => set({ department: e.target.value })}
                   onKeyDown={enter}

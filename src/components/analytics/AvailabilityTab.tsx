@@ -230,6 +230,7 @@ export default function AvailabilityTab({ all, filled }: { all: AvailabilityData
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search a member"
+            aria-label="Search a member"
             className="w-56 rounded-md border border-zinc-700 bg-black/40 px-3 py-2 text-sm text-white placeholder-zinc-600"
           />
           <div className="inline-flex rounded-lg border border-zinc-800 bg-black/30 p-1">

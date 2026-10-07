@@ -281,22 +281,22 @@ export default function RosterClient({
           onSubmit={add}
           className="mt-4 grid sm:grid-cols-2 gap-3 bg-gradient-to-b from-white/[0.06] to-white/[0.02] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] border border-white/10 rounded-3xl p-4"
         >
-          <input required placeholder="Full name" className={input} value={form.fullName} onChange={set("fullName")} />
-          <input required placeholder="Register number" className={input} value={form.registerNumber} onChange={set("registerNumber")} />
-          <input required type="email" placeholder="Email" className={input} value={form.email} onChange={set("email")} />
-          <input placeholder="Phone (optional)" className={input} value={form.phone} onChange={set("phone")} />
+          <input required placeholder="Full name" aria-label="Full name" className={input} value={form.fullName} onChange={set("fullName")} />
+          <input required placeholder="Register number" aria-label="Register number" className={input} value={form.registerNumber} onChange={set("registerNumber")} />
+          <input required type="email" placeholder="Email" aria-label="Email" className={input} value={form.email} onChange={set("email")} />
+          <input placeholder="Phone (optional)" aria-label="Phone (optional)" className={input} value={form.phone} onChange={set("phone")} />
           <ProgrammeSelect value={form.department} onChange={(department) => setForm({ ...form, department })} className={input} />
-          <select className={input} value={form.academicYear} onChange={set("academicYear")}>
+          <select aria-label="Academic year" className={input} value={form.academicYear} onChange={set("academicYear")}>
             {[1, 2, 3, 4, 5].map((y) => (
               <option key={y} value={y}>Year {y}</option>
             ))}
           </select>
-          <select className={input} value={form.position} onChange={set("position")}>
+          <select aria-label="Dancer role" className={input} value={form.position} onChange={set("position")}>
             {DANCER_ROLES.map((r) => (
               <option key={r}>{r}</option>
             ))}
           </select>
-          <select className={input} value={form.skillLevel} onChange={set("skillLevel")}>
+          <select aria-label="Skill level" className={input} value={form.skillLevel} onChange={set("skillLevel")}>
             <option value="AMATEUR">Amateur</option>
             <option value="PROFESSIONAL">Professional</option>
           </select>
@@ -356,6 +356,7 @@ export default function RosterClient({
                     <span className="text-orange-100/80">{d.skillLevel === "PROFESSIONAL" ? "Professional" : "Amateur"}</span>
                   ) : (
                   <select
+                    aria-label={`Skill level for ${d.fullName}`}
                     value={d.skillLevel}
                     onChange={(e) => update(d.id, { skillLevel: e.target.value })}
                     className="bg-black/30 border border-white/10 rounded-2xl px-2 py-1 text-sm text-white focus:outline-none focus:border-orange-400/70"
