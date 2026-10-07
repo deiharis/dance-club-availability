@@ -89,7 +89,13 @@ export default async function DashboardPage() {
 
       {/* Hero with the halo arch */}
       <section className="relative overflow-hidden px-6 pb-24 pt-16 text-center sm:pt-24">
-        <div className="console-halo" aria-hidden="true" />
+        <div className="console-halo" aria-hidden="true">
+          <div className="halo-atmos" />
+          <div className="halo-rays" />
+          <div className="halo-planet" />
+        </div>
+        {/* Fade the glow into the page at the bottom of the hero (no hard edge) */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#0a0a0c] via-[#0a0a0c]/70 to-transparent" aria-hidden="true" />
         <p className="relative mx-auto max-w-3xl text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-6xl">
           Run the committee.
           <br />

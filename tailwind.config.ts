@@ -9,11 +9,15 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      // Shared page background for the whole app (both sections): neutral near-black, as bg-base.
+      // Background ONLY: as a general colour, "base" also made text-base (the normal text SIZE)
+      // paint text #0a0a0c, which hid the dashboard subheading.
+      backgroundColor: {
+        base: "#0a0a0c",
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
-        // Shared page background for the whole app (both sections): neutral near-black.
-        base: "#0a0a0c",
         // Neutral greys for the console; existing gray-* classes follow.
         gray: colors.zinc,
         // The Working Committee accent is violet. Existing purple-* classes on

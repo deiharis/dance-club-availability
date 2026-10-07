@@ -80,32 +80,72 @@ body {
 
 /* Committee dashboard hero: a glowing violet halo arch. A soft blurred ring plus a
    thin crisp ring on top, faded out towards the bottom. Decorative only. */
+/* ── Console hero: eclipse planet (app/(dashboard)/dashboard) ───────────────────────────
+   A dark sphere rising from the bottom, back-lit by a violet "sun": the headline, subheading and
+   buttons sit on its dark face (best contrast), with a SHARP rim of light along its curve.
+   Built from layers, all crisp (box-shadows and gradients, no blur filter):
+     .halo-atmos  wide soft violet atmosphere behind everything
+     .halo-rays   faint corona rays just outside the rim, turning very slowly
+     .halo-planet the sphere: inner shading + a crisp rim highlight + close and wide outer glows
+   Only transform animates (the rays); reduced motion and phones drop it. */
 .console-halo {
   position: absolute;
   left: 50%;
   top: 0;
-  width: min(120%, 1300px);
-  aspect-ratio: 2 / 1;
+  width: min(140%, 1500px);
+  aspect-ratio: 1.6 / 1;
   transform: translateX(-50%);
   pointer-events: none;
-  mask-image: linear-gradient(to bottom, black 55%, transparent 100%);
+  /* fade the glow out before the numbers bar */
+  mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
 }
-.console-halo::before,
-.console-halo::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 9999px 9999px 0 0;
+.console-halo > * { position: absolute; left: 50%; border-radius: 9999px; }
+
+.halo-atmos {
+  top: -6%;
+  width: 100%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.42) 0%, rgba(91, 33, 182, 0.22) 30%, rgba(76, 29, 149, 0.08) 45%, transparent 60%);
 }
-.console-halo::before {
+
+.halo-rays {
+  top: 1%;
+  width: 92%;
+  aspect-ratio: 1;
+  transform: translateX(-50%) rotate(0deg);
+  background: repeating-conic-gradient(from 0deg, rgba(221, 214, 254, 0.16) 0deg 0.6deg, transparent 0.6deg 7deg);
+  /* only a thin band just outside the planet's rim */
+  mask-image: radial-gradient(circle, transparent 0 45.2%, black 46%, black 48%, transparent 54%);
+  animation: halo-rays 160s linear infinite;
+  will-change: transform;
+}
+@keyframes halo-rays { to { transform: translateX(-50%) rotate(360deg); } }
+
+.halo-planet {
+  top: 6%;
+  width: 84%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  /* back-lit sphere: a faint violet limb at the top, deep dark everywhere else */
   background:
-    radial-gradient(ellipse 50% 100% at 50% 100%, transparent 0 62%, rgba(196, 181, 253, 0.95) 68%, rgba(124, 58, 237, 0.85) 78%, rgba(91, 33, 246, 0.35) 90%, transparent 100%);
-  filter: blur(16px);
+    radial-gradient(circle at 50% -8%, rgba(167, 139, 250, 0.32), rgba(76, 29, 149, 0.12) 22%, transparent 42%),
+    radial-gradient(circle at 50% 120%, #08070c 0%, #0b0a11 55%, #120d22 100%);
+  box-shadow:
+    inset 0 1.5px 0 rgba(245, 243, 255, 0.95),          /* crisp rim highlight */
+    inset 0 10px 22px -8px rgba(196, 181, 253, 0.55),    /* light bleeding just inside the rim */
+    inset 0 60px 120px -40px rgba(124, 58, 237, 0.35),   /* soft inner shading (3D falloff) */
+    0 -1px 0 rgba(237, 233, 254, 0.7),                   /* hairline just outside the rim */
+    0 -6px 24px -2px rgba(196, 181, 253, 0.75),          /* close bright halo */
+    0 -24px 80px -6px rgba(139, 92, 246, 0.6),           /* mid glow */
+    0 -60px 180px 0 rgba(109, 40, 217, 0.45);            /* wide falloff */
 }
-.console-halo::after {
-  background:
-    radial-gradient(ellipse 50% 100% at 50% 100%, transparent 0 67%, rgba(233, 225, 255, 0.9) 68.4%, transparent 70.5%),
-    radial-gradient(ellipse 50% 100% at 50% 100%, rgba(124, 58, 237, 0.16), transparent 66%);
+
+@media (max-width: 640px) {
+  .halo-rays { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .halo-rays { animation: none; }
 }
 
 /* ── Intro splash (components/brand/Splash.tsx) ───────────────────────────── */
@@ -212,6 +252,12 @@ body {
   .heat-pop { animation: none; }
 }
 @keyframes stage-spin { to { transform: rotate(360deg); } }
+/* Dance Floor 3D orbit (components/dance/Orbit.tsx): the dot turns back exactly as much as its
+   ring spins, then undoes the ring's tilt (--rx, --a), so it always faces the viewer. */
+@keyframes orbit-billboard {
+  from { transform: translate(-50%, -50%) rotateZ(0deg) rotateX(calc(var(--rx) * -1)) rotateZ(calc(var(--a) * -1)); }
+  to { transform: translate(-50%, -50%) rotateZ(-360deg) rotateX(calc(var(--rx) * -1)) rotateZ(calc(var(--a) * -1)); }
+}
 @keyframes stage-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
