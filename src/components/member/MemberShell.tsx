@@ -7,9 +7,11 @@ import { User, Calendar, FileText, KeyRound, LogOut, Music, UserCog } from "luci
 import { LogoMark, LogoLockup } from "@/components/brand/Logo";
 import { consoleFont, brandFont } from "@/lib/fonts";
 
-// Frame for the pages Normal Members and FFCS-only members use: a slim top bar with the
-// club logo and four links, in the violet console style. (Committee users get the sidebar
-// console and dancers get Dance Floor, so they never see this.)
+// Frame for the pages Normal Members and FFCS-only members use, in the violet console style.
+// Desktop/tablet: a slim top bar with the club logo, the links and the account actions.
+// Phone: the top bar keeps the logo and account actions, and the links move to a LABELLED
+// bottom tab bar (easy to reach with a thumb). (Committee users get the sidebar console and
+// dancers get Dance Floor, so they never see this.)
 const LINKS = [
   { href: "/profile", label: "Profile", icon: User },
   { href: "/timetable", label: "Timetable", icon: Calendar },
@@ -47,7 +49,7 @@ export default function MemberShell({
             </span>
           </Link>
 
-          <nav className="ml-auto flex items-center gap-1 overflow-x-auto">
+          <nav className="ml-auto hidden md:flex items-center gap-1" aria-label="Main">
             {links.map((l) => {
               const Icon = l.icon;
               const active = pathname.startsWith(l.href);
@@ -55,38 +57,67 @@ export default function MemberShell({
                 <Link
                   key={l.href}
                   href={l.href}
-                  className={`flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                  aria-current={active ? "page" : undefined}
+                  className={`press flex items-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium ${
                     active ? "bg-violet-500/15 text-violet-200" : "text-zinc-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
-                  <Icon size={15} />
-                  <span className="hidden md:inline">{l.label}</span>
+                  <Icon size={15} aria-hidden="true" />
+                  <span>{l.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-1 border-l border-white/10 pl-3">
+          <div className="ml-auto md:ml-0 flex shrink-0 items-center gap-1 md:border-l md:border-white/10 md:pl-3">
             <div
               title={name}
               className="mr-1 hidden h-8 w-8 items-center justify-center rounded bg-zinc-800 text-xs font-semibold text-zinc-300 sm:flex"
             >
               {initials || "?"}
             </div>
-            <Link href="/account" title="My details" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
+            <Link href="/account" title="My details" aria-label="My details" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
               <UserCog size={16} />
             </Link>
-            <Link href="/change-password" title="Change password" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
+            <Link href="/change-password" title="Change password" aria-label="Change password" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
               <KeyRound size={16} />
             </Link>
-            <Link href="/api/auth/signout" title="Sign out" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
+            <Link href="/api/auth/signout" title="Sign out" aria-label="Sign out" className="rounded p-2 text-zinc-500 hover:bg-white/5 hover:text-white">
               <LogOut size={16} />
             </Link>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-8 sm:py-8">{children}</main>
+      {/* pb-24 on phones keeps content clear of the bottom tab bar */}
+      <main className="page-enter mx-auto max-w-5xl px-4 pt-6 pb-24 sm:px-8 sm:pt-8 md:pb-8">{children}</main>
+
+      {/* Phone: labelled bottom tab bar */}
+      <nav
+        aria-label="Main"
+        className="md:hidden fixed inset-x-0 bottom-0 z-30 border-t border-white/10 bg-[#0a0a0c]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
+      >
+        <div className={`grid ${links.length === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+          {links.map((l) => {
+            const Icon = l.icon;
+            const active = pathname.startsWith(l.href);
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                aria-current={active ? "page" : undefined}
+                className={`press relative flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
+                  active ? "text-violet-200" : "text-zinc-500"
+                }`}
+              >
+                {active && <span className="absolute inset-x-6 top-0 h-0.5 rounded-b bg-violet-400" aria-hidden="true" />}
+                <Icon size={19} aria-hidden="true" />
+                {l.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

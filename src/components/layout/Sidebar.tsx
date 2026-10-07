@@ -23,6 +23,7 @@ import {
   Bell,
 } from "lucide-react";
 import { LogoMark } from "@/components/brand/Logo";
+import { useSlidingIndicator } from "@/components/layout/useSlidingIndicator";
 
 interface SidebarProps {
   userName: string;
@@ -101,6 +102,12 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
     },
   ];
 
+  const activeHref =
+    groups
+      .flatMap((g) => g.items.filter((i) => i.show).map((i) => i.href))
+      .filter(isActive)
+      .sort((a, b) => b.length - a.length)[0] ?? "";
+
   const initials = userName
     .split(" ")
     .map((w) => w[0])
@@ -108,7 +115,7 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
     .join("")
     .toUpperCase();
 
-  const SidebarContent = () => (
+  const content = (
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div className="h-14 px-4 border-b border-zinc-800 flex items-center justify-between">
@@ -129,43 +136,8 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
         </button>
       </div>
 
-      {/* Grouped nav with a left-edge active marker */}
-      <nav className="flex-1 py-3 overflow-y-auto">
-        {groups.map((group) => {
-          const items = group.items.filter((i) => i.show);
-          if (items.length === 0) return null;
-          return (
-            <div key={group.label} className="mb-4">
-              <p className="px-4 mb-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
-                {group.label}
-              </p>
-              {items.map((item) => {
-                const Icon = item.icon;
-                const active = isActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`flex items-center gap-3 pl-4 pr-3 py-2 text-sm border-l-2 transition-colors ${
-                      active
-                        ? "border-violet-400 bg-violet-500/10 text-violet-200 font-medium"
-                        : "border-transparent text-zinc-400 hover:text-white hover:bg-white/[0.03]"
-                    }`}
-                  >
-                    <Icon size={15} />
-                    {item.label}
-                    {"badge" in item && (item.badge ?? 0) > 0 && (
-                      <span className="ml-auto rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-violet-300">
-                        {item.badge}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          );
-        })}
-      </nav>
+      {/* Grouped nav; the left-edge active marker glides between links */}
+      <CommitteeNav groups={groups} activeHref={activeHref} />
 
       {/* Switch to the dancer section (own team only, unless SuperAdmin) */}
       {showDanceFloor && (
@@ -181,35 +153,33 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
         </Link>
       )}
 
-      {/* User */}
+      {/* Account: full name and role (no more "Aadit..."), then the three actions in a row */}
       <div className="border-t border-zinc-800 p-3">
-        <div className="flex items-center gap-3 px-1 py-1">
-          <div className="w-8 h-8 rounded bg-zinc-800 text-zinc-300 text-xs font-semibold flex items-center justify-center shrink-0">
+        <div className="flex items-center gap-3 px-1" title={userEmail}>
+          <div className="w-9 h-9 rounded-md bg-violet-500/15 text-violet-200 text-xs font-semibold flex items-center justify-center shrink-0">
             {initials || "?"}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-white text-sm font-medium truncate">{userName}</p>
-            <p className="text-zinc-500 text-[11px] truncate">
-              {isSuperAdmin ? "Super admin" : "Admin"} · {userEmail}
-            </p>
+            <p className="text-white text-sm font-medium leading-snug line-clamp-2 break-words">{userName}</p>
+            <p className="text-zinc-500 text-[11px]">{isSuperAdmin ? "Super Admin" : "Committee"}</p>
           </div>
-          <Link href="/account" title="My details" className="text-zinc-500 hover:text-white p-1.5">
-            <UserCog size={15} />
-          </Link>
-          <Link
-            href="/change-password"
-            title="Change password"
-            className="text-zinc-500 hover:text-white p-1.5"
-          >
-            <KeyRound size={15} />
-          </Link>
-          <Link
-            href="/api/auth/signout"
-            title="Sign out"
-            className="text-zinc-500 hover:text-white p-1.5"
-          >
-            <LogOut size={15} />
-          </Link>
+        </div>
+        <div className="mt-2.5 grid grid-cols-3 gap-1">
+          {[
+            { href: "/account", label: "My details", icon: UserCog },
+            { href: "/change-password", label: "Password", icon: KeyRound },
+            { href: "/api/auth/signout", label: "Sign out", icon: LogOut },
+          ].map((a) => (
+            <Link
+              key={a.href}
+              href={a.href}
+              title={a.label}
+              className="press flex flex-col items-center gap-1 rounded-md py-1.5 text-[10px] text-zinc-500 hover:bg-white/5 hover:text-white"
+            >
+              <a.icon size={15} aria-hidden="true" />
+              {a.label}
+            </Link>
+          ))}
         </div>
       </div>
     </div>
@@ -245,13 +215,65 @@ export default function Sidebar({ userName, userEmail, role, showDanceFloor }: S
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <SidebarContent />
+        {content}
       </aside>
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex lg:flex-col w-60 border-r border-zinc-800 bg-[#0d0c10] fixed h-full z-10">
-        <SidebarContent />
+        {content}
       </aside>
     </>
+  );
+}
+
+type NavGroup = {
+  label: string;
+  items: { href: string; label: string; icon: React.ElementType; show: boolean; badge?: number }[];
+};
+
+// One stable list per sidebar (desktop and drawer each have their own), so the violet marker
+// can glide from the old link to the new one when the page changes.
+function CommitteeNav({ groups, activeHref }: { groups: NavGroup[]; activeHref: string }) {
+  const { navRef, indicator } = useSlidingIndicator(activeHref);
+  return (
+    <nav ref={navRef} className="relative flex-1 py-3 overflow-y-auto">
+      <span
+        aria-hidden="true"
+        className="nav-indicator inset-x-0 border-l-2 border-violet-400 bg-violet-500/10"
+        style={indicator}
+      />
+      {groups.map((group) => {
+        const items = group.items.filter((i) => i.show);
+        if (items.length === 0) return null;
+        return (
+          <div key={group.label} className="mb-4">
+            <p className="px-4 mb-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">{group.label}</p>
+            {items.map((item) => {
+              const Icon = item.icon;
+              const active = item.href === activeHref;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  data-active={active || undefined}
+                  aria-current={active ? "page" : undefined}
+                  className={`relative flex items-center gap-3 pl-4 pr-3 py-2 text-sm transition-colors duration-200 ${
+                    active ? "text-violet-100 font-medium" : "text-zinc-400 hover:text-white hover:bg-white/[0.03]"
+                  }`}
+                >
+                  <Icon size={15} className={`transition-colors duration-200 ${active ? "text-violet-300" : ""}`} aria-hidden="true" />
+                  {item.label}
+                  {(item.badge ?? 0) > 0 && (
+                    <span className="ml-auto rounded bg-violet-500/20 px-1.5 py-0.5 text-[10px] font-semibold tabular-nums text-violet-300">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
+        );
+      })}
+    </nav>
   );
 }

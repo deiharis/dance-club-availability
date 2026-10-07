@@ -23,6 +23,7 @@ import {
   X,
 } from "lucide-react";
 import { LogoMark } from "@/components/brand/Logo";
+import { useSlidingIndicator } from "@/components/layout/useSlidingIndicator";
 
 interface DanceSidebarProps {
   userName: string;
@@ -74,6 +75,10 @@ export default function DanceSidebar({
     return href === "/dance" ? pathname === "/dance" : pathname.startsWith(href);
   }
 
+  // The most specific matching link is the active one.
+  const activeHref =
+    navItems.map((i) => i.href).filter(isActive).sort((a, b) => b.length - a.length)[0] ?? "";
+
   const initials = userName
     .split(" ")
     .map((w) => w[0])
@@ -93,7 +98,7 @@ export default function DanceSidebar({
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-[radial-gradient(ellipse_at_bottom,rgba(249,115,22,0.35),transparent_70%)]" />
 
       {/* Brand */}
-      <div className="relative px-6 pt-7 pb-5 flex items-start justify-between">
+      <div className="relative px-6 pt-6 pb-3 flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2.5">
             <LogoMark size={34} />
@@ -113,39 +118,8 @@ export default function DanceSidebar({
         </button>
       </div>
 
-      {/* Pill navigation */}
-      <nav className="relative flex-1 overflow-y-auto px-3 py-2 space-y-1">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.href);
-          const count = badges[item.href] ?? 0;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-3 rounded-full border pl-2 pr-3 py-2 text-sm transition-all outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-orange-300/60 ${
-                active
-                  ? "border-orange-400/40 bg-gradient-to-r from-orange-500/30 to-orange-500/5 text-white shadow-[inset_0_0_24px_-10px_rgba(251,146,60,0.9)]"
-                  : "border-transparent text-orange-50/60 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <span
-                className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                  active ? "bg-orange-500 text-white" : "bg-white/5"
-                }`}
-              >
-                <Icon size={15} />
-              </span>
-              {item.label}
-              {count > 0 && (
-                <span className="ml-auto rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-semibold text-white">
-                  {count}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </nav>
+      {/* Pill navigation; the glowing pill glides to the active link */}
+      <DanceNav items={items} activeHref={activeHref} badges={badges} />
 
       {/* User card */}
       <div className="relative p-3 space-y-2">
@@ -158,32 +132,34 @@ export default function DanceSidebar({
             <ArrowUpRight size={14} />
           </Link>
         )}
-        <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-black/30 p-3 backdrop-blur">
-          <div className="w-9 h-9 rounded-full bg-gradient-to-b from-orange-300 to-orange-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
-            {initials || "?"}
+        {/* Account: full name and role, then the three actions in a row */}
+        <div className="rounded-3xl border border-white/10 bg-black/30 p-3 backdrop-blur" title={userEmail}>
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-gradient-to-b from-orange-300 to-orange-600 text-white text-xs font-semibold flex items-center justify-center shrink-0">
+              {initials || "?"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-white text-sm font-medium leading-snug line-clamp-2 break-words">{userName}</p>
+              <p className="text-orange-200 text-[11px]">{label}</p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-white text-sm font-medium truncate">{userName}</p>
-            <p className="text-orange-200 text-[11px] truncate">{label}</p>
-            <p className="text-orange-100/40 text-[10px] truncate">{userEmail}</p>
+          <div className="mt-2.5 grid grid-cols-3 gap-1">
+            {[
+              { href: "/account", label: "My details", icon: UserCog },
+              { href: "/change-password", label: "Password", icon: KeyRound },
+              { href: "/api/auth/signout", label: "Sign out", icon: LogOut },
+            ].map((a) => (
+              <Link
+                key={a.href}
+                href={a.href}
+                title={a.label}
+                className="press flex flex-col items-center gap-1 rounded-full py-1.5 text-[10px] text-orange-100/55 hover:bg-white/5 hover:text-white"
+              >
+                <a.icon size={15} aria-hidden="true" />
+                {a.label}
+              </Link>
+            ))}
           </div>
-          <Link href="/account" title="My details" className="text-orange-100/60 hover:text-white p-1.5">
-            <UserCog size={16} />
-          </Link>
-          <Link
-            href="/change-password"
-            title="Change password"
-            className="text-orange-100/60 hover:text-white p-1.5"
-          >
-            <KeyRound size={16} />
-          </Link>
-          <Link
-            href="/api/auth/signout"
-            title="Sign out"
-            className="text-orange-100/60 hover:text-white p-1.5"
-          >
-            <LogOut size={16} />
-          </Link>
         </div>
       </div>
     </div>
@@ -226,5 +202,49 @@ export default function DanceSidebar({
         {content}
       </aside>
     </>
+  );
+}
+
+type DanceNavItem = { href: string; label: string; icon: React.ElementType };
+
+// Stable list (desktop and drawer each have their own) so the glowing pill glides between links.
+function DanceNav({ items, activeHref, badges }: { items: DanceNavItem[]; activeHref: string; badges: Record<string, number> }) {
+  const { navRef, indicator } = useSlidingIndicator(activeHref);
+  return (
+    <nav ref={navRef} className="relative flex-1 overflow-y-auto px-3 py-1 space-y-0.5 [mask-image:linear-gradient(to_bottom,black_calc(100%-1.5rem),transparent)]">
+      <span
+        aria-hidden="true"
+        className="nav-indicator inset-x-3 rounded-full border border-orange-400/40 bg-gradient-to-r from-orange-500/30 to-orange-500/5 shadow-[inset_0_0_24px_-10px_rgba(251,146,60,0.9)]"
+        style={indicator}
+      />
+      {items.map((item) => {
+        const Icon = item.icon;
+        const active = item.href === activeHref;
+        const count = badges[item.href] ?? 0;
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            data-active={active || undefined}
+            aria-current={active ? "page" : undefined}
+            className={`relative flex items-center gap-3 rounded-full border border-transparent pl-1.5 pr-3 py-1.5 text-sm transition-colors duration-200 ${
+              active ? "text-white" : "text-orange-50/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <span
+              className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors duration-200 ${
+                active ? "bg-orange-500 text-white" : "bg-white/5"
+              }`}
+            >
+              <Icon size={15} aria-hidden="true" />
+            </span>
+            {item.label}
+            {count > 0 && (
+              <span className="ml-auto rounded-full bg-orange-500 px-2 py-0.5 text-[10px] font-semibold text-white">{count}</span>
+            )}
+          </Link>
+        );
+      })}
+    </nav>
   );
 }

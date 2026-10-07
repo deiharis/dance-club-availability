@@ -41,7 +41,7 @@ export default async function MemberTimetablePage({
         role={role}
         showDanceFloor={caller.seesAllTeams || caller.inTeam}
       />
-      <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
+      <main className="page-enter flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
         <div data-section="People" className="c-page-header flex items-center justify-between">
           <div>
             <h1 className="text-base sm:text-lg font-semibold text-white">

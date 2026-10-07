@@ -28,7 +28,7 @@ export default async function SubmitReportPage() {
           role={session.user.role}
           showDanceFloor={caller.seesAllTeams || caller.inTeam}
         />
-        <main className="flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
+        <main className="page-enter flex-1 lg:ml-60 min-w-0 pt-14 lg:pt-0">
           <div data-section="Work" className="c-page-header">
             <h1 className="text-white">My reports</h1>
             <p className="text-zinc-500 mt-0.5">Submit work reports and request OD</p>

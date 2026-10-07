@@ -77,7 +77,7 @@ export function FeedbackProvider({ children }: { children: React.ReactNode }) {
         <div
           aria-live="polite"
           aria-atomic="false"
-          className="pointer-events-none fixed inset-x-0 bottom-16 z-[130] flex flex-col items-center gap-2 px-4 sm:bottom-6"
+          className="pointer-events-none fixed inset-x-0 bottom-24 z-[130] flex flex-col items-center gap-2 px-4 md:bottom-6"
         >
           {toasts.map((t) => (
             <ToastView key={t.id} t={t} stage={stage} onClose={() => dismiss(t.id)} />

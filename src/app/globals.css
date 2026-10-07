@@ -48,9 +48,28 @@
 .sk-stage { background: rgba(251, 191, 36, 0.06); }
 @keyframes sk-sweep { to { transform: translateX(100%); } }
 
+/* Sidebar active marker that glides between links (components/layout/useSlidingIndicator.ts). */
+.nav-indicator {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  transition: transform var(--dur-3) var(--ease-brand), height var(--dur-3) var(--ease-brand), opacity var(--dur-2) var(--ease-brand);
+}
+
+/* Page change: a short fade + tiny rise (the template.tsx files). Quick enough not to slow navigation. */
+@keyframes page-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.page-enter { animation: page-enter var(--dur-3) var(--ease-brand) both; }
+
+/* Pressable controls: a tiny press-in on click. */
+.press { transition: transform var(--dur-1) var(--ease-brand), background-color var(--dur-2) var(--ease-brand), color var(--dur-2) var(--ease-brand), border-color var(--dur-2) var(--ease-brand); }
+.press:active { transform: scale(0.97); }
+
 @media (prefers-reduced-motion: reduce) {
   .fb-toast, .fb-dialog, .fb-backdrop { animation: none; }
   .sk::after { animation: none; }
+  .nav-indicator { transition: none; }
+  .page-enter { animation: none; }
+  .press:active { transform: none; }
 }
 
 body {
@@ -426,7 +445,8 @@ html[data-locked] body { visibility: hidden; }
 }
 
 /* Sound button sits under the intro splash; nudge it up on phones where bottom bars live. */
-@media (max-width: 640px) { .ambient-toggle { bottom: 0.75rem; right: 0.75rem; } }
+/* Phones: sit above the member portal's bottom tab bar (about 4.5rem tall). */
+@media (max-width: 767px) { .ambient-toggle { bottom: 5.25rem; right: 0.75rem; } }
 
 /* Phones and touch devices: keep grain and vignette, drop the moving light and dust (battery). */
 @media (max-width: 768px), (hover: none) {
