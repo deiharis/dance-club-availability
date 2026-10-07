@@ -205,11 +205,22 @@ body {
     0 -60px 180px 0 rgba(109, 40, 217, 0.45);            /* wide falloff */
 }
 
+/* Depth: layers drift a few px toward the mouse (components/console/HaloParallax.tsx sets
+   --px/--py). The CSS "translate" property adds to "transform", so the rays keep turning.
+   Nearer layers move more: planet > rays > atmosphere. */
+.halo-atmos, .halo-rays, .halo-planet { transition: translate 900ms var(--ease-brand); }
+.halo-atmos { translate: calc(var(--px, 0) * -6px) calc(var(--py, 0) * -4px); animation: halo-breathe 9s ease-in-out infinite alternate; }
+.halo-rays { translate: calc(var(--px, 0) * 8px) calc(var(--py, 0) * 5px); }
+.halo-planet { translate: calc(var(--px, 0) * 14px) calc(var(--py, 0) * 9px); }
+/* The violet glow very slowly brightens and dims ("breathing"). */
+@keyframes halo-breathe { from { opacity: 0.85; } to { opacity: 1; } }
+
 @media (max-width: 640px) {
   .halo-rays { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .halo-rays { animation: none; }
+  .halo-rays, .halo-atmos { animation: none; }
+  .halo-atmos, .halo-rays, .halo-planet { translate: none; transition: none; }
 }
 
 /* ── Intro splash (components/brand/Splash.tsx) ───────────────────────────── */
