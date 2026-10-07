@@ -1,6 +1,7 @@
 import React from "react";
 import { consoleFont } from "@/lib/fonts";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { db } from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
@@ -171,6 +172,17 @@ export default async function TimetablePage({
             <Link href="/timetable?missing=1" className={tab(missing)}>
               No timetable ({missingCount})
             </Link>
+            {/* Name + register number of the same "No timetable" list, as Excel (read-only) */}
+            {missingCount > 0 && (
+              <a
+                href="/api/timetable/missing/export"
+                download
+                className="ml-auto flex items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-zinc-200 transition-colors hover:border-zinc-500 hover:bg-white/5"
+              >
+                <Download size={13} />
+                Export no-timetable list ({missingCount})
+              </a>
+            )}
           </div>
           {missing && members.length === 0 ? (
             <div className="bg-[#111014] border border-gray-800 rounded-xl p-12 text-center">
