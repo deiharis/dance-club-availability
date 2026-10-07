@@ -125,7 +125,12 @@ export default function RehearsalsClient({
   }
 
   async function remove(r: Rehearsal) {
-    if (!confirm(`Delete "${r.title}"? Its attendance records are deleted too.`)) return;
+    // Upcoming: the team is told it is cancelled (by the server). Past: just tidying up.
+    const upcoming = r.date >= new Date().toLocaleDateString("en-CA");
+    const msg = upcoming
+      ? `Cancel "${r.title}" on ${r.date}? Everyone in the team will be notified that it is cancelled.`
+      : `Delete "${r.title}"? Its attendance records are deleted too.`;
+    if (!confirm(msg)) return;
     setError("");
     const res = await fetch(`/api/dance/rehearsals/${r.id}`, { method: "DELETE" });
     if (!res.ok) setError((await res.json()).error ?? "Could not delete");

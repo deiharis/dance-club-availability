@@ -20,6 +20,8 @@ const DANCE_TYPES: NotificationType[] = [
   "REHEARSAL_ADDED",
   "PERFORMANCE_ADDED",
   "ATTENDANCE_MARKED",
+  "REHEARSAL_CANCELLED",
+  "PERFORMANCE_CANCELLED",
 ];
 
 // Also: the decision on a dance-topic report, even for a Core member who dances.
@@ -111,3 +113,15 @@ export async function notifySuperAdmins(opts: {
 
 export const teamLink = (path: string, team: string) =>
   `${path}?team=${encodeURIComponent(team)}`;
+
+// ── Cancellations ─────────────────────────────────────────────────────────────
+// Rehearsal and performance dates are stored as UTC midnight of the (Indian) calendar day.
+export const todayIST = () =>
+  new Date(new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" }) + "T00:00:00Z");
+
+// Who cancelled it, in the words the team sees.
+export function cancelledBy(caller: { isSuper: boolean; isLead: boolean; member?: { fullName: string } | null }) {
+  if (caller.isSuper) return "the Super Admin";
+  const name = caller.member?.fullName;
+  return caller.isLead ? (name ? `your Team Leader, ${name}` : "your Team Leader") : name ?? "the club";
+}

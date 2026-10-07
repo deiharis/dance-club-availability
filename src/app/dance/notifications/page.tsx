@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight, GraduationCap } from "lucide-react";
+import { CheckCircle, XCircle, CalendarDays, Star, ClipboardCheck, ArrowUpRight, GraduationCap, CalendarX } from "lucide-react";
 import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
 import { sectionWhere } from "@/lib/notify";
@@ -15,6 +15,8 @@ const KIND: Record<string, { icon: React.ElementType; color: string }> = {
   REHEARSAL_ADDED: { icon: CalendarDays, color: "text-amber-300" },
   PERFORMANCE_ADDED: { icon: Star, color: "text-amber-300" },
   ATTENDANCE_MARKED: { icon: ClipboardCheck, color: "text-amber-300" },
+  REHEARSAL_CANCELLED: { icon: CalendarX, color: "text-red-400" },
+  PERFORMANCE_CANCELLED: { icon: CalendarX, color: "text-red-400" },
 };
 
 export default async function DanceNotificationsPage() {

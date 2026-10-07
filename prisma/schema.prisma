@@ -239,6 +239,8 @@ enum NotificationType {
   OD_REQUESTED
   MEMBERS_ADDED
   PROGRAMME_FIX // "your academic programme needs updating" (lib/programme-issues.ts)
+  REHEARSAL_CANCELLED // a Lead / SuperAdmin cancelled an upcoming rehearsal (team is told)
+  PERFORMANCE_CANCELLED // a Lead / SuperAdmin cancelled an upcoming performance (team is told)
 }
 
 model Notification {

@@ -115,7 +115,11 @@ function Item({
   }
 
   async function remove() {
-    if (!confirm(`Delete "${p.name}"?`)) return;
+    const upcoming = p.date >= new Date().toLocaleDateString("en-CA");
+    const msg = upcoming
+      ? `Cancel "${p.name}" on ${p.date}? Everyone in the team will be notified that it is cancelled.`
+      : `Delete "${p.name}"?`;
+    if (!confirm(msg)) return;
     onError("");
     const res = await fetch(`/api/dance/performances/${p.id}`, { method: "DELETE" });
     if (!res.ok) return onError((await res.json()).error ?? "Could not delete");

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getCaller, unauthorized, forbidden } from "@/lib/dance";
-import { notifyMembers, dateLabel, teamLink } from "@/lib/notify";
+import { notifyMembers, notifyTeam, dateLabel, teamLink, todayIST, cancelledBy } from "@/lib/notify";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ async function load(id: string) {
     };
   }
   if (!caller.canManage(performance.team)) return { res: forbidden() };
-  return { performance };
+  return { performance, caller };
 }
 
 // Replace the dancer list. Body: { dancerIds: string[] }
@@ -71,6 +71,8 @@ export async function PUT(
   }
 }
 
+// Cancel (delete) a performance. If it had not happened yet, everyone in THAT team (plus SuperAdmins,
+// minus whoever cancelled) is notified here on the server. Deleting a past one notifies nobody.
 export async function DELETE(
   req: Request,
   { params }: { params: { id: string } }
@@ -79,7 +81,18 @@ export async function DELETE(
     const r = await load(params.id);
     if ("res" in r) return r.res;
 
+    const p = r.performance;
     await db.performance.delete({ where: { id: params.id } });
+
+    if (p.eventDate >= todayIST()) {
+      await notifyTeam({
+        team: p.team,
+        actorMemberId: r.caller.member?.id,
+        type: "PERFORMANCE_CANCELLED",
+        message: `Performance cancelled: "${p.name}" scheduled for ${dateLabel(p.eventDate)}${p.venue ? ` at ${p.venue}` : ""} has been cancelled by ${cancelledBy(r.caller)}.`,
+        link: teamLink("/dance/performances", p.team),
+      });
+    }
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
