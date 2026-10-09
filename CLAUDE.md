@@ -11,7 +11,7 @@ The owner (Haris) is a beginner. Explain what each change does and why, give exa
 - NextAuth v4, Credentials provider, JWT sessions, bcryptjs password hashing
 - Supabase Storage (bucket `report-images`) for temporary report proof images
 - lucide-react icons, recharts charts, xlsx for Excel import/export
-- Hosted on **Vercel**, auto-deploys from GitHub `deiharis/dance-club-availability` branch `main`
+- Hosted on **Vercel**, auto-deploys from GitHub `deiharis/dance-club-availability` branch `main`. Server code runs in Tokyo (`vercel.json` `"regions": ["hnd1"]`) because the Supabase database is in Tokyo (`aws-1-ap-northeast-1`): every page makes several database queries, and the default US region added ~150 ms per query (pages took a second or more). If the database ever moves, move this region with it. Check with the `x-vercel-id` response header (`bom1::hnd1::...` = Mumbai edge, Tokyo functions).
 
 ## Rules that cost us hours before
 
