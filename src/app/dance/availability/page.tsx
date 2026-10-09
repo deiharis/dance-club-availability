@@ -4,6 +4,7 @@ import { getDanceUser, pageTeam } from "@/lib/dance";
 import { DANCER_TEAMS } from "@/lib/teams";
 import StageHeader from "@/components/dance/StageHeader";
 import AvailabilityView from "@/components/dance/AvailabilityView";
+import NoAccess from "@/components/dance/NoAccess";
 
 // Timetable analytics. Team Leader: own team only. SuperAdmin (and the read-only Advisory): any
 // team via the tabs. Normal Dancers, and Core members who dance as Normal Dancers, are sent back.
@@ -15,7 +16,9 @@ export default async function DanceAvailabilityPage({
 }) {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
-  if (!dance.isLead && !dance.seesAllTeams) redirect("/dance");
+  if (!dance.isLead && !dance.seesAllTeams) {
+    return <NoAccess title="Team availability is for Team Leaders" body="Only your team's Team Leader and the Super Admin can open this page. Your rehearsals, performances, attendance and timetable are in the menu." />;
+  }
 
   const team = pageTeam(dance, searchParams.team);
   if (!team) {

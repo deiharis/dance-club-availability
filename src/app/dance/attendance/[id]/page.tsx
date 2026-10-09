@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getDanceUser } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import AttendanceMarker from "@/components/dance/AttendanceMarker";
+import NoAccess from "@/components/dance/NoAccess";
 
 export default async function MarkAttendancePage({
   params,
@@ -20,7 +21,15 @@ export default async function MarkAttendancePage({
     include: { attendance: true },
   });
   if (!rehearsal) notFound();
-  if (!dance.canManage(rehearsal.team)) redirect("/dance/attendance");
+  if (!dance.canManage(rehearsal.team)) {
+    return (
+      <NoAccess
+        title="Only this team's Team Leader marks attendance"
+        body="You can see your own attendance record on the Attendance page."
+        back={{ label: "Go to Attendance", href: "/dance/attendance" }}
+      />
+    );
+  }
 
   const dancers = await db.member.findMany({
     where: { team: rehearsal.team },

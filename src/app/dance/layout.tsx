@@ -8,6 +8,7 @@ import { sectionWhere } from "@/lib/notify";
 import DanceSidebar from "@/components/dance/DanceSidebar";
 import WaveBackdrop from "@/components/dance/WaveBackdrop";
 import ProgrammeFixBanner from "@/components/ProgrammeFixBanner";
+import NoAccess from "@/components/dance/NoAccess";
 
 // Dance Floor has its own display typeface; the committee keeps Inter.
 const stage = Sora({ subsets: ["latin"], weight: ["300", "400", "600"] });
@@ -27,8 +28,19 @@ export default async function DanceLayout({
   // Core members without a team have no team to see. Checked against the database, so a
   // member added to a team gets in without re-logging.
   // The Advisory (Core) may look at every team, read-only.
+  // Says why instead of silently sending them away (they may have followed a shared link).
   if (!dance.seesAllTeams && !dance.member.team) {
-    redirect(dance.isCommittee ? "/dashboard" : "/profile");
+    return (
+      <div className={`${stage.className} stage-glow flex min-h-[100dvh] items-center bg-base text-white`}>
+        <div className="w-full">
+          <NoAccess
+            title="The Dance Floor is for dance team members"
+            body="You are not in a dance team, so there is nothing to show here yet. If you have joined a team, ask your Team Leader or the Super Admin to add you to it."
+            back={dance.isCommittee ? { label: "Back to the Working Committee", href: "/dashboard" } : { label: "Back to my profile", href: "/profile" }}
+          />
+        </div>
+      </div>
+    );
   }
 
   const label = dance.isSuper

@@ -4,6 +4,7 @@ import { getDanceUser, pageTeam } from "@/lib/dance";
 import { DANCER_TEAMS } from "@/lib/teams";
 import StageHeader from "@/components/dance/StageHeader";
 import TeamAnalyticsView from "@/components/dance/TeamAnalyticsView";
+import NoAccess from "@/components/dance/NoAccess";
 
 // A Dance Lead sees their own team; the committee picks any team.
 export default async function DanceAnalyticsPage({
@@ -13,7 +14,9 @@ export default async function DanceAnalyticsPage({
 }) {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
-  if (!dance.isLead && !dance.seesAllTeams) redirect("/dance");
+  if (!dance.isLead && !dance.seesAllTeams) {
+    return <NoAccess title="Team insights are for Team Leaders" body="Only your team's Team Leader and the Super Admin can open this page. Your rehearsals, performances, attendance and timetable are in the menu." />;
+  }
 
   // Committee: the chosen tab, else their own team if they dance. Others: their own team.
   const team = pageTeam(dance, searchParams.team);

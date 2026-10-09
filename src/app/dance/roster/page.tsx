@@ -5,6 +5,7 @@ import { getDanceUser, pageTeam } from "@/lib/dance";
 import StageHeader from "@/components/dance/StageHeader";
 import { DANCER_TEAMS } from "@/lib/teams";
 import RosterClient from "@/components/dance/RosterClient";
+import NoAccess from "@/components/dance/NoAccess";
 
 export default async function RosterPage({
   searchParams,
@@ -13,7 +14,9 @@ export default async function RosterPage({
 }) {
   const dance = await getDanceUser();
   if (!dance) redirect("/login");
-  if (!dance.isLead && !dance.seesAllTeams) redirect("/dance");
+  if (!dance.isLead && !dance.seesAllTeams) {
+    return <NoAccess title="The team roster is for Team Leaders" body="Only your team's Team Leader and the Super Admin can open this page. Your rehearsals, performances, attendance and timetable are in the menu." />;
+  }
 
   // Committee picks any team; a Lead is fixed to their own.
   // Committee: the chosen tab, else their own team if they dance. Others: their own team.
